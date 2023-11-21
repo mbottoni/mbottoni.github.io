@@ -24,7 +24,7 @@ export const base = (
   <link rel="icon" href="/favicon.png" type="image/png">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="canonical" href="${site_url}${path}">
-  <link rel="alternate" type="application/rss+xml" title="matklad" href="${site_url}/feed.xml">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="${site_url}/feed.xml">
   <style>
   @font-face {
     font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
@@ -111,7 +111,7 @@ export const base = (
       </a>
       <a href="https://github.com/mbottoni">
         <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
-        matklad
+        mbottoni
       </a>
     </p>
   </footer>
