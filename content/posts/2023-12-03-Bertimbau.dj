@@ -1,0 +1,33 @@
+# Testing the website
+[colab]: https://colab.research.google.com/drive/1k0w9xlsbXeHHdBy3GJu472fPC0Rz2vA9?usp=sharing
+
+Hey, I this is my first blog post ever =)
+
+In this post i will show something that i did for a NLP course that I'm currently enrolled, I focused
+on fine-tuning the BERTimabu model, a Portuguese version of the BERT model, for two
+specific tasks: vowel density regression and sentence classification. BERT, a revolutionary model in 
+natural language processing, uses a bidirectional transformer architecture, significantly enhancing the
+context understanding of words in sentences. This architecture, based on the Transformer model and its
+encoder component, marks a departure from previous sequential learning methods by employing attention mechanisms exclusively.
+Here is a image of the architecture
+![](/assets/bertimbau/arch.jpg)
+
+My study delves into the application of BERT in two areas. First, I investigated the regression of vowel
+density in texts. This involved calculating the proportion of vowels (ignoring spaces, punctuation, and
+non-letter characters) and exploring how well the BERT model could predict this density. The task posed
+challenges, as traditional models often struggled with such context-specific predictions.
+
+I also explored sentence classification based on vowel density, dividing sentences into three classes
+according to their vowel density. This classification was examined in both balanced and unbalanced
+datasets, with the performance assessed across various metrics. The results highlighted the impact of
+class imbalance on model performance, especially in the unbalanced dataset.
+
+Throughout this work, I demonstrated the adaptability and effectiveness of the BERT model in handling
+these distinct linguistic tasks. The experiments underscored the importance of context in language models and
+the potential of BERT in enhancing the understanding and processing of Portuguese language tasks. The findings provide
+valuable insights into the model's capabilities and limitations, paving the way for further refinements and
+applications in natural language processing.
+
+For more details here is the colab where I implemented the models [Link to code][colab]
+
+
