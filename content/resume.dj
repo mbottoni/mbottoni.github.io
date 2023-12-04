@@ -1,5 +1,5 @@
 # Resume
-[resume.pdf]: https://matklad.github.io/resume.pdf
+[resume.pdf]: https://mbottoni.github.io/resume.pdf
 
 Welcome to my resume! 
 The resume is available as [.html][resume.html] and [.pdf][resume.pdf].
@@ -40,17 +40,19 @@ October 2022 - November 2022
 ## RESEARCH EXPERIENCE
 
 ### Undergraduate Research 2021-2022
-_An Introduction to Codes, Lattices and Applications in Signal Transmission_  
+
+- _An Introduction to Codes, Lattices and Applications in Signal Transmission_  
 (Written in Portuguese). Research project in mathematics trying to understand optimal ways to use lattices for reliable and secure transmission of information.
 
 ### Undergraduate Research 2022-2023
-_An Introduction to Information Geometry and Applications_  
+
+- _An Introduction to Information Geometry and Applications_  
 (Written in Portuguese). Research project in mathematics trying to understand how to use differential geometry in the context of statistical manifolds on machine learning cost functions.
 
-## SKILLS
+## Skills
 
-### Programming Languages**: Python, Matlab, C, Java  
-### Tools**: Shell Scripting, Git, Torch, Scikit-learn, TensorFlow, Linux
+- Programming Languages: Python, Matlab, C, Java  
+- Tools: Shell Scripting, Git, Torch, Scikit-learn, TensorFlow, Linux
 
 ## RELEVANT EXTRACURRICULAR COURSES
 - Bahia Asset Management - Course in applied mathematical modeling for finance.  
