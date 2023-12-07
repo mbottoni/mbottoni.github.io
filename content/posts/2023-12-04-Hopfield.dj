@@ -60,12 +60,12 @@ $$`y_i=  \sum_j y_j w_{ij}`
 
 Furthermore the activation of a neuron is used to determine the state,
 or output, of the neuron according to a thresholding function. Here the
-$s_i$ represent a neuron-i given state and output
+$`s_i` represent a neuron-i given state and output
 
-$$s_i = \begin{cases}
+$$`s_i = \begin{cases}
 +1, & \text{if } y_i > 0, \\
 -1, & \text{if } y_i < 0.
-\end{cases}$$
+\end{cases}`
 
 As the state of each neuron in the network is updated, its contributions
 to the activities of other neurons change; this in turn feeds back and
@@ -135,29 +135,29 @@ integrate on modern deep learning architectures. For that the authors of
 the paper proposed a new energy function.
 
 First we need to define the log-sum-exp function (lse)
-$$lse(\beta, \bf x) =
+$$`lse(\beta, \bf x) =
 \beta^{-1} \log (
 \sum_{i=1}^{N} \exp( \beta x_i )
-)$$
+)`
 
 Where we have
 
 -   N Stored (Key) Patterns
 
--   $\bm{x}_i \in \bm{R}^d$ represented by a matrix
-    $\bm{X} = (\bm{x}_1, \dots, \bm{x}_N)$
+-   $`\bm{x}_i \in \bm{R}^d` represented by a matrix
+    $`\bm{X} = (\bm{x}_1, \dots, \bm{x}_N)`
 
--   Largest pattern $M = \max_i \| \bm{x}_i \|$
+-   Largest pattern $`M = \max_i \| \bm{x}_i \|`
 
--   The state (query) pattern is $\bm{\xi} \in \mathbb{R}^d$
+-   The state (query) pattern is $`\bm{\xi} \in \mathbb{R}^d`
 
 The energy function E of a modern Hopfield network for binary patterns
-$\bm{x_i}$ and a binary state pattern $\bm{\xi}$ is
-$E = -\sum_{i=1}^{N} F(\bm{\xi}^T \bm{x_i})$ where we wave $F(x) = x^n$
+$`\bm{x_i}` and a binary state pattern $`\bm{\xi}` is
+$`E = -\sum_{i=1}^{N} F(\bm{\xi}^T \bm{x_i})` where we wave $`F(x) = x^n`
 (n=2 gives the classical Hopfield Network). This model can be
-generalized by exponential functions $F(x) = \exp(x)$, which gives this
-energy $E = -\exp(else(1,\bm{X}^T \bm{\xi}))$. This energy leads to an
-exponential storage capacity of $N=2^{d/2}$ for binary patterns.
+generalized by exponential functions $`F(x) = \exp(x)`, which gives this
+energy $`E = -\exp(else(1,\bm{X}^T \bm{\xi}))`. This energy leads to an
+exponential storage capacity of $`N=2^{d/2}` for binary patterns.
 
 The paper contributes by modifying the energy function in a way to
 permit continuous states on the Hopfield network. They define the energy
@@ -229,3 +229,7 @@ Finally the paper finalize with the following observations:
 3.  Applications in Deep Network Architectures Hopfield networks extend
     beyond the attention mechanism, offering additional functionalities
     in deep learning architectures through specific layers.
+
+Einstein derived $`e=mc^2`.
+Pythagoras proved
+$$` x^n + y^n = z^n `
