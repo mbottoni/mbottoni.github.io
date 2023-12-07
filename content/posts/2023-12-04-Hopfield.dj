@@ -1,2 +1,231 @@
 # Hopfield Networks for dummies
-[colab]: https://colab.research.google.com/drive/1k0w9xlsbXeHHdBy3GJu472fPC0Rz2vA9?usp=sharing
+
+![](/assets/hopfield.gif)
+
+## Basics of Hopfield Networks
+
+### Background
+
+In a certain way Hopfield Networks are a certain type of RNN. Notably,
+Hopfield Networks were the first instance of associative neural
+networks: RNN architectures, which are capable of producing an emergent
+associative memory. For context, we can define Associative memory, or
+content-addressable memory, as a system in which a memory recall is
+initiated by the associability of an input pattern to a memorized one.
+In other words, associative memory allows for the retrieval and
+completion of a memory using only an incomplete or noisy portion of it.
+
+Hopfield's unique network architecture was based on the Ising model, a
+physics model that explains the emergent behavior of the magnetic fields
+produced by ferromagnetic materials. The model is usually described as a
+flat graph, where nodes represent magnetic dipole moments of regular
+repeating arrangements. Each node can occupy one of two states (i.e.
+spin up or spin down, +1 or -1), and the agreement of states between
+adjacent nodes is energetically favorable. As each dipole 'flips', or
+evolves to find local energetic minima, the whole material trends toward
+a steady-state, or global energy minimum. HNs can be thought of in a
+similar way where the network is represented as a 2D graph and each node
+(or neuron) occupies one of two states: active or inactive. Like Ising
+models, the dynamic behavior of a HN is ultimately determined according
+to a metaphorical notion of 'system energy', and the network converges
+to a state of 'energetic minimum', which in the case of a learned
+network happens to be a memory.
+
+In order to understand the layout and function of a Hopfield Network,
+it's useful to break down the qualities and attributes of the individual
+unit/neuron. Each neuron in the network has three qualities to consider:
+
+-   **connections to other neurons** --- each neuron in the network is
+    connected to all other neurons, and each connection has a unique
+    strength, or weight, analogous to the strength of a synapse. These
+    connection strengths are stored inside a matrix of weights.
+
+-   **activation** --- this is computed via the net input from other
+    neurons and their respective connection weights, loosely analogous
+    to the membrane potential of a neuron. The activation takes on a
+    single scalar value.
+
+-   **bipolar state** --- this is the output of the neuron, computed
+    using the neuron's activation and a thresholding function, analogous
+    to a neuron's 'firing state.' In this case, -1 and +1.
+
+Any neuron's instantaneous activation on a Hopfield Network can be
+calculated by taking the weighted sum of inputs from the neurons it's
+connected to. Here $y_i$ represents the activation of neuron-i in the
+network, $y_j$ represents a vector of the respective outputs of all
+neurons inputting to neuron-i, and $w_{ij}$ the symmetric weight of the
+connection between neurons i and j.
+
+$$y_i=  \sum_j y_j w_{ij}$$
+
+Furthermore the activation of a neuron is used to determine the state,
+or output, of the neuron according to a thresholding function. Here the
+$s_i$ represent a neuron-i given state and output
+
+$$s_i = \begin{cases}
++1, & \text{if } y_i > 0, \\
+-1, & \text{if } y_i < 0.
+\end{cases}$$
+
+As the state of each neuron in the network is updated, its contributions
+to the activities of other neurons change; this in turn feeds back and
+modulates more activity, and so on, until the network reaches a stable
+formation. If a neuron's activation during a given generation is
+positive, its output will be +1 and vice versa.
+
+Defining the single units we still have the open question: How does this
+translate to the distributed storage and representation of information
+in the network?
+
+While each neuron can represent one of two states at a given time, the
+overall state of the network, termed s, can represent a string of binary
+information. Take this pattern for example: Pattern =
+\[0,1,0,1,0,1,0,1,0\]. This can be reshaped to a 3x3 matrix, that can be
+interpreted as an image. If a pattern takes the form of an image, we
+represent the pixels themselves using individual neurons. In the example
+above we have a 3 x 3 matrix of pixels, so we require 9 neurons to fully
+represent the image. In this network graph, the nodes represent neurons
+and the edges represent the connections between them. In a computer, the
+state of each neuron is represented as the individual elements in a 1 x
+9 vector, S. In other words, we directly represent the information we
+are trying to store using the respective states of neurons in the
+network:
+
+Any arbitrary information string of n bits can be represented by a
+network of n neurons. It is the combined activity of the neurons in the
+network which collectively represent our target information in a
+distributed fashion. In most HNs, the states of neurons are bipolar (-1
+or +1). For the sake of simplicity, the example above uses binary 0 or
+1, from here on out assume that the neurons occupy bipolar states.
+
+Before going into the next section it is worth mentioning network-level
+concepts which go hand-in-hand that are useful to understand:
+
+-   Network learning --- The computation of network weights which will
+    enable the network's state to evolve toward one or more memory
+    attractors
+
+-   Network Energy --- A mathematical basis and useful analogy which
+    helps to understand why the network is guaranteed to converge to an
+    attractor state, or energetic minimum. It is a scalar value
+    associated with each state of the network
+
+The energy function decreases or stay the same as the Hopfield Network
+learns.
+
+## Hopfield Networks is all you need
+
+Now with a little bit of more context of Hopfield Networks's we will
+dive into a quick summary of the
+[Paper](https://arxiv.org/abs/2008.02217). To put it simply the main
+message of the paper is the following: *By introducing a modern Hopfield
+Network with continuous states we can store exponentially many patterns,
+retrieve them with only one update and the update rule is equivalent to
+the attention mechanism used in transformers*.
+
+Now let's dive deep into the details. The basic architecture is on
+[1](#hopfield){reference-type="ref" reference="hopfield"}
+
+![Modern Hopfield Networks with continuos
+states](Screenshot 2023-12-06 at 17.55.21.png){#hopfield
+width=".6\\textwidth"}
+
+The main purpose of making the Hopfield Network continuos is to
+integrate on modern deep learning architectures. For that the authors of
+the paper proposed a new energy function.
+
+First we need to define the log-sum-exp function (lse)
+$$lse(\beta, \bf x) =
+\beta^{-1} \log (
+\sum_{i=1}^{N} \exp( \beta x_i )
+)$$
+
+Where we have
+
+-   N Stored (Key) Patterns
+
+-   $\bm{x}_i \in \bm{R}^d$ represented by a matrix
+    $\bm{X} = (\bm{x}_1, \dots, \bm{x}_N)$
+
+-   Largest pattern $M = \max_i \| \bm{x}_i \|$
+
+-   The state (query) pattern is $\bm{\xi} \in \mathbb{R}^d$
+
+The energy function E of a modern Hopfield network for binary patterns
+$\bm{x_i}$ and a binary state pattern $\bm{\xi}$ is
+$E = -\sum_{i=1}^{N} F(\bm{\xi}^T \bm{x_i})$ where we wave $F(x) = x^n$
+(n=2 gives the classical Hopfield Network). This model can be
+generalized by exponential functions $F(x) = \exp(x)$, which gives this
+energy $E = -\exp(else(1,\bm{X}^T \bm{\xi}))$. This energy leads to an
+exponential storage capacity of $N=2^{d/2}$ for binary patterns.
+
+The paper contributes by modifying the energy function in a way to
+permit continuous states on the Hopfield network. They define the energy
+function E as:
+$$E = -lse(\beta, \bm{X}^T \xi) + \dfrac{1}{2}\bm{\xi}^T \bm{\xi} +
+\beta^{-1}\log N + \dfrac{1}{2}M^2$$ Furthermore, they define the
+following update rule $$\bm{\xi}^{new} = f(\bm{\xi}) = \bm{X}
+softmax(\beta \bm{X}^T \bm{\xi})$$
+
+The paper introduces 5 theorems to characterize the introduced hopfield
+network.
+
+-   Theorem 1: It states that the update rule for these networks
+    converges globally. This means for a given sequence of states, the
+    energy will eventually converge to a stable value at a fixed point,
+    even as time tends to infinity. The proof involves the
+    Concave-Convex Procedure (CCCP) to ensure this global convergence.
+
+-   Theorem 2: This theorem extends Theorem 1, stating that not only
+    does the energy converge, but the sequence of states either
+    converges or its limit points form a connected and compact set of
+    stationary points. If this set is finite, the sequence will converge
+    to a specific stationary point.
+
+-   Theorem 3: This theorem discusses the storage capacity of the
+    network. It defines conditions under which a certain number of
+    random patterns can be stored with a high probability. The
+    calculations involve complex functions like the Lambert W function
+    and take into account the dimensions of the pattern space and a
+    failure probability.
+
+-   Theorem 4: It states that the network is capable of retrieving
+    patterns efficiently with just one update, particularly if the
+    patterns are well-separated. The theorem quantifies the retrieval
+    capability in terms of the separation of patterns.
+
+-   Theorem 5: This theorem addresses the retrieval error, which is
+    found to be exponentially small relative to the pattern separation.
+    It provides bounds on this error, demonstrating the effectiveness of
+    the network in accurately retrieving patterns.
+
+Finally the paper finalize with the following observations:
+
+1.  In modern Hopfield networks, the dynamics of pattern convergence are
+    characterized by:
+
+    -   If patterns $x_i$ are not well separated, the iteration
+        converges to a global fixed point near the average of all
+        vectors.
+
+    -   In cases where some patterns are similar yet distinct from
+        others, a metastable state near these patterns is formed.
+        Iterations converge to this metastable state.
+
+2.  Hopfield Update Rule as Transformer Attention
+
+    -   The Hopfield network update rule parallels the attention
+        mechanism in transformer and BERT models.
+
+    -   With stored (key) patterns $y_i$ and state (query) patterns
+        $r_i$, and using transformations with weight matrices $W^K$,
+        $W^Q$, and $W^V$, the update rule resembles transformer
+        attention.
+
+    -   The equivalence is shown in the formulation of transformer
+        self-attention, where modifications in weight matrices and
+        softmax function applications are highlighted.
+
+3.  Applications in Deep Network Architectures Hopfield networks extend
+    beyond the attention mechanism, offering additional functionalities
+    in deep learning architectures through specific layers.
