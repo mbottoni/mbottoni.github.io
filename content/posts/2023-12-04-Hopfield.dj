@@ -56,7 +56,7 @@ network, $y_j$ represents a vector of the respective outputs of all
 neurons inputting to neuron-i, and $w_{ij}$ the symmetric weight of the
 connection between neurons i and j.
 
-$$y_i=  \sum_j y_j w_{ij}$$
+$$`y_i=  \sum_j y_j w_{ij}`
 
 Furthermore the activation of a neuron is used to determine the state,
 or output, of the neuron according to a thresholding function. Here the
