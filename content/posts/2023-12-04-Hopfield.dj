@@ -89,8 +89,8 @@ Finally it is interesting to note the following.
         mechanism in transformer and BERT models.
 
     -   With stored (key) patterns yi and state (query) patterns
-        r_i, and using transformations with weight matrices W^K,
-        W^Q, and W^V, the update rule resembles transformer
+        ri, and using transformations with weight matrices WK,
+        WQ, and WV, the update rule resembles transformer
         attention.
 
     -   The equivalence is shown in the formulation of transformer
