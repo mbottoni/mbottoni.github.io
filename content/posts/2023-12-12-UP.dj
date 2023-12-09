@@ -5,13 +5,14 @@
 A while ago I posted about Hopfield Networks. I wanted to further explore this theme
 by trying to implement this type of idea from scratch in python. 
 
-Here is the link to my code 
-[GitHub](https://github.com/mbottoni/hopfield-scratch)
+Here is the link to my code: [GitHub](https://github.com/mbottoni/hopfield-scratch)
 
-Some nice results are show here:
+Some nice results are shown here:
 
 The reconstruction of the images using associative memory of the network:
+
 ![](/assets/weights_hopfield.png)
 
 The weights of the hopfield network graph
+
 ![](/assets/result_mnist_hopfield.png)
