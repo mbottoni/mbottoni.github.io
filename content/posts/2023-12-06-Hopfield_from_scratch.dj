@@ -1,2 +1,107 @@
 # Understanding Cover's Universal Portfolio
-[colab]: https://colab.research.google.com/drive/1k0w9xlsbXeHHdBy3GJu472fPC0Rz2vA9?usp=sharing
+
+![](/assets/meme_stock.jpg)
+
+I always wanted to understandt the concept of a universal portfolio
+from Cover's. This topic always fascinated me since I first heard about it
+on my information theory lectures and you know what they say... The best 
+way to learn is to practice. So here's my attempt ...
+
+Folowing the words from the original paper from Cover: _We exhibit
+an algorithm that ourperforms the best stock in the market_. For this
+he exhibit as a goal the wealth Sn that will outperform the 
+best stock in the market and will depend on differents weights
+alongside different stock options. This will be an online algorithm,
+this means that the portfolio will be constantly be updated
+and captures distributions shifts and drifst of the market. Besides
+that the algorithm is "model agnostic", in the sense that does not
+depend on the underlying assumption that you make about the statistics
+of the log returns. That's fantastic and seems almost too good to be true.
+
+Here is the link to the original paper: [Paper](https://web.mit.edu/6.454/www/www_fall_2001/shaas/universal_portfolios.pdf).
+I'll not be entering on the math behind the paper but here is my bite-sized summary.
+Cover simply proved that, with enough time, with a LOT of time, the rebalancing effect
+across the curve would end up generating an average return across the curve in excess
+of the return of the better single asset.
+
+This is neither a simple "mean-reversion" nor a "momentum" effect. Aĺl of your portfolios
+are mean-reverting; but you're running with their momentum.
+
+The intuition is the arithmetic vs geometric half-variance drag and rebalancing effect. Whatever the
+two assets's true return, vol, and correlation, the rebalancing portfolios will be biased
+to having a better risk-reward than their naked equivalent all across the
+curve. Cover' s insight was proving that letting the winning (rebalancing) portfolios
+run would, in the end, guarantee performance better than the winning
+asset. In the (VERY) long-run.
+
+If you don't understand the central anomaly here, ask yourself what is the probability that any
+market will be X% up before being X% down? If you want to teĺl me it's a 50:50, then the
+theoretically optimal bet is to stake a quarter of my wealth it's down :-) Yes, that's crazy; but 
+it's not wrong... market doubles or zeroes every day, buy or sell to hold? The
+same is true to diminished degrees with "fair bets" in general.
+
+Any fair investment, ie zero long-term expected return, therefore has to have
+a (SMALL) positive expected return in the short-term.
+
+Cover' s "Universal Portfolio" is simply an algorithm that exploits this
+effect it's "proof" is simply that , with infinite time, the rebalancing gains
+across the spectrum of weights will end up surpassing the performance differential
+between the sample assets.
+
+That's the logic (and proven, assuming traditional assumptions
+with respect to normality hold true).
+and a pseudocode that implements the main idea:
+
+```python
+# Initialize portfolio weights
+initialize_portfolio(weights)  # All weights start with an equal distribution
+
+# Initialize wealth and wealth history
+wealth = 1.0
+wealth_history = []
+
+# Define the set of available assets
+assets = [asset1, asset2, ..., assetN]
+
+# Define the number of time steps
+T = number_of_time_steps
+
+# Main loop for T time steps
+for t in range(T):
+    # Observe returns for all assets at time t
+    observe_returns(returns)
+
+    # Calculate the total wealth in the portfolio at time t
+    total_wealth = sum(wealth * weight for weight in weights)
+
+    # Calculate the regret for each asset
+    regrets = []
+    for asset in assets:
+        asset_wealth = wealth * weights[assets.index(asset)]
+        best_asset_wealth = wealth * max(weights)
+        regret = best_asset_wealth - asset_wealth
+        regrets.append(regret)
+
+    # Update portfolio weights using exponential weights
+    total_regret = sum(regrets)
+    for asset in assets:
+        weight = weights[assets.index(asset)]
+        asset_regret = regrets[assets.index(asset)]
+        weight *= (1 + asset_regret) / (1 + total_regret)
+        weights[assets.index(asset)] = weight
+
+    # Normalize portfolio weights to sum up to 1
+    total_weight = sum(weights)
+    weights = [weight / total_weight for weight in weights]
+
+    # Update the portfolio's wealth at time t
+    new_wealth = sum(wealth * weight * (1 + asset_return) for weight, asset_return in zip(weights, returns))
+    wealth = new_wealth
+
+    # Append the wealth at time t to the wealth history
+    wealth_history.append(wealth)
+
+# After T time steps, you have the final portfolio weights in 'weights'
+```
+
+Here is the colab where I tested the ideas: [colab]:(https://colab.research.google.com/drive/14i_T9KRUh05b9EaTbksWOap6RvJgB27l?usp=sharing)
