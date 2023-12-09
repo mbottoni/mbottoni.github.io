@@ -1,6 +1,7 @@
 # Understanding Cover's Universal Portfolio
 
-![](/assets/meme_stock.jpg =100x20)
+<img src="/assets/meme_stock.jpg" alt="meme" width="150"/>
+
 
 I always wanted to understandt the concept of a universal portfolio
 from Cover's. This topic always fascinated me since I first heard about it
@@ -104,4 +105,4 @@ for t in range(T):
 # After T time steps, you have the final portfolio weights in 'weights'
 ```
 
-Here is the colab where I tested the ideas: [colab]:(https://colab.research.google.com/drive/14i_T9KRUh05b9EaTbksWOap6RvJgB27l?usp=sharing)
+Here is the colab where I tested the ideas: [colab](https://colab.research.google.com/drive/14i_T9KRUh05b9EaTbksWOap6RvJgB27l?usp=sharing)
