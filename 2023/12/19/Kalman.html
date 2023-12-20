@@ -1,0 +1,174 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Implementing the Kalman Filter in Python</title>
+  <meta name="description" content="Hello. I'm trying to experiment with some recent articles that tries to 
+connect transformers and kalman filter. I remember that I saw in my undergrad
+this concept on the control lecture but to be honest I didn't quite understand
+the concept at the time. To help my understanding i tried to implement
+using only some basic python libraries the Kalman Filter in python.">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2023/12/19/Kalman.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  <article >
+
+    <h1>
+    <a href="#Implementing-the-Kalman-Filter-in-Python"><span>Implementing the Kalman Filter in Python</span> <time datetime="2023-12-19">Dec 19, 2023</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/kalman1.jpg">
+</figure>
+<p><span>Hello. I</span>&rsquo;<span>m trying to experiment with some recent articles that tries to </span>
+<span>connect transformers and kalman filter. I remember that I saw in my undergrad</span>
+<span>this concept on the control lecture but to be honest I didn</span>&rsquo;<span>t quite understand</span>
+<span>the concept at the time. To help my understanding i tried to implement</span>
+<span>using only some basic python libraries the Kalman Filter in python.</span></p>
+<p><span>Before the notebook with the implementation here is a quick summary of what is </span>
+<span>this filter provided by GPT ( =P ):</span></p>
+<p><span>A Kalman filter is a powerful algorithm used for making estimates or predictions in systems </span>
+<span>that are subject to various uncertainties. It</span>&rsquo;<span>s widely used in fields like robotics, aerospace,</span>
+<span>finance, and even weather forecasting. Here</span>&rsquo;<span>s a simplified explanation suitable for a blog post:</span></p>
+<ul>
+<li>
+<p><span>Understanding the Kalman Filter: A Simple Guide</span>
+<span>Imagine you</span>&rsquo;<span>re trying to predict the position of a moving car using a GPS system. The GPS provides </span>
+<span>you with location data, but this data isn</span>&rsquo;<span>t perfect—it has some level of inaccuracy or </span>&lsquo;<span>noise</span>&rsquo;<span>. How do you </span>
+<span>make the best possible estimate of the car</span>&rsquo;<span>s true position?</span></p>
+</li>
+<li>
+<p><span>Enter the Kalman filter. Developed by Rudolf E. Kalman in the 1960s, this algorithm is a set of mathematical equations </span>
+<span>that provides an efficient computational (recursive) solution to the problem of estimating the state of a process—in our case, the position and speed of the car.</span></p>
+</li>
+<li>
+<p><span>How Does It Work?</span>
+<span>The Kalman filter works in two fundamental</span>
+<span>steps: Prediction and Update.</span></p>
+</li>
+<li>
+<p><span>Prediction: This step involves predicting the current state </span>
+<span>of the process (like the position and velocity of the car) based on the</span>
+<span>previous state. It</span>&rsquo;<span>s like saying, </span>&ldquo;<span>Given where the car was and </span>
+<span>how fast it was moving, here</span>&rsquo;<span>s where I think it is now.</span>&rdquo;</p>
+</li>
+<li>
+<p><span>Update: In this step, the Kalman filter takes new measurements (e.g., from the GPS) and</span>
+<span>refines the prediction. It essentially asks, </span>&ldquo;<span>Now that I have new data, how should I</span>
+<span>adjust my prediction to be more accurate?</span>&rdquo;</p>
+</li>
+</ul>
+<p><span>The beauty of the Kalman filter lies in its ability to deal with uncertainty. It</span>&rsquo;<span>s designed to weigh both the</span>
+<span>predicted state and the new measurements, considering the uncertainties in</span>
+<span>both. If the measurements are very accurate, it gives them more weight. If the predictions are believed to be more reliable, it leans more on them.</span></p>
+<ul>
+<li>
+<span>Real-World Applications</span>
+<span>While the GPS example is straightforward, the Kalman filter is used in much more complex</span>
+<span>situations. It</span>&rsquo;<span>s vital in the operation of satellites and spacecraft, where precise navigation is crucial. In the financial world, it</span>
+<span>helps in predicting market trends and in robotics, it</span>&rsquo;<span>s used for navigation and tracking movements.</span>
+</li>
+</ul>
+
+<figure>
+
+<img alt="" src="/assets/kalman2.svg">
+</figure>
+<p><span>Finally here is the notebook : </span><a href="https://colab.research.google.com/drive/1g0BNY3ov6DiauAGLEfB-Ka-7836NZMo1?usp=sharing"><span>Colab</span></a></p>
+</article>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2023-12-19-Kalman.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:aleksey.kladov+blog@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+</body>
+
+</html>
