@@ -1,0 +1,13 @@
+
+# Implementing the Transformer in Python
+
+![](/assets/transformer_arch.png)
+
+Hello everyone. 
+Today the I will present a sketch of a transformer implementations. 
+The focus here will be only on the forward pass of the architecture and not
+on learning the weights. 
+
+![](/assets/transformer_explanation.svg)
+
+Finally here is the notebook with the implementation: [Colab](https://colab.research.google.com/drive/1e9jN-S-5LfYs9mVIllh5N_bh8jsvef9P?usp=sharing)
