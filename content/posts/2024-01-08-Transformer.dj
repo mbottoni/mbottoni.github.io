@@ -58,6 +58,6 @@ network, followed by normalization and residual connections.
 layer followed by a softmax function to predict the probability distribution of each token in the
 output vocabulary.
 
-![](/assets/transformer_explanation.svg)
+![](/assets/transformer_explanation.png)
 
 Finally here is the notebook with the implementation: [Colab](https://colab.research.google.com/drive/1e9jN-S-5LfYs9mVIllh5N_bh8jsvef9P?usp=sharing)
