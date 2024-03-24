@@ -105,7 +105,7 @@ export const base = (
         <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
         Subscribe
       </a>
-      <a href="mailto:aleksey.kladov+blog@gmail.com">
+      <a href="mailto:maruanbakriottoni@gmail.com">
         <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
         Get in touch
       </a>
