@@ -1,0 +1,865 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+<link href="https://mbottoni.github.io/feed.xml" rel="self" type="application/atom+xml"/>
+<link href="https://mbottoni.github.io" rel="alternate" type="text/html"/>
+<updated>2024-05-12T22:34:21.378Z</updated>
+<id>https://mbottoni.github.io/feed.xml</id>
+<title type="html">mbottoni</title>
+<subtitle>Yet another programming blog by Maruan Bakri Ottoni aka mbottoni.</subtitle>
+<author><name>Alex Kladov</name></author>
+
+<entry>
+<title type="text">Some tests with the Mandelbrot set and parallelization</title>
+<link href="https://mbottoni.github.io/2024/05/12/mandelbrot.html" rel="alternate" type="text/html" title="Some tests with the Mandelbrot set and parallelization" />
+<published>2024-05-12T00:00:00+00:00</published>
+<updated>2024-05-12T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2024/05/12/mandelbrot</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[Hello. It has been a while since I lasted programed
+with OpenMP and C. For refreshing my mind and keeping
+the concepts clear I was doing some tests with the
+Mandelbrot Set with OpenMP and with a single thread.
+Here is the code for both cases:]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2024/05/12/mandelbrot.html"><![CDATA[
+    <h1>
+    <a href="#Some-tests-with-the-Mandelbrot-set-and-parallelization"><span>Some tests with the Mandelbrot set and parallelization</span> <time datetime="2024-05-12">May 12, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/mandelbrot.png">
+</figure>
+<p><span>Hello. It has been a while since I lasted programed</span>
+<span>with OpenMP and C. For refreshing my mind and keeping</span>
+<span>the concepts clear I was doing some tests with the</span>
+<span>Mandelbrot Set with OpenMP and with a single thread.</span>
+<span>Here is the code for both cases:</span></p>
+<section id="Baseline">
+
+    <h2>
+    <a href="#Baseline"><span>Baseline</span> </a>
+    </h2>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line">#include &lt;stdio.h&gt;</span>
+<span class="line">#include &lt;stdlib.h&gt;</span>
+<span class="line">#include &lt;math.h&gt;</span>
+<span class="line"></span>
+<span class="line">#define WIDTH 1920</span>
+<span class="line">#define HEIGHT 1080</span>
+<span class="line">#define REAL_MIN -2.0</span>
+<span class="line">#define REAL_MAX 1.5</span>
+<span class="line">#define IMAG_MIN -1.0</span>
+<span class="line">#define IMAG_MAX 1.0</span>
+<span class="line">#define MAX_ITERATIONS 8000</span>
+<span class="line"></span>
+<span class="line">typedef unsigned char uchar;</span>
+<span class="line"></span>
+<span class="line">typedef struct {</span>
+<span class="line">    uchar r, g, b;</span>
+<span class="line">} Color;</span>
+<span class="line"></span>
+<span class="line">// Function Prototypes</span>
+<span class="line">Color computeMandelbrotPixel(double x0, double y0, Color* palette);</span>
+<span class="line">Color* generatePalette(int size);</span>
+<span class="line">double linearInterpolate(double start, double end, double t);</span>
+<span class="line"></span>
+<span class="line">int main() {</span>
+<span class="line">    uchar (*image)[WIDTH][3] = malloc(sizeof(uchar[HEIGHT][WIDTH][3]));</span>
+<span class="line">    Color* palette = generatePalette(MAX_ITERATIONS);</span>
+<span class="line"></span>
+<span class="line">    for (int py = 0; py &lt; HEIGHT; py++) {</span>
+<span class="line">        for (int px = 0; px &lt; WIDTH; px++) {</span>
+<span class="line">            double x0 = REAL_MIN + (px / (double) WIDTH) * (REAL_MAX - REAL_MIN);</span>
+<span class="line">            double y0 = IMAG_MIN + (py / (double) HEIGHT) * (IMAG_MAX - IMAG_MIN);</span>
+<span class="line">            Color color = computeMandelbrotPixel(x0, y0, palette);</span>
+<span class="line">            image[py][px][0] = color.r;</span>
+<span class="line">            image[py][px][1] = color.g;</span>
+<span class="line">            image[py][px][2] = color.b;</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    // Output to PPM format</span>
+<span class="line">    FILE* fout = fopen("output/ms.ppm", "w");</span>
+<span class="line">    fprintf(fout, "P6\n%d %d\n255\n", WIDTH, HEIGHT);</span>
+<span class="line">    for (int y = 0; y &lt; HEIGHT; y++) {</span>
+<span class="line">        fwrite(image[y], 1, sizeof(uchar[WIDTH][3]), fout);</span>
+<span class="line">    }</span>
+<span class="line">    fclose(fout);</span>
+<span class="line">    free(image);</span>
+<span class="line">    free(palette);</span>
+<span class="line"></span>
+<span class="line">    printf("Finished calculations and output.\n");</span>
+<span class="line">    return 0;</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">Color computeMandelbrotPixel(double x0, double y0, Color* palette) {</span>
+<span class="line">    double x = 0, y = 0, x2 = 0, y2 = 0;</span>
+<span class="line">    int iteration = 0;</span>
+<span class="line">    while (x2 + y2 &lt;= 4 &amp;&amp; iteration &lt; MAX_ITERATIONS) {</span>
+<span class="line">        y = 2 * x * y + y0;</span>
+<span class="line">        x = x2 - y2 + x0;</span>
+<span class="line">        x2 = x * x;</span>
+<span class="line">        y2 = y * y;</span>
+<span class="line">        iteration++;</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    if (iteration &lt; MAX_ITERATIONS) {</span>
+<span class="line">        double log_zn = log(x2 + y2) / 2.0;</span>
+<span class="line">        double nu = log(log_zn / log(2)) / log(2);</span>
+<span class="line">        iteration += 1 - nu;</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    int idx1 = iteration;</span>
+<span class="line">    int idx2 = idx1 + 1;</span>
+<span class="line">    Color c1 = palette[idx1 &lt; MAX_ITERATIONS ? idx1 : MAX_ITERATIONS];</span>
+<span class="line">    Color c2 = palette[idx2 &lt; MAX_ITERATIONS ? idx2 : MAX_ITERATIONS];</span>
+<span class="line">    double t = iteration - floor(iteration);</span>
+<span class="line"></span>
+<span class="line">    return (Color){</span>
+<span class="line">        .r = (int)linearInterpolate(c1.r, c2.r, t),</span>
+<span class="line">        .g = (int)linearInterpolate(c1.g, c2.g, t),</span>
+<span class="line">        .b = (int)linearInterpolate(c1.b, c2.b, t)</span>
+<span class="line">    };</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">Color* generatePalette(int size) {</span>
+<span class="line">    Color* palette = malloc(sizeof(Color) * (size + 1));</span>
+<span class="line">    for (int i = 0; i &lt;= size; i++) {</span>
+<span class="line">        double intensity = 3.0 * (i == 0 ? 3.0 : log(i) / log(size - 1));</span>
+<span class="line">        if (intensity &lt; 1) {</span>
+<span class="line">            palette[i] = (Color){0, (uchar)(255 * intensity), 0};</span>
+<span class="line">        } else if (intensity &lt; 2) {</span>
+<span class="line">            palette[i] = (Color){(uchar)(255 * (intensity - 1)), 255, 0};</span>
+<span class="line">        } else {</span>
+<span class="line">            palette[i] = (Color){(uchar)(255 * (intensity - 2)), 255, 255};</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line">    return palette;</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">double linearInterpolate(double start, double end, double t) {</span>
+<span class="line">    return (1 - t) * start + t * end;</span>
+<span class="line">}</span></code></pre>
+
+</figure>
+</section>
+<section id="OpenMP">
+
+    <h2>
+    <a href="#OpenMP"><span>OpenMP</span> </a>
+    </h2>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line">#include &lt;math.h&gt;</span>
+<span class="line">#include &lt;stdio.h&gt;</span>
+<span class="line">#include &lt;stdlib.h&gt;</span>
+<span class="line"></span>
+<span class="line">#define WIDTH 1920</span>
+<span class="line">#define HEIGHT 1080</span>
+<span class="line">#define uchar unsigned char</span>
+<span class="line"></span>
+<span class="line">#define REAL_MAX 1.5</span>
+<span class="line">#define REAL_MIN -2</span>
+<span class="line">#define IMAG_MAX 1.0</span>
+<span class="line">#define IMAG_MIN -IMAG_MAX</span>
+<span class="line"></span>
+<span class="line">#define MAX_ITERATIONS 8000</span>
+<span class="line"></span>
+<span class="line">typedef struct {</span>
+<span class="line">    uchar r;</span>
+<span class="line">    uchar g;</span>
+<span class="line">    uchar b;</span>
+<span class="line">} Color;</span>
+<span class="line"></span>
+<span class="line">// Function Prototypes</span>
+<span class="line">double linearInterpolation(double start, double end, double t);</span>
+<span class="line">Color* generateColorPalette(int size);</span>
+<span class="line">Color calculateMandelbrotColor(int px, int py, Color* palette);</span>
+<span class="line"></span>
+<span class="line">int main() {</span>
+<span class="line">    uchar (*image)[WIDTH][3] = malloc(sizeof(uchar[HEIGHT][WIDTH][3]));</span>
+<span class="line">    Color* palette = generateColorPalette(MAX_ITERATIONS);</span>
+<span class="line"></span>
+<span class="line">    #pragma omp parallel for</span>
+<span class="line">    for (int py = 0; py &lt; HEIGHT; py++) {</span>
+<span class="line">        for (int px = 0; px &lt; WIDTH; px++) {</span>
+<span class="line">            Color color = calculateMandelbrotColor(px, py, palette);</span>
+<span class="line">            image[py][px][0] = color.r;</span>
+<span class="line">            image[py][px][1] = color.g;</span>
+<span class="line">            image[py][px][2] = color.b;</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    FILE* fout = fopen("output/mandelbrot.ppm", "w");</span>
+<span class="line">    fprintf(fout, "P6\n%d %d\n255\n", WIDTH, HEIGHT);</span>
+<span class="line">    for (int y = 0; y &lt; HEIGHT; y++) {</span>
+<span class="line">        fwrite(image[y], 1, sizeof(image[y]), fout);</span>
+<span class="line">    }</span>
+<span class="line">    fclose(fout);</span>
+<span class="line"></span>
+<span class="line">    free(palette);</span>
+<span class="line">    free(image);</span>
+<span class="line">    printf("Finished calculations and output.\n");</span>
+<span class="line">    return 0;</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">Color calculateMandelbrotColor(int px, int py, Color* palette) {</span>
+<span class="line">    double x0 = REAL_MIN + px * (REAL_MAX - REAL_MIN) / WIDTH;</span>
+<span class="line">    double y0 = IMAG_MIN + py * (IMAG_MAX - IMAG_MIN) / HEIGHT;</span>
+<span class="line">    double x = 0, y = 0, x2 = 0, y2 = 0;</span>
+<span class="line">    int iter = 0;</span>
+<span class="line"></span>
+<span class="line">    while (x2 + y2 &lt;= 4 &amp;&amp; iter &lt; MAX_ITERATIONS) {</span>
+<span class="line">        y = 2 * x * y + y0;</span>
+<span class="line">        x = x2 - y2 + x0;</span>
+<span class="line">        x2 = x * x;</span>
+<span class="line">        y2 = y * y;</span>
+<span class="line">        iter++;</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    if (iter &lt; MAX_ITERATIONS) {</span>
+<span class="line">        double log_zn = log(x2 + y2) / 2;</span>
+<span class="line">        double nu = log(log_zn / log(2)) / log(2);</span>
+<span class="line">        iter += 1 - nu;</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    int idx1 = iter;</span>
+<span class="line">    int idx2 = (idx1 + 1 &gt; MAX_ITERATIONS) ? idx1 : idx1 + 1;</span>
+<span class="line">    double t = iter - (int)iter;</span>
+<span class="line">    Color c1 = palette[idx1];</span>
+<span class="line">    Color c2 = palette[idx2];</span>
+<span class="line"></span>
+<span class="line">    return (Color){</span>
+<span class="line">        .r = (uchar)linearInterpolation(c1.r, c2.r, t),</span>
+<span class="line">        .g = (uchar)linearInterpolation(c1.g, c2.g, t),</span>
+<span class="line">        .b = (uchar)linearInterpolation(c1.b, c2.b, t)</span>
+<span class="line">    };</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">Color* generateColorPalette(int size) {</span>
+<span class="line">    Color* palette = malloc(sizeof(Color) * (size + 1));</span>
+<span class="line">    for (int i = 0; i &lt;= size; i++) {</span>
+<span class="line">        double ratio = i / (double)size;</span>
+<span class="line">        double angle = 2 * M_PI * ratio;</span>
+<span class="line">        palette[i] = (Color){</span>
+<span class="line">            .r = (uchar)(sin(angle) * 127.5 + 127.5),</span>
+<span class="line">            .g = (uchar)(sin(angle + 2 * M_PI / 3) * 127.5 + 127.5),</span>
+<span class="line">            .b = (uchar)(sin(angle + 4 * M_PI / 3) * 127.5 + 127.5)</span>
+<span class="line">        };</span>
+<span class="line">    }</span>
+<span class="line">    return palette;</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">double linearInterpolation(double start, double end, double t) {</span>
+<span class="line">    return (1 - t) * start + t * end;</span>
+<span class="line">}</span></code></pre>
+
+</figure>
+</section>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Having fun with decoding and optimization</title>
+<link href="https://mbottoni.github.io/2024/03/24/decoding.html" rel="alternate" type="text/html" title="Having fun with decoding and optimization" />
+<published>2024-03-24T00:00:00+00:00</published>
+<updated>2024-03-24T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2024/03/24/decoding</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[Hey.
+One topic very fascinating for me is coding theory. It can be very challenging
+and it can be pleasing for a more mathematical inclined person or someone like
+me that, likes a lot mathematics but like engineering as well. I think that the
+beginning of coding theory is strong related to
+Shannon work, A mathematical theory of communication but it can be interpreted
+in a very broad sense. What I mean by that is that a lot of natural phenomenum
+can be interpreted as an application of coding theory. For instance, you can 
+consider the language as a coding theory application where what is done by expressing
+ourselfs in words is to find an optimal code for communicating thoughts. Other interesting
+example is what happens in natural evolution. Basically, there you can interpret the changes
+on environment and the DNA of species being on a communication channel where the DNA 
+is coding the optimal way to survive on a given environment.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2024/03/24/decoding.html"><![CDATA[
+    <h1>
+    <a href="#Having-fun-with-decoding-and-optimization"><span>Having fun with decoding and optimization</span> <time datetime="2024-03-24">Mar 24, 2024</time></a>
+    </h1>
+<p><span>Hey.</span>
+<span>One topic very fascinating for me is coding theory. It can be very challenging</span>
+<span>and it can be pleasing for a more mathematical inclined person or someone like</span>
+<span>me that, likes a lot mathematics but like engineering as well. I think that the</span>
+<span>beginning of coding theory is strong related to</span>
+<span>Shannon work, </span>&ldquo;<span>A mathematical theory of communication</span>&rdquo;<span> but it can be interpreted</span>
+<span>in a very broad sense. What I mean by that is that a lot of natural phenomenum</span>
+<span>can be interpreted as an application of coding theory. For instance, you can </span>
+<span>consider the language as a coding theory application where what is done by expressing</span>
+<span>ourselfs in words is to find an optimal code for communicating thoughts. Other interesting</span>
+<span>example is what happens in natural evolution. Basically, there you can interpret the changes</span>
+<span>on environment and the DNA of species being on a communication channel where the DNA </span>
+<span>is coding the optimal way to survive on a given environment.</span></p>
+<p><span>During the years a lot of new approaches having being through of what is </span>
+<span>the most optimal way of coding and retrieving messages through a communication</span>
+<span>channel. One interesting topic that appeared recently is how to code </span>
+<span>messages in a way that a is reliable and secure, and most importantly, can be used</span>
+<span>in a cryptopgraphic way to resist the attack of quantum computers, but I think</span>
+<span>that would be more interesting to disccus in another post.</span>
+<span>On this post i will be focusing on optimal way to retrieve messages corrupted</span>
+<span>by noise. One very interesting way that I will be implementing here is the way Candes and Tao explored</span>
+<span>on their famous paper titled </span><strong><span>Decoding by Linear Programming</span></strong><span> </span><a href="https://arxiv.org/pdf/math/0502327.pdf"><span>Paper</span></a><span>.</span></p>
+<p><span>On their words:</span>
+<span>This paper delves into a traditional issue often discussed in the realm of coding theory, which is the</span>
+<span>correction of errors. The goal is to accurately retrieve an input vector from corrupted measurements. These measurements</span>
+<span>are the result of combining the input vector with a specific matrix, and then adding some errors, which are both random</span>
+<span>and unknown. The central question is whether it</span>&rsquo;<span>s feasible to precisely reconstruct the original input from these tainted measurements.</span></p>
+<p><span>Our findings affirm that, given certain conditions related to the matrix used in the process, the original input is the only answer</span>
+<span>to a particular optimization problem that focuses on minimizing the sum of the absolute values of the components. This is true</span>
+<span>especially when the number of non-zero elements in the error vector is relatively small, being less than a</span>
+<span>specific proportion of the matrix</span>&rsquo;<span>s row count. In essence, the original input can be accurately recovered by solving</span>
+<span>a straightforward optimization problem, which can also be seen as a type of linear programming.</span></p>
+<p><span>Moreover, our numerical tests indicate that this method of recovery is exceptionally effective, managing to</span>
+<span>accurately retrieve the original input even in scenarios where a considerable portion of the measurements</span>
+<span>is tainted. This research not only addresses the challenge of extracting sparse solutions from systems of</span>
+<span>linear equations that are significantly underdetermined but also ties closely with the task of reconstructing</span>
+<span>signals from severely incomplete measurements. In fact, the findings presented in this paper build upon and enhance</span>
+<span>our previous work. At the heart of this successful approach is a fundamental principle we term the uniform uncertainty</span>
+<span>principle, which we will explore in detail.</span></p>
+<p><span>I find this idea very ellegant because it solve fundamental problem in a very simple and efficient way. For more details</span>
+<span>regarding the mathematical aspects of the idea you can find on the original paper linked above. Here is the implementation</span>
+<span>and some tests in python of the idea </span><a href="https://github.com/mbottoni/decoding-linear-programming"><span>Github Page</span></a><span>.</span></p>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Implementing the Transformer in Python</title>
+<link href="https://mbottoni.github.io/2024/01/08/Transformer.html" rel="alternate" type="text/html" title="Implementing the Transformer in Python" />
+<published>2024-01-08T00:00:00+00:00</published>
+<updated>2024-01-08T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2024/01/08/Transformer</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[Hello everyone. 
+Today the I will present a sketch of a transformer implementations. 
+The focus here will be only on the forward pass of the architecture and not
+on learning the weights.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2024/01/08/Transformer.html"><![CDATA[
+    <h1>
+    <a href="#Implementing-the-Transformer-in-Python"><span>Implementing the Transformer in Python</span> <time datetime="2024-01-08">Jan 8, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/transformer_arch.png">
+</figure>
+<p><span>Hello everyone. </span>
+<span>Today the I will present a sketch of a transformer implementations. </span>
+<span>The focus here will be only on the forward pass of the architecture and not</span>
+<span>on learning the weights.</span></p>
+<p><span>To elaborate further on the technical details of implementing a Transformer model, we can </span>
+<span>dive into the key components and steps involved in the forward pass of the </span>
+<span>architecture. The Transformer model, introduced in </span>
+<span>the paper </span>&ldquo;<span>Attention is All You Need</span>&rdquo;<span> by Vaswani et al., is a deep learning model that </span>
+<span>has revolutionized the field of natural language processing (NLP) due to its effectiveness in </span>
+<span>handling sequential data without relying on recurrent layers.</span></p>
+<section id="Key-Components-of-the-Transformer">
+
+    <h3>
+    <a href="#Key-Components-of-the-Transformer"><span>Key Components of the Transformer:</span> </a>
+    </h3>
+<ol>
+<li>
+<p><strong><strong><span>Input Embedding</span></strong></strong><span>: The input sequence is converted into a high-dimensional embedding that</span>
+<span>represents each token in a continuous vector space. Positional encodings are added to these embeddings </span>
+<span>to provide the model with information about the order of tokens.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Multi-Head Attention</span></strong></strong><span>: This mechanism allows the model to focus on different parts of the </span>
+<span>input sequence simultaneously. It performs scaled dot-product attention multiple times in</span>
+<span>parallel, and the outputs are concatenated and linearly transformed.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Position-wise Feed-Forward Networks</span></strong></strong><span>: Each position in the encoder and decoder layers passes</span>
+<span>through a feed-forward neural network, which is applied independently to each position.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Normalization and Residual Connections</span></strong></strong><span>: Each sub-layer (attention and feed-forward networks) in</span>
+<span>the encoder and</span>
+<span>decoder is followed by layer normalization and is wrapped with a residual connection. This helps in</span>
+<span>stabilizing the training of deep networks.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Encoder and Decoder</span></strong></strong><span>: The Transformer model consists of an encoder stack and a decoder</span>
+<span>stack. The encoder processes the input sequence, and the decoder generates the output</span>
+<span>sequence, one token at a time. The decoder also uses masked attention to prevent future tokens from</span>
+<span>being used in the prediction of the current token.</span></p>
+</li>
+</ol>
+</section>
+<section id="Implementing-the-Forward-Pass">
+
+    <h3>
+    <a href="#Implementing-the-Forward-Pass"><span>Implementing the Forward Pass:</span> </a>
+    </h3>
+<p><span>The forward pass of the Transformer involves processing the input sequence through the encoder</span>
+<span>layers, followed by the decoder layers to generate the output sequence. Here</span>&rsquo;<span>s a high-level overview:</span></p>
+<ol>
+<li>
+<p><strong><strong><span>Prepare Input Embeddings</span></strong></strong><span>: Convert the input tokens into embeddings and add positional encodings.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Encoder</span></strong></strong><span>: For each encoder layer, perform multi-head attention on the input embeddings and</span>
+<span>apply the position-wise feed-forward network. Use normalization and residual connections around</span>
+<span>each of these sub-layers.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Decoder</span></strong></strong><span>: For each decoder layer, perform masked multi-head attention on the decoder input</span>
+<span>embeddings. Then, perform multi-head attention using the encoder output as key and value, and</span>
+<span>the output of the previous attention layer as the query. Apply the position-wise feed-forward</span>
+<span>network, followed by normalization and residual connections.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Output Linear Layer and Softmax</span></strong></strong><span>: The final decoder output is passed through a linear</span>
+<span>layer followed by a softmax function to predict the probability distribution of each token in the</span>
+<span>output vocabulary.</span></p>
+</li>
+</ol>
+
+<figure>
+
+<img alt="" src="/assets/transformer_explanation.png">
+</figure>
+<p><span>Finally here is the notebook with the implementation: </span><a href="https://colab.research.google.com/drive/1e9jN-S-5LfYs9mVIllh5N_bh8jsvef9P?usp=sharing"><span>Colab</span></a></p>
+</section>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Implementing the Kalman Filter in Python</title>
+<link href="https://mbottoni.github.io/2023/12/19/Kalman.html" rel="alternate" type="text/html" title="Implementing the Kalman Filter in Python" />
+<published>2023-12-19T00:00:00+00:00</published>
+<updated>2023-12-19T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2023/12/19/Kalman</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[Hello. I'm trying to experiment with some recent articles that tries to 
+connect transformers and kalman filter. I remember that I saw in my undergrad
+this concept on the control lecture but to be honest I didn't quite understand
+the concept at the time. To help my understanding i tried to implement
+using only some basic python libraries the Kalman Filter in python.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2023/12/19/Kalman.html"><![CDATA[
+    <h1>
+    <a href="#Implementing-the-Kalman-Filter-in-Python"><span>Implementing the Kalman Filter in Python</span> <time datetime="2023-12-19">Dec 19, 2023</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/kalman1.jpg">
+</figure>
+<p><span>Hello. I</span>&rsquo;<span>m trying to experiment with some recent articles that tries to </span>
+<span>connect transformers and kalman filter. I remember that I saw in my undergrad</span>
+<span>this concept on the control lecture but to be honest I didn</span>&rsquo;<span>t quite understand</span>
+<span>the concept at the time. To help my understanding i tried to implement</span>
+<span>using only some basic python libraries the Kalman Filter in python.</span></p>
+<p><span>Before the notebook with the implementation here is a quick summary of what is </span>
+<span>this filter provided by GPT ( =P ):</span></p>
+<p><span>A Kalman filter is a powerful algorithm used for making estimates or predictions in systems </span>
+<span>that are subject to various uncertainties. It</span>&rsquo;<span>s widely used in fields like robotics, aerospace,</span>
+<span>finance, and even weather forecasting. Here</span>&rsquo;<span>s a simplified explanation suitable for a blog post:</span></p>
+<ul>
+<li>
+<p><span>Understanding the Kalman Filter: A Simple Guide</span>
+<span>Imagine you</span>&rsquo;<span>re trying to predict the position of a moving car using a GPS system. The GPS provides </span>
+<span>you with location data, but this data isn</span>&rsquo;<span>t perfect—it has some level of inaccuracy or </span>&lsquo;<span>noise</span>&rsquo;<span>. How do you </span>
+<span>make the best possible estimate of the car</span>&rsquo;<span>s true position?</span></p>
+</li>
+<li>
+<p><span>Enter the Kalman filter. Developed by Rudolf E. Kalman in the 1960s, this algorithm is a set of mathematical equations </span>
+<span>that provides an efficient computational (recursive) solution to the problem of estimating the state of a process—in our case, the position and speed of the car.</span></p>
+</li>
+<li>
+<p><span>How Does It Work?</span>
+<span>The Kalman filter works in two fundamental</span>
+<span>steps: Prediction and Update.</span></p>
+</li>
+<li>
+<p><span>Prediction: This step involves predicting the current state </span>
+<span>of the process (like the position and velocity of the car) based on the</span>
+<span>previous state. It</span>&rsquo;<span>s like saying, </span>&ldquo;<span>Given where the car was and </span>
+<span>how fast it was moving, here</span>&rsquo;<span>s where I think it is now.</span>&rdquo;</p>
+</li>
+<li>
+<p><span>Update: In this step, the Kalman filter takes new measurements (e.g., from the GPS) and</span>
+<span>refines the prediction. It essentially asks, </span>&ldquo;<span>Now that I have new data, how should I</span>
+<span>adjust my prediction to be more accurate?</span>&rdquo;</p>
+</li>
+</ul>
+<p><span>The beauty of the Kalman filter lies in its ability to deal with uncertainty. It</span>&rsquo;<span>s designed to weigh both the</span>
+<span>predicted state and the new measurements, considering the uncertainties in</span>
+<span>both. If the measurements are very accurate, it gives them more weight. If the predictions are believed to be more reliable, it leans more on them.</span></p>
+<ul>
+<li>
+<span>Real-World Applications</span>
+<span>While the GPS example is straightforward, the Kalman filter is used in much more complex</span>
+<span>situations. It</span>&rsquo;<span>s vital in the operation of satellites and spacecraft, where precise navigation is crucial. In the financial world, it</span>
+<span>helps in predicting market trends and in robotics, it</span>&rsquo;<span>s used for navigation and tracking movements.</span>
+</li>
+</ul>
+
+<figure>
+
+<img alt="" src="/assets/kalman2.svg">
+</figure>
+<p><span>Finally here is the notebook : </span><a href="https://colab.research.google.com/drive/1g0BNY3ov6DiauAGLEfB-Ka-7836NZMo1?usp=sharing"><span>Colab</span></a></p>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Implementing from scratch a Hopfield Network</title>
+<link href="https://mbottoni.github.io/2023/12/12/UP.html" rel="alternate" type="text/html" title="Implementing from scratch a Hopfield Network" />
+<published>2023-12-12T00:00:00+00:00</published>
+<updated>2023-12-12T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2023/12/12/UP</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[A while ago I posted about Hopfield Networks. I wanted to further explore this theme
+by trying to implement this type of idea from scratch in python.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2023/12/12/UP.html"><![CDATA[
+    <h1>
+    <a href="#Implementing-from-scratch-a-Hopfield-Network"><span>Implementing from scratch a Hopfield Network</span> <time datetime="2023-12-12">Dec 12, 2023</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/cat_coding.jpg">
+</figure>
+<p><span>A while ago I posted about Hopfield Networks. I wanted to further explore this theme</span>
+<span>by trying to implement this type of idea from scratch in python.</span></p>
+<p><span>Here is the link to my code: </span><a href="https://github.com/mbottoni/hopfield-scratch"><span>GitHub</span></a></p>
+<p><span>Some nice results are shown here:</span></p>
+<p><span>The reconstruction of the images using associative memory of the network:</span></p>
+
+<figure>
+
+<img alt="" src="/assets/weights_hopfield.png">
+</figure>
+<p><span>The weights of the hopfield network graph</span></p>
+
+<figure>
+
+<img alt="" src="/assets/result_mnist_hopfield.png">
+</figure>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Understanding Cover's Universal Portfolio</title>
+<link href="https://mbottoni.github.io/2023/12/06/Hopfield_from_scratch.html" rel="alternate" type="text/html" title="Understanding Cover's Universal Portfolio" />
+<published>2023-12-06T00:00:00+00:00</published>
+<updated>2023-12-06T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2023/12/06/Hopfield_from_scratch</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[I always wanted to understandt the concept of a universal portfolio
+from Cover's. This topic always fascinated me since I first heard about it
+on my information theory lectures and you know what they say... The best 
+way to learn is to practice. So here's my attempt ...]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2023/12/06/Hopfield_from_scratch.html"><![CDATA[
+    <h1>
+    <a href="#Understanding-Cover-s-Universal-Portfolio"><span>Understanding Cover</span>&rsquo;<span>s Universal Portfolio</span> <time datetime="2023-12-06">Dec 6, 2023</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/meme_stock_res.jpg">
+</figure>
+<p><span>I always wanted to understandt the concept of a universal portfolio</span>
+<span>from Cover</span>&rsquo;<span>s. This topic always fascinated me since I first heard about it</span>
+<span>on my information theory lectures and you know what they say</span>&hellip;<span> The best </span>
+<span>way to learn is to practice. So here</span>&rsquo;<span>s my attempt </span>&hellip;</p>
+<p><span>Folowing the words from the original paper from Cover: </span><em><span>We exhibit</span>
+<span>an algorithm that ourperforms the best stock in the market</span></em><span>. For this</span>
+<span>he exhibit as a goal the wealth Sn that will outperform the </span>
+<span>best stock in the market and will depend on differents weights</span>
+<span>alongside different stock options. This will be an online algorithm,</span>
+<span>this means that the portfolio will be constantly be updated</span>
+<span>and captures distributions shifts and drifst of the market. Besides</span>
+<span>that the algorithm is </span>&ldquo;<span>model agnostic</span>&rdquo;<span>, in the sense that does not</span>
+<span>depend on the underlying assumption that you make about the statistics</span>
+<span>of the log returns. That</span>&rsquo;<span>s fantastic and seems almost too good to be true.</span></p>
+<p><span>Here is the link to the original paper: </span><a href="https://web.mit.edu/6.454/www/www_fall_2001/shaas/universal_portfolios.pdf"><span>Paper</span></a><span>.</span>
+<span>I</span>&rsquo;<span>ll not be entering on the math behind the paper but here is my bite-sized summary.</span>
+<span>Cover simply proved that, with enough time, with a LOT of time, the rebalancing effect</span>
+<span>across the curve would end up generating an average return across the curve in excess</span>
+<span>of the return of the better single asset.</span></p>
+<p><span>This is neither a simple </span>&ldquo;<span>mean-reversion</span>&rdquo;<span> nor a </span>&ldquo;<span>momentum</span>&rdquo;<span> effect. Aĺl of your portfolios</span>
+<span>are mean-reverting; but you</span>&rsquo;<span>re running with their momentum.</span></p>
+<p><span>The intuition is the arithmetic vs geometric half-variance drag and rebalancing effect. Whatever the</span>
+<span>two assets</span>&rsquo;<span>s true return, vol, and correlation, the rebalancing portfolios will be biased</span>
+<span>to having a better risk-reward than their naked equivalent all across the</span>
+<span>curve. Cover</span>&rsquo;<span> s insight was proving that letting the winning (rebalancing) portfolios</span>
+<span>run would, in the end, guarantee performance better than the winning</span>
+<span>asset. In the (VERY) long-run.</span></p>
+<p><span>If you don</span>&rsquo;<span>t understand the central anomaly here, ask yourself what is the probability that any</span>
+<span>market will be X% up before being X% down? If you want to teĺl me it</span>&rsquo;<span>s a 50:50, then the</span>
+<span>theoretically optimal bet is to stake a quarter of my wealth it</span>&rsquo;<span>s down :-) Yes, that</span>&rsquo;<span>s crazy; but </span>
+<span>it</span>&rsquo;<span>s not wrong</span>&hellip;<span> market doubles or zeroes every day, buy or sell to hold? The</span>
+<span>same is true to diminished degrees with </span>&ldquo;<span>fair bets</span>&rdquo;<span> in general.</span></p>
+<p><span>Any fair investment, ie zero long-term expected return, therefore has to have</span>
+<span>a (SMALL) positive expected return in the short-term.</span></p>
+<p><span>Cover</span>&rsquo;<span> s </span>&ldquo;<span>Universal Portfolio</span>&rdquo;<span> is simply an algorithm that exploits this</span>
+<span>effect it</span>&rsquo;<span>s </span>&ldquo;<span>proof</span>&rdquo;<span> is simply that , with infinite time, the rebalancing gains</span>
+<span>across the spectrum of weights will end up surpassing the performance differential</span>
+<span>between the sample assets.</span></p>
+<p><span>That</span>&rsquo;<span>s the logic (and proven, assuming traditional assumptions</span>
+<span>with respect to normality hold true).</span>
+<span>and a pseudocode that implements the main idea:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-comment"># Initialize portfolio weights</span></span>
+<span class="line">initialize_portfolio(weights)  <span class="hl-comment"># All weights start with an equal distribution</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Initialize wealth and wealth history</span></span>
+<span class="line">wealth = <span class="hl-number">1.0</span></span>
+<span class="line">wealth_history = []</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Define the set of available assets</span></span>
+<span class="line">assets = [asset1, asset2, ..., assetN]</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Define the number of time steps</span></span>
+<span class="line">T = number_of_time_steps</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Main loop for T time steps</span></span>
+<span class="line"><span class="hl-keyword">for</span> t <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(T):</span>
+<span class="line">    <span class="hl-comment"># Observe returns for all assets at time t</span></span>
+<span class="line">    observe_returns(returns)</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Calculate the total wealth in the portfolio at time t</span></span>
+<span class="line">    total_wealth = <span class="hl-built_in">sum</span>(wealth * weight <span class="hl-keyword">for</span> weight <span class="hl-keyword">in</span> weights)</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Calculate the regret for each asset</span></span>
+<span class="line">    regrets = []</span>
+<span class="line">    <span class="hl-keyword">for</span> asset <span class="hl-keyword">in</span> assets:</span>
+<span class="line">        asset_wealth = wealth * weights[assets.index(asset)]</span>
+<span class="line">        best_asset_wealth = wealth * <span class="hl-built_in">max</span>(weights)</span>
+<span class="line">        regret = best_asset_wealth - asset_wealth</span>
+<span class="line">        regrets.append(regret)</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Update portfolio weights using exponential weights</span></span>
+<span class="line">    total_regret = <span class="hl-built_in">sum</span>(regrets)</span>
+<span class="line">    <span class="hl-keyword">for</span> asset <span class="hl-keyword">in</span> assets:</span>
+<span class="line">        weight = weights[assets.index(asset)]</span>
+<span class="line">        asset_regret = regrets[assets.index(asset)]</span>
+<span class="line">        weight *= (<span class="hl-number">1</span> + asset_regret) / (<span class="hl-number">1</span> + total_regret)</span>
+<span class="line">        weights[assets.index(asset)] = weight</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Normalize portfolio weights to sum up to 1</span></span>
+<span class="line">    total_weight = <span class="hl-built_in">sum</span>(weights)</span>
+<span class="line">    weights = [weight / total_weight <span class="hl-keyword">for</span> weight <span class="hl-keyword">in</span> weights]</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Update the portfolio&#x27;s wealth at time t</span></span>
+<span class="line">    new_wealth = <span class="hl-built_in">sum</span>(wealth * weight * (<span class="hl-number">1</span> + asset_return) <span class="hl-keyword">for</span> weight, asset_return <span class="hl-keyword">in</span> <span class="hl-built_in">zip</span>(weights, returns))</span>
+<span class="line">    wealth = new_wealth</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Append the wealth at time t to the wealth history</span></span>
+<span class="line">    wealth_history.append(wealth)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># After T time steps, you have the final portfolio weights in &#x27;weights&#x27;</span></span></code></pre>
+
+</figure>
+<p><span>Here is the colab where I tested the ideas: </span><a href="https://colab.research.google.com/drive/14i_T9KRUh05b9EaTbksWOap6RvJgB27l?usp=sharing"><span>colab</span></a></p>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Hopfield Networks for dummies</title>
+<link href="https://mbottoni.github.io/2023/12/04/Hopfield.html" rel="alternate" type="text/html" title="Hopfield Networks for dummies" />
+<published>2023-12-04T00:00:00+00:00</published>
+<updated>2023-12-04T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2023/12/04/Hopfield</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[Hopfield Networks, a type of Recurrent Neural Network (RNN), are renowned for their unique ability to
+store and retrieve patterns through associative memory. This means they can recall a complete memory from
+just a partial input. Inspired by the Ising model in physics, which explains magnetic behaviors in
+certain materials, Hopfield Networks use a system of interconnected neurons, each able to be in
+one of two states, akin to magnetic dipoles. These neurons are fully connected, each influencing the other
+based on the strength of their connections. The network dynamically evolves to a stable state where the
+system's energy is minimized, representing a memory. The overall network state thus can represent binary information, like
+an image or a pattern, making Hopfield Networks particularly effective in pattern recognition
+and completion tasks.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2023/12/04/Hopfield.html"><![CDATA[
+    <h1>
+    <a href="#Hopfield-Networks-for-dummies"><span>Hopfield Networks for dummies</span> <time datetime="2023-12-04">Dec 4, 2023</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/hopfield.gif">
+</figure>
+<section id="Introduction-to-Hopfield-Networks">
+
+    <h2>
+    <a href="#Introduction-to-Hopfield-Networks"><span>Introduction to Hopfield Networks</span> </a>
+    </h2>
+<p><span>Hopfield Networks, a type of Recurrent Neural Network (RNN), are renowned for their unique ability to</span>
+<span>store and retrieve patterns through associative memory. This means they can recall a complete memory from</span>
+<span>just a partial input. Inspired by the Ising model in physics, which explains magnetic behaviors in</span>
+<span>certain materials, Hopfield Networks use a system of interconnected neurons, each able to be in</span>
+<span>one of two states, akin to magnetic dipoles. These neurons are fully connected, each influencing the other</span>
+<span>based on the strength of their connections. The network dynamically evolves to a stable state where the</span>
+<span>system</span>&rsquo;<span>s </span>&lsquo;<span>energy</span>&rsquo;<span> is minimized, representing a memory. The overall network state thus can represent binary information, like</span>
+<span>an image or a pattern, making Hopfield Networks particularly effective in pattern recognition</span>
+<span>and completion tasks.</span></p>
+</section>
+<section id="Hopfield-Networks-is-all-you-need">
+
+    <h2>
+    <a href="#Hopfield-Networks-is-all-you-need"><span>Hopfield Networks is all you need</span> </a>
+    </h2>
+<p><span>Now with a little bit of more context of Hopfield Networks</span>&rsquo;<span>s we will</span>
+<span>dive into a quick summary of the</span>
+<a href="https://arxiv.org/abs/2008.02217"><span>Paper</span></a><span>. To put it simply the main</span>
+<span>message of the paper is the following: </span><strong><span>By introducing a modern Hopfield</span>
+<span>Network with continuous states we can store exponentially many patterns,</span>
+<span>retrieve them with only one update and the update rule is equivalent to</span>
+<span>the attention mechanism used in transformers</span></strong><span>.</span></p>
+<p><span>Now let</span>&rsquo;<span>s dive little deep into the details. The basic architecture is on</span>
+<img alt="" src="/assets/modern_hopfield.png"></p>
+<p><span>The evolution of Hopfield Networks towards modern architectures involves a transition from binary to continuous neuron states, allowing for more complex and</span>
+<span>nuanced representations. This advancement closely aligns with the mechanisms used in transformer models in deep learning.</span>
+<span>The modern approach introduces a new energy function to accommodate these continuous states, fundamentally</span>
+<span>changing the network dynamics. The update rule in these modern networks parallels the attention mechanism in</span>
+<span>transformer and BERT models, marking a significant innovation. Modern Hopfield Networks not only enhance</span>
+<span>the capacity for pattern storage and retrieval but also exhibit improved efficiency in these processes. The</span>
+<span>research also presents several theorems to explain the behavior of these networks, including</span>
+<span>their convergence, storage capacity, pattern retrieval efficiency, and error rates. These networks extend beyond</span>
+<span>mimicking transformer attention, offering potential applications in a wide range of deep learning architectures</span>
+<span>and providing new tools for designing advanced neural network systems.</span></p>
+<p><span>The paper introduces 5 theorems to characterize the introduced hopfield network.</span></p>
+<ul>
+<li>
+<p><span>Theorem 1: It states that the update rule for these networks</span>
+<span>converges globally. This means for a given sequence of states, the</span>
+<span>energy will eventually converge to a stable value at a fixed point,</span>
+<span>even as time tends to infinity. The proof involves the</span>
+<span>Concave-Convex Procedure (CCCP) to ensure this global convergence.</span></p>
+</li>
+<li>
+<p><span>Theorem 2: This theorem extends Theorem 1, stating that not only</span>
+<span>does the energy converge, but the sequence of states either</span>
+<span>converges or its limit points form a connected and compact set of</span>
+<span>stationary points. If this set is finite, the sequence will converge</span>
+<span>to a specific stationary point.</span></p>
+</li>
+<li>
+<p><span>Theorem 3: This theorem discusses the storage capacity of the</span>
+<span>network. It defines conditions under which a certain number of</span>
+<span>random patterns can be stored with a high probability. The</span>
+<span>calculations involve complex functions like the Lambert W function</span>
+<span>and take into account the dimensions of the pattern space and a</span>
+<span>failure probability.</span></p>
+</li>
+<li>
+<p><span>Theorem 4: It states that the network is capable of retrieving</span>
+<span>patterns efficiently with just one update, particularly if the</span>
+<span>patterns are well-separated. The theorem quantifies the retrieval</span>
+<span>capability in terms of the separation of patterns.</span></p>
+</li>
+<li>
+<p><span>Theorem 5: This theorem addresses the retrieval error, which is</span>
+<span>found to be exponentially small relative to the pattern separation.</span>
+<span>It provides bounds on this error, demonstrating the effectiveness of</span>
+<span>the network in accurately retrieving patterns.</span></p>
+</li>
+</ul>
+<p><span>Finally it is interesting to note the following.</span></p>
+<ol>
+<li>
+<span>In modern Hopfield networks, the dynamics of pattern convergence are</span>
+<span>characterized by:</span>
+<ul>
+<li>
+<p><span>If patterns xi are not well separated, the iteration</span>
+<span>converges to a global fixed point near the average of all</span>
+<span>vectors.</span></p>
+</li>
+<li>
+<p><span>In cases where some patterns are similar yet distinct from</span>
+<span>others, a metastable state near these patterns is formed.</span>
+<span>Iterations converge to this metastable state.</span></p>
+</li>
+</ul>
+</li>
+<li>
+<span>Hopfield Update Rule as Transformer Attention</span>
+<ul>
+<li>
+<p><span>The Hopfield network update rule parallels the attention</span>
+<span>mechanism in transformer and BERT models.</span></p>
+</li>
+<li>
+<p><span>With stored (key) patterns yi and state (query) patterns</span>
+<span>ri, and using transformations with weight matrices WK,</span>
+<span>WQ, and WV, the update rule resembles transformer</span>
+<span>attention.</span></p>
+</li>
+<li>
+<p><span>The equivalence is shown in the formulation of transformer</span>
+<span>self-attention, where modifications in weight matrices and</span>
+<span>softmax function applications are highlighted.</span></p>
+</li>
+</ul>
+</li>
+<li>
+<span>Applications in Deep Network Architectures Hopfield networks extend</span>
+<span>beyond the attention mechanism, offering additional functionalities</span>
+<span>in deep learning architectures through specific layers.</span>
+</li>
+</ol>
+</section>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">BERT and fine tunning</title>
+<link href="https://mbottoni.github.io/2023/12/03/Bertimbau.html" rel="alternate" type="text/html" title="BERT and fine tunning" />
+<published>2023-12-03T00:00:00+00:00</published>
+<updated>2023-12-03T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2023/12/03/Bertimbau</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[Hey, I this is my first blog post ever =)]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2023/12/03/Bertimbau.html"><![CDATA[
+    <h1>
+    <a href="#BERT-and-fine-tunning"><span>BERT and fine tunning</span> <time datetime="2023-12-03">Dec 3, 2023</time></a>
+    </h1>
+<p><span>Hey, I this is my first blog post ever =)</span></p>
+<p><span>In this post i will show something that i did for a NLP course that I</span>&rsquo;<span>m currently enrolled, I focused</span>
+<span>on fine-tuning the BERTimabu model, a Portuguese version of the BERT model, for two</span>
+<span>specific tasks: vowel density regression and sentence classification. BERT, a revolutionary model in </span>
+<span>natural language processing, uses a bidirectional transformer architecture, significantly enhancing the</span>
+<span>context understanding of words in sentences. This architecture, based on the Transformer model and its</span>
+<span>encoder component, marks a departure from previous sequential learning methods by employing attention mechanisms exclusively.</span>
+<span>Here is a image of the architecture</span></p>
+
+<figure>
+
+<img alt="" src="/assets/arch.jpg">
+</figure>
+<p><span>My study delves into the application of BERT in two areas. First, I investigated the regression of vowel</span>
+<span>density in texts. This involved calculating the proportion of vowels (ignoring spaces, punctuation, and</span>
+<span>non-letter characters) and exploring how well the BERT model could predict this density. The task posed</span>
+<span>challenges, as traditional models often struggled with such context-specific predictions.</span></p>
+<p><span>I also explored sentence classification based on vowel density, dividing sentences into three classes</span>
+<span>according to their vowel density. This classification was examined in both balanced and unbalanced</span>
+<span>datasets, with the performance assessed across various metrics. The results highlighted the impact of</span>
+<span>class imbalance on model performance, especially in the unbalanced dataset.</span></p>
+<p><span>Throughout this work, I demonstrated the adaptability and effectiveness of the BERT model in handling</span>
+<span>these distinct linguistic tasks. The experiments underscored the importance of context in language models and</span>
+<span>the potential of BERT in enhancing the understanding and processing of Portuguese language tasks. The findings provide</span>
+<span>valuable insights into the model</span>&rsquo;<span>s capabilities and limitations, paving the way for further refinements and</span>
+<span>applications in natural language processing.</span></p>
+<p><span>For more details here is the colab where I implemented the models </span><a href="https://colab.research.google.com/drive/1k0w9xlsbXeHHdBy3GJu472fPC0Rz2vA9?usp=sharing"><span>Link to code</span></a></p>
+]]></content>
+</entry>
+
+</feed>
