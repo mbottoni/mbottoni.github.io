@@ -7,10 +7,10 @@
 Hopfield Networks, a type of Recurrent Neural Network (RNN), are renowned for their unique ability to
 store and retrieve patterns through associative memory. This means they can recall a complete memory from
 just a partial input. Inspired by the Ising model in physics, which explains magnetic behaviors in
-certain materials, Hopfield Networks use a system of interconnected neurons, each able to be in 
+certain materials, Hopfield Networks use a system of interconnected neurons, each able to be in
 one of two states, akin to magnetic dipoles. These neurons are fully connected, each influencing the other
-based on the strength of their connections. The network dynamically evolves to a stable state where the 
-system's 'energy' is minimized, representing a memory. The overall network state thus can represent binary information, like 
+based on the strength of their connections. The network dynamically evolves to a stable state where the
+system's 'energy' is minimized, representing a memory. The overall network state thus can represent binary information, like
 an image or a pattern, making Hopfield Networks particularly effective in pattern recognition
 and completion tasks.
 
@@ -27,15 +27,15 @@ the attention mechanism used in transformers*.
 Now let's dive little deep into the details. The basic architecture is on
 ![](/assets/modern_hopfield.png)
 
-The evolution of Hopfield Networks towards modern architectures involves a transition from binary to continuous neuron states, allowing for more complex and 
-nuanced representations. This advancement closely aligns with the mechanisms used in transformer models in deep learning. 
-The modern approach introduces a new energy function to accommodate these continuous states, fundamentally 
-changing the network dynamics. The update rule in these modern networks parallels the attention mechanism in 
-transformer and BERT models, marking a significant innovation. Modern Hopfield Networks not only enhance 
-the capacity for pattern storage and retrieval but also exhibit improved efficiency in these processes. The 
-research also presents several theorems to explain the behavior of these networks, including 
-their convergence, storage capacity, pattern retrieval efficiency, and error rates. These networks extend beyond 
-mimicking transformer attention, offering potential applications in a wide range of deep learning architectures 
+The evolution of Hopfield Networks towards modern architectures involves a transition from binary to continuous neuron states, allowing for more complex and
+nuanced representations. This advancement closely aligns with the mechanisms used in transformer models in deep learning.
+The modern approach introduces a new energy function to accommodate these continuous states, fundamentally
+changing the network dynamics. The update rule in these modern networks parallels the attention mechanism in
+transformer and BERT models, marking a significant innovation. Modern Hopfield Networks not only enhance
+the capacity for pattern storage and retrieval but also exhibit improved efficiency in these processes. The
+research also presents several theorems to explain the behavior of these networks, including
+their convergence, storage capacity, pattern retrieval efficiency, and error rates. These networks extend beyond
+mimicking transformer attention, offering potential applications in a wide range of deep learning architectures
 and providing new tools for designing advanced neural network systems.
 
 The paper introduces 5 theorems to characterize the introduced hopfield network.
@@ -100,4 +100,3 @@ Finally it is interesting to note the following.
 3.  Applications in Deep Network Architectures Hopfield networks extend
     beyond the attention mechanism, offering additional functionalities
     in deep learning architectures through specific layers.
-

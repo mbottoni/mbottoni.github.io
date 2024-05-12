@@ -1,0 +1,223 @@
+
+# Some tests with the Mandelbrot set and parallelization
+
+![](/assets/mandelbrot.png)
+
+Hello. It has been a while since I lasted programed
+with OpenMP and C. For refreshing my mind and keeping
+the concepts clear I was doing some tests with the
+Mandelbrot Set with OpenMP and with a single thread.
+Here is the code for both cases:
+
+## Baseline
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#define WIDTH 1920
+#define HEIGHT 1080
+#define REAL_MIN -2.0
+#define REAL_MAX 1.5
+#define IMAG_MIN -1.0
+#define IMAG_MAX 1.0
+#define MAX_ITERATIONS 8000
+
+typedef unsigned char uchar;
+
+typedef struct {
+    uchar r, g, b;
+} Color;
+
+// Function Prototypes
+Color computeMandelbrotPixel(double x0, double y0, Color* palette);
+Color* generatePalette(int size);
+double linearInterpolate(double start, double end, double t);
+
+int main() {
+    uchar (*image)[WIDTH][3] = malloc(sizeof(uchar[HEIGHT][WIDTH][3]));
+    Color* palette = generatePalette(MAX_ITERATIONS);
+
+    for (int py = 0; py < HEIGHT; py++) {
+        for (int px = 0; px < WIDTH; px++) {
+            double x0 = REAL_MIN + (px / (double) WIDTH) * (REAL_MAX - REAL_MIN);
+            double y0 = IMAG_MIN + (py / (double) HEIGHT) * (IMAG_MAX - IMAG_MIN);
+            Color color = computeMandelbrotPixel(x0, y0, palette);
+            image[py][px][0] = color.r;
+            image[py][px][1] = color.g;
+            image[py][px][2] = color.b;
+        }
+    }
+
+    // Output to PPM format
+    FILE* fout = fopen("output/ms.ppm", "w");
+    fprintf(fout, "P6\n%d %d\n255\n", WIDTH, HEIGHT);
+    for (int y = 0; y < HEIGHT; y++) {
+        fwrite(image[y], 1, sizeof(uchar[WIDTH][3]), fout);
+    }
+    fclose(fout);
+    free(image);
+    free(palette);
+
+    printf("Finished calculations and output.\n");
+    return 0;
+}
+
+Color computeMandelbrotPixel(double x0, double y0, Color* palette) {
+    double x = 0, y = 0, x2 = 0, y2 = 0;
+    int iteration = 0;
+    while (x2 + y2 <= 4 && iteration < MAX_ITERATIONS) {
+        y = 2 * x * y + y0;
+        x = x2 - y2 + x0;
+        x2 = x * x;
+        y2 = y * y;
+        iteration++;
+    }
+
+    if (iteration < MAX_ITERATIONS) {
+        double log_zn = log(x2 + y2) / 2.0;
+        double nu = log(log_zn / log(2)) / log(2);
+        iteration += 1 - nu;
+    }
+
+    int idx1 = iteration;
+    int idx2 = idx1 + 1;
+    Color c1 = palette[idx1 < MAX_ITERATIONS ? idx1 : MAX_ITERATIONS];
+    Color c2 = palette[idx2 < MAX_ITERATIONS ? idx2 : MAX_ITERATIONS];
+    double t = iteration - floor(iteration);
+
+    return (Color){
+        .r = (int)linearInterpolate(c1.r, c2.r, t),
+        .g = (int)linearInterpolate(c1.g, c2.g, t),
+        .b = (int)linearInterpolate(c1.b, c2.b, t)
+    };
+}
+
+Color* generatePalette(int size) {
+    Color* palette = malloc(sizeof(Color) * (size + 1));
+    for (int i = 0; i <= size; i++) {
+        double intensity = 3.0 * (i == 0 ? 3.0 : log(i) / log(size - 1));
+        if (intensity < 1) {
+            palette[i] = (Color){0, (uchar)(255 * intensity), 0};
+        } else if (intensity < 2) {
+            palette[i] = (Color){(uchar)(255 * (intensity - 1)), 255, 0};
+        } else {
+            palette[i] = (Color){(uchar)(255 * (intensity - 2)), 255, 255};
+        }
+    }
+    return palette;
+}
+
+double linearInterpolate(double start, double end, double t) {
+    return (1 - t) * start + t * end;
+}
+```
+
+## OpenMP
+
+```
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define WIDTH 1920
+#define HEIGHT 1080
+#define uchar unsigned char
+
+#define REAL_MAX 1.5
+#define REAL_MIN -2
+#define IMAG_MAX 1.0
+#define IMAG_MIN -IMAG_MAX
+
+#define MAX_ITERATIONS 8000
+
+typedef struct {
+    uchar r;
+    uchar g;
+    uchar b;
+} Color;
+
+// Function Prototypes
+double linearInterpolation(double start, double end, double t);
+Color* generateColorPalette(int size);
+Color calculateMandelbrotColor(int px, int py, Color* palette);
+
+int main() {
+    uchar (*image)[WIDTH][3] = malloc(sizeof(uchar[HEIGHT][WIDTH][3]));
+    Color* palette = generateColorPalette(MAX_ITERATIONS);
+
+    #pragma omp parallel for
+    for (int py = 0; py < HEIGHT; py++) {
+        for (int px = 0; px < WIDTH; px++) {
+            Color color = calculateMandelbrotColor(px, py, palette);
+            image[py][px][0] = color.r;
+            image[py][px][1] = color.g;
+            image[py][px][2] = color.b;
+        }
+    }
+
+    FILE* fout = fopen("output/mandelbrot.ppm", "w");
+    fprintf(fout, "P6\n%d %d\n255\n", WIDTH, HEIGHT);
+    for (int y = 0; y < HEIGHT; y++) {
+        fwrite(image[y], 1, sizeof(image[y]), fout);
+    }
+    fclose(fout);
+
+    free(palette);
+    free(image);
+    printf("Finished calculations and output.\n");
+    return 0;
+}
+
+Color calculateMandelbrotColor(int px, int py, Color* palette) {
+    double x0 = REAL_MIN + px * (REAL_MAX - REAL_MIN) / WIDTH;
+    double y0 = IMAG_MIN + py * (IMAG_MAX - IMAG_MIN) / HEIGHT;
+    double x = 0, y = 0, x2 = 0, y2 = 0;
+    int iter = 0;
+
+    while (x2 + y2 <= 4 && iter < MAX_ITERATIONS) {
+        y = 2 * x * y + y0;
+        x = x2 - y2 + x0;
+        x2 = x * x;
+        y2 = y * y;
+        iter++;
+    }
+
+    if (iter < MAX_ITERATIONS) {
+        double log_zn = log(x2 + y2) / 2;
+        double nu = log(log_zn / log(2)) / log(2);
+        iter += 1 - nu;
+    }
+
+    int idx1 = iter;
+    int idx2 = (idx1 + 1 > MAX_ITERATIONS) ? idx1 : idx1 + 1;
+    double t = iter - (int)iter;
+    Color c1 = palette[idx1];
+    Color c2 = palette[idx2];
+
+    return (Color){
+        .r = (uchar)linearInterpolation(c1.r, c2.r, t),
+        .g = (uchar)linearInterpolation(c1.g, c2.g, t),
+        .b = (uchar)linearInterpolation(c1.b, c2.b, t)
+    };
+}
+
+Color* generateColorPalette(int size) {
+    Color* palette = malloc(sizeof(Color) * (size + 1));
+    for (int i = 0; i <= size; i++) {
+        double ratio = i / (double)size;
+        double angle = 2 * M_PI * ratio;
+        palette[i] = (Color){
+            .r = (uchar)(sin(angle) * 127.5 + 127.5),
+            .g = (uchar)(sin(angle + 2 * M_PI / 3) * 127.5 + 127.5),
+            .b = (uchar)(sin(angle + 4 * M_PI / 3) * 127.5 + 127.5)
+        };
+    }
+    return palette;
+}
+
+double linearInterpolation(double start, double end, double t) {
+    return (1 - t) * start + t * end;
+}
+```

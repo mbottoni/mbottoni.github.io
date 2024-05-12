@@ -3,7 +3,7 @@
 ![](/assets/cat_coding.jpg)
 
 A while ago I posted about Hopfield Networks. I wanted to further explore this theme
-by trying to implement this type of idea from scratch in python. 
+by trying to implement this type of idea from scratch in python.
 
 Here is the link to my code: [GitHub](https://github.com/mbottoni/hopfield-scratch)
 

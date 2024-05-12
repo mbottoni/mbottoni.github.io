@@ -65,7 +65,7 @@ Equisized pairs;
 
 Remove code duplication by extracting commonalities into tabular data
 
-```
+``
 // GOOD
 const cases = ["foo", "bar", "baz"];
 for case in cases {
