@@ -28,8 +28,6 @@ text classification, named entity recognition, and sentiment analysis. Some exam
 
 ### 2. Decoder-Only Architectures
 
-#### Description
-
 Decoder-only architectures generate sequences by predicting the next token given the previous tokens. These architectures 
 are primarily used for tasks that involve text generation, such as language modeling, text 
 completion, and machine translation (in autoregressive mode). Some examples are the GPT family
@@ -45,8 +43,6 @@ completion, and machine translation (in autoregressive mode). Some examples are 
 - **Output Layer**: Each output token is generated sequentially, based on the context of previously generated tokens.
 
 ### 3. Encoder-Decoder Architectures
-
-#### Description
 
 Encoder-decoder architectures, also known as sequence-to-sequence (Seq2Seq) models, are designed to 
 transform an input sequence into an output sequence. These architectures are used for tasks that involve 
