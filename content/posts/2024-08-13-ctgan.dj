@@ -10,6 +10,7 @@ to poor performance when applied directly to tabular data. CTGAN addresses these
 realistic synthetic tabular data.
 
 ## CTGAN Architecture
+
 The CTGAN model is based on the GAN framework, comprising two main components: a generator and a discriminator.
 
 - Generator: The generator is responsible for producing synthetic data that resembles the real data. It takes as 
@@ -21,6 +22,7 @@ trained to maximize the likelihood of correctly identifying real data from the g
 both real and synthetic data as input and outputs a probability score indicating whether the input is real or fake.
 
 ## Key Innovations in CTGAN
+
 CTGAN introduces several key innovations that enable it to handle the complexities of tabular data:
 
 - Conditional Vector and Mode-specific Normalization: This allows the generator to conditionally generate data based on specific categories. This is 
