@@ -1,0 +1,96 @@
+
+# Some common divergences
+[colab]: https://colab.research.google.com/drive/11WsBPSsF00E0w6FsRsU-bT_gm-KjCvGr?usp=sharing
+
+Hey. usually on machine learning we have to consider distances between different probability distributions.
+This is in fact a hard problem and there is a misconception that the most common way to do this is using the
+kl divergence. I believe that this is not true. 
+
+In fact, the KL divergence is not a metric, because it is not symmetric. It have nice properties that makes it useful
+but there are other metrics that are more useful in specific scenarios. Sadly these metrics are not taught on introductory
+courses in machine learning but there is a research trend on using these metrics on common architectures where you usually use 
+the KL divergence on the loss, suck as the VAE's and DDPMs. 
+
+For example, here is a pseudocode for some common divergences
+
+```python
+def kl_divergence(p, q):
+    """
+    Compute the Kullback-Leibler divergence D_KL(P || Q)
+    """
+    p = np.asarray(p, dtype=np.float64)
+    q = np.asarray(q, dtype=np.float64)
+    epsilon = 1e-10
+    p = np.clip(p, epsilon, 1)
+    q = np.clip(q, epsilon, 1)
+    return np.sum(p * np.log(p / q))
+
+def js_divergence(p, q):
+    """
+    Compute the Jensen-Shannon divergence between distributions P and Q
+    """
+    m = 0.5 * (p + q)
+    return 0.5 * kl_divergence(p, m) + 0.5 * kl_divergence(q, m)
+
+def hellinger_distance(p, q):
+    """
+    Compute the Hellinger distance between distributions P and Q
+    """
+    return np.sqrt(np.sum((np.sqrt(p) - np.sqrt(q))**2)) / np.sqrt(2)
+
+def total_variation_distance(p, q):
+    """
+    Compute the Total Variation distance between distributions P and Q
+    """
+    return 0.5 * np.sum(np.abs(p - q))
+
+def bhattacharyya_distance(p, q):
+    """
+    Compute the Bhattacharyya distance between distributions P and Q
+    """
+    bc = np.sum(np.sqrt(p * q))
+    return -np.log(bc)
+
+def cosine_distance(p, q):
+    """
+    Compute the Cosine distance between distributions P and Q
+    """
+    return cosine(p, q)
+
+def euclidean_distance(p, q):
+    """
+    Compute the Euclidean distance between distributions P and Q
+    """
+    return euclidean(p, q)
+
+def chi_squared_distance(p, q):
+    """
+    Compute the Chi-Squared distance between distributions P and Q
+    """
+    epsilon = 1e-10
+    p = np.asarray(p, dtype=np.float64) + epsilon
+    q = np.asarray(q, dtype=np.float64) + epsilon
+    return 0.5 * np.sum(((p - q)**2) / (p + q))
+
+def kolmogorov_smirnov_statistic(p, q):
+    """
+    Compute the Kolmogorov-Smirnov statistic between distributions P and Q
+    """
+    cdf_p = np.cumsum(p)
+    cdf_q = np.cumsum(q)
+    return np.max(np.abs(cdf_p - cdf_q))
+
+def mahalanobis_distance(p, q, cov=None):
+    """
+    Compute the Mahalanobis distance between distributions P and Q
+    """
+    diff = p - q
+    if cov is None:
+        cov = np.cov(np.stack([p, q], axis=0).T)
+    cov_inv = inv(cov)
+    return np.sqrt(np.dot(np.dot(diff.T, cov_inv), diff))
+```
+
+Anyway, for more details here is the colab where I implemented some of these metrics and more [Link to code][colab]
+
+
