@@ -1,0 +1,16 @@
+
+# Kolmogorov-Arnold Networks 
+
+![](/assets/kan.png)
+
+[colab]: https://colab.research.google.com/drive/1N9gmXIGNU-lRnyaCCMwCNab4AQu5NnUF?usp=sharing
+
+I have been playing with some implementations of Kolmogorov-Arnold Networks.
+Here is an easy implementation for anyone who wants to try it out.
+
+In general, the promising ideas showed on the original paper are not 
+so easy to replicate. I personally believe that KAN's are a promising
+research direction, but maybe the hype on the original paper created 
+an unrealistic expectation on the capabilities of KAN's for now.
+
+Here is the [colab] with the implementations.
