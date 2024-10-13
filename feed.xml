@@ -1,0 +1,956 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+<link href="https://mbottoni.github.io/feed.xml" rel="self" type="application/atom+xml"/>
+<link href="https://mbottoni.github.io" rel="alternate" type="text/html"/>
+<updated>2024-10-13T18:37:49.739Z</updated>
+<id>https://mbottoni.github.io/feed.xml</id>
+<title type="html">mbottoni</title>
+<subtitle>Yet another programming blog by Maruan Bakri Ottoni aka mbottoni.</subtitle>
+<author><name>Alex Kladov</name></author>
+
+<entry>
+<title type="text">A comprehensive list of different types of VAEs</title>
+<link href="https://mbottoni.github.io/2024/10/13/vaes.html" rel="alternate" type="text/html" title="A comprehensive list of different types of VAEs" />
+<published>2024-10-13T00:00:00+00:00</published>
+<updated>2024-10-13T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2024/10/13/vaes</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[VAE (Vanilla VAE): The original VAE architecture consists of an encoder that 
+maps input data to a latent space, and a decoder that reconstructs the 
+input from the latent representation. It uses a variational inference 
+approach to learn the latent space distribution.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2024/10/13/vaes.html"><![CDATA[
+    <h1>
+    <a href="#A-comprehensive-list-of-different-types-of-VAEs"><span>A comprehensive list of different types of VAEs</span> <time datetime="2024-10-13">Oct 13, 2024</time></a>
+    </h1>
+<ol>
+<li>
+<p><strong><strong><span>VAE</span></strong></strong><span> (Vanilla VAE): The original VAE architecture consists of an encoder that </span>
+<span>maps input data to a latent space, and a decoder that reconstructs the </span>
+<span>input from the latent representation. It uses a variational inference </span>
+<span>approach to learn the latent space distribution.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Conditional VAE</span></strong></strong><span>: This VAE variant incorporates additional conditioning </span>
+<span>information into both the encoder and decoder networks. The conditioning </span>
+<span>allows the model to generate samples conditioned on specific attributes or classes.</span></p>
+</li>
+<li>
+<p><strong><strong><span>WAE - MMD</span></strong></strong><span> (with RBF Kernel): Wasserstein Autoencoders use Maximum Mean Discrepancy (MMD) with </span>
+<span>a Radial Basis Function (RBF) kernel to minimize the distance between the encoded </span>
+<span>distribution and a prior distribution, aiming for better-quality reconstructions.</span></p>
+</li>
+<li>
+<p><strong><strong><span>WAE - MMD</span></strong></strong><span> (with IMQ Kernel): Similar to the RBF kernel version, but uses an Inverse MultiQuadric (IMQ) kernel </span>
+<span>for the MMD calculation, which can provide different regularization properties.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Beta-VAE</span></strong></strong><span>: This architecture introduces a hyperparameter β to control the trade-off between </span>
+<span>reconstruction quality and the disentanglement of latent representations, allowing for </span>
+<span>more interpretable latent spaces.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Disentangled Beta-VAE</span></strong></strong><span>: An improved version of Beta-VAE that aims to achieve better disentanglement </span>
+<span>of latent factors by modifying the training objective and architecture slightly.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Beta-TC-VAE</span></strong></strong><span>: This variant decomposes the KL divergence term in the VAE objective into three </span>
+<span>components, with a β parameter applied to the total correlation term to </span>
+<span>encourage disentanglement.</span></p>
+</li>
+<li>
+<p><strong><strong><span>IWAE</span></strong></strong><span> (Importance Weighted Autoencoder): IWAE uses multiple samples </span>
+<span>from the encoder to compute </span>
+<span>a tighter lower bound on the marginal likelihood, potentially leading </span>
+<span>to better generative models.</span></p>
+</li>
+<li>
+<p><strong><strong><span>MIWAE</span></strong></strong><span> (Multiply Importance Weighted Autoencoder): An extension of IWAE that uses multiple </span>
+<span>importance-weighted samples during both training and inference to improve performance.</span></p>
+</li>
+<li>
+<p><strong><strong><span>DFCVAE</span></strong></strong><span> (Deep Feature Consistent VAE): This VAE incorporates perceptual losses based on features from </span>
+<span>pre-trained neural networks to improve the quality and consistency of generated images.</span></p>
+</li>
+<li>
+<p><strong><strong><span>MSSIM VAE</span></strong></strong><span> (Multi-Scale Structural Similarity VAE): This architecture uses a multi-scale </span>
+<span>structural similarity index as part of its loss function </span>
+<span>to improve the perceptual quality of reconstructed images.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Categorical VAE</span></strong></strong><span>: A VAE variant designed to work with </span>
+<span>categorical latent variables, often using the Gumbel-Softmax </span>
+<span>trick for differentiable sampling from discrete distributions.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Joint VAE</span></strong></strong><span>: This model combines continuous and discrete latent variables in </span>
+<span>a single framework, allowing for representation of both continuous </span>
+<span>and categorical factors.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Info VAE</span></strong></strong><span>: InfoVAE modifies the objective function to maximize the mutual information </span>
+<span>between inputs and latent variables, aiming for more informative </span>
+<span>latent representations.</span></p>
+</li>
+<li>
+<p><strong><strong><span>LogCosh VAE</span></strong></strong><span>: This VAE uses the log-cosh loss function </span>
+<span>instead of mean squared error for reconstruction, potentially </span>
+<span>providing robustness to outliers.</span></p>
+</li>
+<li>
+<p><strong><strong><span>SWAE</span></strong></strong><span> (Sliced-Wasserstein Autoencoder): SWAE uses the sliced Wasserstein distance to </span>
+<span>measure the discrepancy between the encoded distribution and the prior, offering </span>
+<span>an alternative to KL divergence.</span></p>
+</li>
+<li>
+<p><strong><strong><span>VQ-VAE</span></strong></strong><span> (Vector Quantized VAE): This architecture uses vector quantization </span>
+<span>in the latent space, mapping continuous encodings to discrete codes from a </span>
+<span>codebook, useful for generating high-quality images and audio.</span></p>
+</li>
+<li>
+<p><strong><strong><span>DIP VAE</span></strong></strong><span> (Disentangled Inferred Prior VAE): DIP-VAE modifies the VAE objective to encourage </span>
+<span>the aggregate posterior to match the prior, aiming for better disentanglement </span>
+<span>of latent factors.</span></p>
+</li>
+</ol>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Quantization of LLMs</title>
+<link href="https://mbottoni.github.io/2024/09/29/llm-quant.html" rel="alternate" type="text/html" title="Quantization of LLMs" />
+<published>2024-09-29T00:00:00+00:00</published>
+<updated>2024-09-29T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2024/09/29/llm-quant</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[The escalating complexity and 
+scale of large language models (LLMs) have introduced substantial challenges concerning computational 
+demands and resource allocation. These models, often comprising hundreds of billions of parameters, 
+necessitate extensive memory and processing capabilities, making their deployment and real-time inference 
+both costly and impractical for widespread use.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2024/09/29/llm-quant.html"><![CDATA[
+    <h1>
+    <a href="#Quantization-of-LLMs"><span>Quantization of LLMs</span> <time datetime="2024-09-29">Sep 29, 2024</time></a>
+    </h1>
+<p><span>The escalating complexity and </span>
+<span>scale of large language models (LLMs) have introduced substantial challenges concerning computational </span>
+<span>demands and resource allocation. These models, often comprising hundreds of billions of parameters, </span>
+<span>necessitate extensive memory and processing capabilities, making their deployment and real-time inference </span>
+<span>both costly and impractical for widespread use.</span></p>
+<p><span>Quantization has a solution for this. It is a technique to alleviate these challenges by reducing the numerical precision </span>
+<span>of model parameters and activations. Traditional LLMs utilize 32-bit floating-point representations (FP32) for </span>
+<span>weights and activations, which, while precise, are resource-intensive. Quantization reduces </span>
+<span>this precision to 16-bit (FP16), 8-bit (INT8), or even lower bit-widths, effectively compressing the </span>
+<span>model size and decreasing computational overhead.</span></p>
+<p><span>However, applying quantization to LLMs is non-trivial due to the inherent sensitivity of these models to </span>
+<span>precision loss. Direct quantization can lead to significant degradation in model performance, characterized by a decline </span>
+<span>in accuracy and the introduction of errors in language understanding and generation tasks.</span></p>
+<p><span>To address these issues, several advanced quantization methodologies have been developed:</span></p>
+<p><strong><strong><span>Post-Training Quantization (PTQ):</span></strong></strong><span> This technique involves quantizing a fully trained model without additional retraining. PTQ </span>
+<span>uses calibration datasets to determine optimal scaling factors and zero-points for quantization, aiming to minimize the </span>
+<span>impact on model accuracy. Methods like symmetric and asymmetric quantization, per-channel scaling, and weight </span>
+<span>clustering are employed to enhance performance.</span></p>
+<p><strong><strong><span>Quantization-Aware Training (QAT):</span></strong></strong><span> QAT integrates quantization operations into the training process. By simulating low-precision </span>
+<span>arithmetic during forward and backward passes, the model learns to compensate for quantization errors. This results in weights </span>
+<span>and activations that are more robust to precision loss, thereby preserving accuracy post-quantization.</span></p>
+<p><strong><strong><span>Mixed-Precision Quantization:</span></strong></strong><span> Recognizing that different layers and operations within an LLM have varying sensitivities to </span>
+<span>quantization, mixed-precision strategies assign different bit-widths to different parts of the model. For instance, attention layers </span>
+<span>critical for capturing contextual relationships might use higher precision, while less sensitive layers use lower precision.</span></p>
+<p><strong><strong><span>Adaptive and Dynamic Quantization:</span></strong></strong><span> These approaches adjust quantization parameters on-the-fly based on the input data or </span>
+<span>during runtime, optimizing the trade-off between performance and efficiency dynamically.</span></p>
+<p><span>The implementation of these quantization techniques has yielded quantized LLMs that maintain performance metrics comparable to their full</span>
+<span>-precision counterparts. For example, models like BERT and GPT variants have been successfully quantized to INT8 with </span>
+<span>minimal loss in accuracy, enabling faster inference and reduced memory usage.</span></p>
+<p><span>The benefits of quantization are multifold:</span></p>
+<ul>
+<li>
+<span>Reduced Memory Footprint: Lower-precision representations consume less memory, allowing for larger models to fit into limited hardware resources.</span>
+</li>
+<li>
+<span>Increased Throughput: Integer operations are generally faster than floating-point operations on modern processors, leading to faster inference times.</span>
+</li>
+<li>
+<span>Energy Efficiency: Reduced computational requirements translate to lower energy consumption, which is crucial for battery-powered devices.</span>
+</li>
+</ul>
+<p><span>Some preview code of how to apply quantization to a LLM can be found below:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">quantization_aware_training</span>(<span class="hl-params">model, train_loader, epochs</span>):</span>
+<span class="line">    optimizer = optim.Adam(model.parameters(), lr=<span class="hl-number">0.001</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">for</span> epoch <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(epochs):</span>
+<span class="line">        <span class="hl-keyword">for</span> data, target <span class="hl-keyword">in</span> train_loader:</span>
+<span class="line">            optimizer.zero_grad()</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># Forward pass with fake quantization</span></span>
+<span class="line">            output = model.forward(data)</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># Simulate quantization of weights and activations</span></span>
+<span class="line">            <span class="hl-keyword">for</span> layer <span class="hl-keyword">in</span> model.layers:</span>
+<span class="line">                <span class="hl-comment"># Fake quantize weights</span></span>
+<span class="line">                weight = layer.weight</span>
+<span class="line">                weight_scale = (weight.<span class="hl-built_in">max</span>() - weight.<span class="hl-built_in">min</span>()) / (<span class="hl-number">2</span>**<span class="hl-number">8</span> - <span class="hl-number">1</span>)</span>
+<span class="line">                quantized_weight = torch.<span class="hl-built_in">round</span>(weight / weight_scale) * weight_scale</span>
+<span class="line">                layer.weight = quantized_weight</span>
+<span class="line">                </span>
+<span class="line">                <span class="hl-comment"># Fake quantize activations</span></span>
+<span class="line">                activation = layer.activation</span>
+<span class="line">                activation_scale = (activation.<span class="hl-built_in">max</span>() - activation.<span class="hl-built_in">min</span>()) / (<span class="hl-number">2</span>**<span class="hl-number">8</span> - <span class="hl-number">1</span>)</span>
+<span class="line">                quantized_activation = torch.<span class="hl-built_in">round</span>(activation / activation_scale) * activation_scale</span>
+<span class="line">                layer.activation = quantized_activation</span>
+<span class="line">            </span>
+<span class="line">            loss = loss_function(output, target)</span>
+<span class="line">            loss.backward()</span>
+<span class="line">            optimizer.step()</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> model</span>
+<span class="line">    </span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">post_training_quantize</span>(<span class="hl-params">model, calibration_data</span>):</span>
+<span class="line">    quantized_model = copy.deepcopy(model)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Step 1: Collect statistics on activations</span></span>
+<span class="line">    activation_min = {}</span>
+<span class="line">    activation_max = {}</span>
+<span class="line">    <span class="hl-keyword">for</span> data <span class="hl-keyword">in</span> calibration_data:</span>
+<span class="line">        activations = quantized_model.forward(data)</span>
+<span class="line">        <span class="hl-keyword">for</span> layer_name, activation <span class="hl-keyword">in</span> activations.items():</span>
+<span class="line">            <span class="hl-keyword">if</span> layer_name <span class="hl-keyword">not</span> <span class="hl-keyword">in</span> activation_min:</span>
+<span class="line">                activation_min[layer_name] = activation.<span class="hl-built_in">min</span>()</span>
+<span class="line">                activation_max[layer_name] = activation.<span class="hl-built_in">max</span>()</span>
+<span class="line">            <span class="hl-keyword">else</span>:</span>
+<span class="line">                activation_min[layer_name] = <span class="hl-built_in">min</span>(activation_min[layer_name], activation.<span class="hl-built_in">min</span>())</span>
+<span class="line">                activation_max[layer_name] = <span class="hl-built_in">max</span>(activation_max[layer_name], activation.<span class="hl-built_in">max</span>())</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Step 2: Quantize weights and activations</span></span>
+<span class="line">    <span class="hl-keyword">for</span> layer <span class="hl-keyword">in</span> quantized_model.layers:</span>
+<span class="line">        <span class="hl-comment"># Quantize weights</span></span>
+<span class="line">        weight = layer.weight</span>
+<span class="line">        weight_scale = (weight.<span class="hl-built_in">max</span>() - weight.<span class="hl-built_in">min</span>()) / (<span class="hl-number">2</span>**<span class="hl-number">8</span> - <span class="hl-number">1</span>)  <span class="hl-comment"># For 8-bit quantization</span></span>
+<span class="line">        quantized_weight = ((weight / weight_scale).<span class="hl-built_in">round</span>()).astype(np.int8)</span>
+<span class="line">        layer.weight = quantized_weight</span>
+<span class="line">        layer.weight_scale = weight_scale</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Quantize activations using collected statistics</span></span>
+<span class="line">        act_min = activation_min[layer.name]</span>
+<span class="line">        act_max = activation_max[layer.name]</span>
+<span class="line">        activation_scale = (act_max - act_min) / (<span class="hl-number">2</span>**<span class="hl-number">8</span> - <span class="hl-number">1</span>)</span>
+<span class="line">        layer.activation_scale = activation_scale</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> quantized_model</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">mixed_precision_quantize</span>(<span class="hl-params">model</span>):</span>
+<span class="line">    quantized_model = copy.deepcopy(model)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">for</span> layer <span class="hl-keyword">in</span> quantized_model.layers:</span>
+<span class="line">        <span class="hl-keyword">if</span> layer.<span class="hl-built_in">type</span> == <span class="hl-string">&#x27;Attention&#x27;</span>:</span>
+<span class="line">            <span class="hl-comment"># Use higher precision for sensitive layers</span></span>
+<span class="line">            bit_width = <span class="hl-number">16</span>  <span class="hl-comment"># e.g., 16-bit quantization</span></span>
+<span class="line">        <span class="hl-keyword">else</span>:</span>
+<span class="line">            <span class="hl-comment"># Use lower precision for less sensitive layers</span></span>
+<span class="line">            bit_width = <span class="hl-number">8</span>   <span class="hl-comment"># e.g., 8-bit quantization</span></span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Quantize weights</span></span>
+<span class="line">        weight = layer.weight</span>
+<span class="line">        weight_scale = (weight.<span class="hl-built_in">max</span>() - weight.<span class="hl-built_in">min</span>()) / (<span class="hl-number">2</span>**bit_width - <span class="hl-number">1</span>)</span>
+<span class="line">        quantized_weight = ((weight / weight_scale).<span class="hl-built_in">round</span>()).astype(get_int_type(bit_width))</span>
+<span class="line">        layer.weight = quantized_weight</span>
+<span class="line">        layer.weight_scale = weight_scale</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Similarly quantize activations if needed</span></span>
+<span class="line">        <span class="hl-comment"># ...</span></span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> quantized_model</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">get_int_type</span>(<span class="hl-params">bit_width</span>):</span>
+<span class="line">    <span class="hl-keyword">if</span> bit_width &lt;= <span class="hl-number">8</span>:</span>
+<span class="line">        <span class="hl-keyword">return</span> np.int8</span>
+<span class="line">    <span class="hl-keyword">elif</span> bit_width &lt;= <span class="hl-number">16</span>:</span>
+<span class="line">        <span class="hl-keyword">return</span> np.int16</span>
+<span class="line">    <span class="hl-keyword">else</span>:</span>
+<span class="line">        <span class="hl-keyword">return</span> np.int32</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">adaptive_quantization_inference</span>(<span class="hl-params">model, input_data</span>):</span>
+<span class="line">    <span class="hl-comment"># Adjust quantization scales based on input data</span></span>
+<span class="line">    activation_min = input_data.<span class="hl-built_in">min</span>()</span>
+<span class="line">    activation_max = input_data.<span class="hl-built_in">max</span>()</span>
+<span class="line">    activation_scale = (activation_max - activation_min) / (<span class="hl-number">2</span>**<span class="hl-number">8</span> - <span class="hl-number">1</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Quantize input data</span></span>
+<span class="line">    quantized_input = ((input_data / activation_scale).<span class="hl-built_in">round</span>()).astype(np.int8)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Forward pass with dynamic quantization</span></span>
+<span class="line">    output = quantized_input</span>
+<span class="line">    <span class="hl-keyword">for</span> layer <span class="hl-keyword">in</span> model.layers:</span>
+<span class="line">        <span class="hl-comment"># Dynamic adjustment of scales if needed</span></span>
+<span class="line">        <span class="hl-comment"># Quantize weights and activations on-the-fly</span></span>
+<span class="line">        weight = layer.weight</span>
+<span class="line">        weight_scale = layer.weight_scale  <span class="hl-comment"># May adjust dynamically</span></span>
+<span class="line">        quantized_weight = ((weight / weight_scale).<span class="hl-built_in">round</span>()).astype(np.int8)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Compute output</span></span>
+<span class="line">        output = quantized_convolution(output, quantized_weight)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Dequantize if necessary for further processing</span></span>
+<span class="line">        output = output * activation_scale  <span class="hl-comment"># Convert back to higher precision if needed</span></span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Update activation scale for next layer based on current output</span></span>
+<span class="line">        activation_scale = (output.<span class="hl-built_in">max</span>() - output.<span class="hl-built_in">min</span>()) / (<span class="hl-number">2</span>**<span class="hl-number">8</span> - <span class="hl-number">1</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> output</span></code></pre>
+
+</figure>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Kolmogorov-Arnold Networks</title>
+<link href="https://mbottoni.github.io/2024/09/21/kan.html" rel="alternate" type="text/html" title="Kolmogorov-Arnold Networks" />
+<published>2024-09-21T00:00:00+00:00</published>
+<updated>2024-09-21T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2024/09/21/kan</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[I have been playing with some implementations of Kolmogorov-Arnold Networks.
+Here is an easy implementation for anyone who wants to try it out.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2024/09/21/kan.html"><![CDATA[
+    <h1>
+    <a href="#Kolmogorov-Arnold-Networks"><span>Kolmogorov-Arnold Networks</span> <time datetime="2024-09-21">Sep 21, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/kan.png">
+</figure>
+<p><span>I have been playing with some implementations of Kolmogorov-Arnold Networks.</span>
+<span>Here is an easy implementation for anyone who wants to try it out.</span></p>
+<p><span>In general, the promising ideas showed on the original paper are not </span>
+<span>so easy to replicate. I personally believe that KAN</span>&rsquo;<span>s are a promising</span>
+<span>research direction, but maybe the hype on the original paper created </span>
+<span>an unrealistic expectation on the capabilities of KAN</span>&rsquo;<span>s for now.</span></p>
+<p><span>For more details here is the colab where I implemented the models </span><a href="https://colab.research.google.com/drive/1N9gmXIGNU-lRnyaCCMwCNab4AQu5NnUF?usp=sharing"><span>Link to code</span></a></p>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Some common divergences</title>
+<link href="https://mbottoni.github.io/2024/09/17/divergences.html" rel="alternate" type="text/html" title="Some common divergences" />
+<published>2024-09-17T00:00:00+00:00</published>
+<updated>2024-09-17T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2024/09/17/divergences</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[Hey. usually on machine learning we have to consider distances between different probability distributions.
+This is in fact a hard problem and there is a misconception that the most common way to do this is using the
+kl divergence. I believe that this is not true.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2024/09/17/divergences.html"><![CDATA[
+    <h1>
+    <a href="#Some-common-divergences"><span>Some common divergences</span> <time datetime="2024-09-17">Sep 17, 2024</time></a>
+    </h1>
+<p><span>Hey. usually on machine learning we have to consider distances between different probability distributions.</span>
+<span>This is in fact a hard problem and there is a misconception that the most common way to do this is using the</span>
+<span>kl divergence. I believe that this is not true.</span></p>
+<p><span>In fact, the KL divergence is not a metric, because it is not symmetric. It have nice properties that makes it useful</span>
+<span>but there are other metrics that are more useful in specific scenarios. Sadly these metrics are not taught on introductory</span>
+<span>courses in machine learning but there is a research trend on using these metrics on common architectures where you usually use </span>
+<span>the KL divergence on the loss, suck as the VAE</span>&rsquo;<span>s and DDPMs.</span></p>
+<p><span>For example, here is a pseudocode for some common divergences</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">kl_divergence</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Kullback-Leibler divergence D_KL(P || Q)</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    p = np.asarray(p, dtype=np.float64)</span>
+<span class="line">    q = np.asarray(q, dtype=np.float64)</span>
+<span class="line">    epsilon = <span class="hl-number">1e-10</span></span>
+<span class="line">    p = np.clip(p, epsilon, <span class="hl-number">1</span>)</span>
+<span class="line">    q = np.clip(q, epsilon, <span class="hl-number">1</span>)</span>
+<span class="line">    <span class="hl-keyword">return</span> np.<span class="hl-built_in">sum</span>(p * np.log(p / q))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">js_divergence</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Jensen-Shannon divergence between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    m = <span class="hl-number">0.5</span> * (p + q)</span>
+<span class="line">    <span class="hl-keyword">return</span> <span class="hl-number">0.5</span> * kl_divergence(p, m) + <span class="hl-number">0.5</span> * kl_divergence(q, m)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">hellinger_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Hellinger distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">return</span> np.sqrt(np.<span class="hl-built_in">sum</span>((np.sqrt(p) - np.sqrt(q))**<span class="hl-number">2</span>)) / np.sqrt(<span class="hl-number">2</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">total_variation_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Total Variation distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">return</span> <span class="hl-number">0.5</span> * np.<span class="hl-built_in">sum</span>(np.<span class="hl-built_in">abs</span>(p - q))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">bhattacharyya_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Bhattacharyya distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    bc = np.<span class="hl-built_in">sum</span>(np.sqrt(p * q))</span>
+<span class="line">    <span class="hl-keyword">return</span> -np.log(bc)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">cosine_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Cosine distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">return</span> cosine(p, q)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">euclidean_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Euclidean distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">return</span> euclidean(p, q)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">chi_squared_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Chi-Squared distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    epsilon = <span class="hl-number">1e-10</span></span>
+<span class="line">    p = np.asarray(p, dtype=np.float64) + epsilon</span>
+<span class="line">    q = np.asarray(q, dtype=np.float64) + epsilon</span>
+<span class="line">    <span class="hl-keyword">return</span> <span class="hl-number">0.5</span> * np.<span class="hl-built_in">sum</span>(((p - q)**<span class="hl-number">2</span>) / (p + q))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">kolmogorov_smirnov_statistic</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Kolmogorov-Smirnov statistic between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    cdf_p = np.cumsum(p)</span>
+<span class="line">    cdf_q = np.cumsum(q)</span>
+<span class="line">    <span class="hl-keyword">return</span> np.<span class="hl-built_in">max</span>(np.<span class="hl-built_in">abs</span>(cdf_p - cdf_q))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">mahalanobis_distance</span>(<span class="hl-params">p, q, cov=<span class="hl-literal">None</span></span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Mahalanobis distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    diff = p - q</span>
+<span class="line">    <span class="hl-keyword">if</span> cov <span class="hl-keyword">is</span> <span class="hl-literal">None</span>:</span>
+<span class="line">        cov = np.cov(np.stack([p, q], axis=<span class="hl-number">0</span>).T)</span>
+<span class="line">    cov_inv = inv(cov)</span>
+<span class="line">    <span class="hl-keyword">return</span> np.sqrt(np.dot(np.dot(diff.T, cov_inv), diff))</span></code></pre>
+
+</figure>
+<p><span>Anyway, for more details here is the colab where I implemented some of these metrics and more </span><a href="https://colab.research.google.com/drive/11WsBPSsF00E0w6FsRsU-bT_gm-KjCvGr?usp=sharing"><span>Link to code</span></a></p>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">DDIM vs DDPM</title>
+<link href="https://mbottoni.github.io/2024/09/09/ddim_ddpm.html" rel="alternate" type="text/html" title="DDIM vs DDPM" />
+<published>2024-09-09T00:00:00+00:00</published>
+<updated>2024-09-09T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2024/09/09/ddim_ddpm</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[Diffusion models have emerged as a powerful class of deep generative models, particularly excelling in image synthesis tasks. This article 
+delves into a comprehensive comparison of two significant variants: Denoising Diffusion Probabilistic Models (DDPM) and Denoising 
+Diffusion Implicit Models (DDIM).]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2024/09/09/ddim_ddpm.html"><![CDATA[
+    <h1>
+    <a href="#DDIM-vs-DDPM"><span>DDIM vs DDPM</span> <time datetime="2024-09-09">Sep 9, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/ddim.png">
+</figure>
+<p><span>Diffusion models have emerged as a powerful class of deep generative models, particularly excelling in image synthesis tasks. This article </span>
+<span>delves into a comprehensive comparison of two significant variants: Denoising Diffusion Probabilistic Models (DDPM) and Denoising </span>
+<span>Diffusion Implicit Models (DDIM).</span></p>
+<section id="DDPM">
+
+    <h2>
+    <a href="#DDPM"><span>DDPM</span> </a>
+    </h2>
+<p><span>DDPM, introduced by Ho et al. in their 2020 paper </span>&ldquo;<span>Denoising Diffusion Probabilistic Models,</span>&rdquo;<span> is grounded in the principles of </span>
+<span>non-equilibrium thermodynamics. The model defines a Markov chain of diffusion steps that gradually add Gaussian noise </span>
+<span>to data, and then learns to reverse this process. Here</span>&rsquo;<span>s a simplified pseudocode representation of the DDPM sampling process:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">sample_ddpm</span>(<span class="hl-params">num_steps</span>):</span>
+<span class="line">    x = random_noise()</span>
+<span class="line">    <span class="hl-keyword">for</span> t <span class="hl-keyword">in</span> <span class="hl-built_in">reversed</span>(<span class="hl-built_in">range</span>(num_steps)):</span>
+<span class="line">        z = random_noise() <span class="hl-keyword">if</span> t &gt; <span class="hl-number">1</span> <span class="hl-keyword">else</span> <span class="hl-number">0</span></span>
+<span class="line">        noise_pred = denoise_fn(x, t)</span>
+<span class="line">        x = (<span class="hl-number">1</span> / sqrt(<span class="hl-number">1</span> - beta[t])) * (x - (beta[t] / sqrt(<span class="hl-number">1</span> - alpha_bar[t])) * noise_pred) + sqrt(beta[t]) * z</span>
+<span class="line">    <span class="hl-keyword">return</span> x</span></code></pre>
+
+</figure>
+<p><span>In this pseudocode, </span><code>beta</code><span> represents the noise schedule, </span><code>alpha_bar</code><span> is the cumulative product of (1 - beta), and </span><code>denoise_fn</code><span> is the learned denoising function.</span></p>
+<p><span>DDPM is characterized by its Markovian nature, where each step depends only on the immediately preceding step. It typically employs </span>
+<span>a fixed number of steps, usually around 1000, for the denoising process. The generation process in DDPM involves stochastic </span>
+<span>sampling, drawing from probability distributions at each step. This approach generally yields high-quality samples but at the </span>
+<span>cost of computational intensity due to the large number of steps involved.</span></p>
+</section>
+<section id="DDIM">
+
+    <h2>
+    <a href="#DDIM"><span>DDIM</span> </a>
+    </h2>
+<p><span>DDIM, proposed by Song et al. in their 2020 paper </span>&ldquo;<span>Denoising Diffusion Implicit Models,</span>&rdquo;<span> builds upon DDPM while introducing significant </span>
+<span>modifications to the generative process. DDIM introduces a non-Markovian inference process. Here</span>&rsquo;<span>s a simplified </span>
+<span>pseudocode representation of the DDIM sampling process:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">sample_ddim</span>(<span class="hl-params">num_steps, eta</span>):</span>
+<span class="line">    x = random_noise()</span>
+<span class="line">    <span class="hl-keyword">for</span> t <span class="hl-keyword">in</span> <span class="hl-built_in">reversed</span>(<span class="hl-built_in">range</span>(num_steps)):</span>
+<span class="line">        noise_pred = denoise_fn(x, t)</span>
+<span class="line">        alpha = alpha_bar[t]</span>
+<span class="line">        alpha_next = alpha_bar[t-<span class="hl-number">1</span>] <span class="hl-keyword">if</span> t &gt; <span class="hl-number">0</span> <span class="hl-keyword">else</span> <span class="hl-number">1.0</span></span>
+<span class="line">        sigma = eta * sqrt((<span class="hl-number">1</span> - alpha / alpha_next) * (<span class="hl-number">1</span> - alpha_next) / (<span class="hl-number">1</span> - alpha))</span>
+<span class="line">        z = random_noise() <span class="hl-keyword">if</span> t &gt; <span class="hl-number">1</span> <span class="hl-keyword">else</span> <span class="hl-number">0</span></span>
+<span class="line">        x = sqrt(alpha_next) * (x - sqrt(<span class="hl-number">1</span> - alpha) * noise_pred) / sqrt(alpha)</span>
+<span class="line">        x = x + sqrt(<span class="hl-number">1</span> - alpha_next - sigma**<span class="hl-number">2</span>) * noise_pred + sigma * z</span>
+<span class="line">    <span class="hl-keyword">return</span> x</span></code></pre>
+
+</figure>
+<p><span>In this pseudocode, </span><code>eta</code><span> is a hyperparameter controlling the stochasticity of the sampling</span>
+<span>process. When </span><code>eta = 0</code><span>, the process becomes deterministic.</span></p>
+<p><span>The key advancements in DDIM include its non-Markovian process, where each step can depend on multiple previous</span>
+<span>steps, and the option for deterministic sampling by setting </span><code>eta</code><span> to 0. Perhaps most notably, DDIM allows</span>
+<span>for flexible sampling steps, capable of generating samples using significantly fewer steps (e.g., 10-100) compared to DDPM.</span></p>
+<p><span>When comparing the two models, several key differences emerge. In terms of sampling efficiency, DDPM requires a fixed number of steps, resulting in </span>
+<span>slower generation. DDIM, on the other hand, allows for accelerated sampling with fewer steps, significantly reducing generation time. This efficiency gain </span>
+<span>in DDIM comes with a potential trade-off in sample quality, especially at very low step counts, though it can generally maintain comparable quality to DDPM.</span></p>
+<p><span>The latent space properties of these models also differ significantly. DDPM</span>&rsquo;<span>s stochastic nature makes it challenging </span>
+<span>to manipulate the latent space directly. In contrast, DDIM</span>&rsquo;<span>s deterministic option allows </span>
+<span>for more controlled latent space manipulation, enabling operations like interpolation.</span></p>
+<p><span>From a theoretical standpoint, DDPM provides stronger guarantees due to its well-defined probabilistic </span>
+<span>framework. DDIM, while sacrificing some theoretical rigor, gains practical advantages in sampling speed and control. Both models can utilize </span>
+<span>similar neural network architectures, such as U-Net, for the denoising function. Notably, DDIM requires </span>
+<span>minimal modifications to a pre-trained DDPM model, making it an attractive upgrade option.</span></p>
+</section>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Diffusion models or Autoencoders?</title>
+<link href="https://mbottoni.github.io/2024/09/01/diffusion.html" rel="alternate" type="text/html" title="Diffusion models or Autoencoders?" />
+<published>2024-09-01T00:00:00+00:00</published>
+<updated>2024-09-01T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2024/09/01/diffusion</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[Recent advancements in generative AI have brought diffusion models to the forefront, particularly 
+for their impressive performance in image generation. While these models are often seen as 
+distinct from traditional approaches, there's a compelling argument for viewing diffusion models 
+as a form of hierarchical autoencoder.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2024/09/01/diffusion.html"><![CDATA[
+    <h1>
+    <a href="#Diffusion-models-or-Autoencoders"><span>Diffusion models or Autoencoders?</span> <time datetime="2024-09-01">Sep 1, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/diffusion.webp">
+</figure>
+<section id="Unmasking-the-Secret-Link-Are-Diffusion-Models-Just-Fancy-Autoencoders">
+
+    <h2>
+    <a href="#Unmasking-the-Secret-Link-Are-Diffusion-Models-Just-Fancy-Autoencoders"><span>Unmasking the Secret Link: Are Diffusion Models Just Fancy Autoencoders?</span> </a>
+    </h2>
+<p><span>Recent advancements in generative AI have brought diffusion models to the forefront, particularly </span>
+<span>for their impressive performance in image generation. While these models are often seen as </span>
+<span>distinct from traditional approaches, there</span>&rsquo;<span>s a compelling argument for viewing diffusion models </span>
+<span>as a form of hierarchical autoencoder.</span></p>
+<p><span>The key insight lies in the similarity between the noise addition process in diffusion models </span>
+<span>and the compression step in autoencoders. When a diffusion model adds noise to data, it</span>&rsquo;<span>s </span>
+<span>effectively compressing the information, retaining only the most robust features. This </span>
+<span>is analogous to how an autoencoder</span>&rsquo;<span>s encoder compresses input data into a </span>
+<span>lower-dimensional representation.</span></p>
+<p><span>Conversely, the denoising process in diffusion models resembles the reconstruction phase </span>
+<span>of autoencoders. The critical difference is that diffusion models perform this reconstruction </span>
+<span>gradually, over multiple steps, allowing them to capture a hierarchy of details. This </span>
+<span>multi-step process creates a series of latent representations at different levels of </span>
+<span>abstraction, much like a hierarchical autoencoder.</span></p>
+<p><span>The noise in diffusion models serves a similar purpose to the bottleneck layer in </span>
+<span>autoencoders, acting as an information constraint that forces the model to learn </span>
+<span>efficient, robust representations. This perspective suggests that diffusion models implicitly </span>
+<span>learn a series of nested representations, each corresponding to a different noise level.</span></p>
+<p><span>Viewing diffusion models through this lens opens up new possibilities for research </span>
+<span>and improvement. It suggests potential hybrid architectures combining elements of both </span>
+<span>approaches, and hints at applications beyond generation, such as in data compression.</span></p>
+</section>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Understanding and Implementing RAG (Retrieval-Augmented Generation)</title>
+<link href="https://mbottoni.github.io/2024/08/27/rag.html" rel="alternate" type="text/html" title="Understanding and Implementing RAG (Retrieval-Augmented Generation)" />
+<published>2024-08-27T00:00:00+00:00</published>
+<updated>2024-08-27T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2024/08/27/rag</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[Retrieval-Augmented Generation (RAG) is a powerful technique that combines the strengths of large language 
+models with the ability to retrieve relevant information from external sources. This approach enhances the 
+model's responses by grounding them in specific, up-to-date, or domain-specific knowledge.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2024/08/27/rag.html"><![CDATA[
+    <h1>
+    <a href="#Understanding-and-Implementing-RAG-Retrieval-Augmented-Generation"><span>Understanding and Implementing RAG (Retrieval-Augmented Generation)</span> <time datetime="2024-08-27">Aug 27, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/rag.png">
+</figure>
+<p><span>Retrieval-Augmented Generation (RAG) is a powerful technique that combines the strengths of large language </span>
+<span>models with the ability to retrieve relevant information from external sources. This approach enhances the </span>
+<span>model</span>&rsquo;<span>s responses by grounding them in specific, up-to-date, or domain-specific knowledge.</span></p>
+<p><span>RAG works by first retrieving relevant information from a knowledge base and then using that information to </span>
+<span>generate a response. This process involves three main steps:</span></p>
+<ol>
+<li>
+<strong><strong><span>Retrieval</span></strong></strong><span>: The system searches for relevant information in a database or document collection.</span>
+</li>
+<li>
+<strong><strong><span>Augmentation</span></strong></strong><span>: The retrieved information is combined with the user</span>&rsquo;<span>s query.</span>
+</li>
+<li>
+<strong><strong><span>Generation</span></strong></strong><span>: A language model uses the augmented input to generate a response.</span>
+</li>
+</ol>
+<section id="Implementing-RAG-with-LangChain">
+
+    <h2>
+    <a href="#Implementing-RAG-with-LangChain"><span>Implementing RAG with LangChain</span> </a>
+    </h2>
+<p><span>Let</span>&rsquo;<span>s look at a simple implementation of RAG using LangChain. This code </span>
+<span>is not ready for production use, but it is a good starting point for understanding RAG.</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">from</span> langchain <span class="hl-keyword">import</span> OpenAI</span>
+<span class="line"><span class="hl-keyword">from</span> langchain.embeddings <span class="hl-keyword">import</span> OpenAIEmbeddings</span>
+<span class="line"><span class="hl-keyword">from</span> langchain.vectorstores <span class="hl-keyword">import</span> Chroma</span>
+<span class="line"><span class="hl-keyword">from</span> langchain.text_splitter <span class="hl-keyword">import</span> CharacterTextSplitter</span>
+<span class="line"><span class="hl-keyword">from</span> langchain.chains <span class="hl-keyword">import</span> RetrievalQA</span>
+<span class="line"><span class="hl-keyword">from</span> langchain.document_loaders <span class="hl-keyword">import</span> TextLoader</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Load and prepare the document</span></span>
+<span class="line">loader = TextLoader(<span class="hl-string">&quot;path_to_your_document.txt&quot;</span>)</span>
+<span class="line">documents = loader.load()</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Split the document into chunks</span></span>
+<span class="line">text_splitter = CharacterTextSplitter(chunk_size=<span class="hl-number">1000</span>, chunk_overlap=<span class="hl-number">0</span>)</span>
+<span class="line">texts = text_splitter.split_documents(documents)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Create embeddings and store them</span></span>
+<span class="line">embeddings = OpenAIEmbeddings()</span>
+<span class="line">vectorstore = Chroma.from_documents(texts, embeddings)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Create a retriever</span></span>
+<span class="line">retriever = vectorstore.as_retriever()</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Initialize the language model</span></span>
+<span class="line">llm = OpenAI()</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Create the RAG chain</span></span>
+<span class="line">qa_chain = RetrievalQA.from_chain_type(</span>
+<span class="line">    llm=llm,</span>
+<span class="line">    chain_type=<span class="hl-string">&quot;stuff&quot;</span>,</span>
+<span class="line">    retriever=retriever</span>
+<span class="line">)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Use the RAG system</span></span>
+<span class="line">query = <span class="hl-string">&quot;What is the main topic of the document?&quot;</span></span>
+<span class="line">response = qa_chain.run(query)</span>
+<span class="line"><span class="hl-built_in">print</span>(response)</span></code></pre>
+
+</figure>
+<p><span>Here are the steps we took:</span></p>
+<ol>
+<li>
+<span>We load a document and split it into smaller chunks.</span>
+</li>
+<li>
+<span>We create embeddings for these chunks and store them in a vector database (Chroma).</span>
+</li>
+<li>
+<span>We set up a retriever to fetch relevant information from the vector store.</span>
+</li>
+<li>
+<span>We initialize a language model (OpenAI</span>&rsquo;<span>s GPT in this case).</span>
+</li>
+<li>
+<span>We create a RetrievalQA chain that combines the retriever and the language model.</span>
+</li>
+<li>
+<span>Finally, we can use this chain to answer questions based on the content of our document.</span>
+</li>
+</ol>
+</section>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Self Supervised Learning</title>
+<link href="https://mbottoni.github.io/2024/08/18/ssl.html" rel="alternate" type="text/html" title="Self Supervised Learning" />
+<published>2024-08-18T00:00:00+00:00</published>
+<updated>2024-08-18T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2024/08/18/ssl</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[This post is based on this blog post by meta Link to post.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2024/08/18/ssl.html"><![CDATA[
+    <h1>
+    <a href="#Self-Supervised-Learning"><span>Self Supervised Learning</span> <time datetime="2024-08-18">Aug 18, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/ssl.webp">
+</figure>
+<p><span>This post is based on this blog post by meta </span><a href="https://ai.meta.com/blog/self-supervised-learning-the-dark-matter-of-intelligence/"><span>Link to post</span></a><span>.</span></p>
+<p><span>In recent years, AI has seen remarkable advancements, particularly in the development of AI systems </span>
+<span>that thrive on massive amounts of labeled data. This approach, known as supervised learning, has </span>
+<span>proven highly effective for training specialized models to perform specific tasks with incredible </span>
+<span>precision. However, while supervised learning has brought us this far, it has its limitations.</span></p>
+<p><span>Particularly for creating generalist models—those capable of performing multiple tasks and acquiring </span>
+<span>new skills without needing large amounts of labeled data. The challenge is simple: it’s impossible </span>
+<span>to label everything in the world. Additionally, for certain tasks, there simply isn</span>&rsquo;<span>t enough </span>
+<span>labeled data available. For example, training AI to understand low-resource languages faces </span>
+<span>significant challenges due to the scarcity of labeled examples.</span></p>
+<p><span>To truly advance AI toward human-level intelligence, we need systems that can learn and adapt beyond the </span>
+<span>confines of their training data. This would involve AI systems developing a more nuanced understanding </span>
+<span>of the world, similar to how humans learn.</span></p>
+<section id="The-Role-of-Common-Sense-in-Intelligence">
+
+    <h2>
+    <a href="#The-Role-of-Common-Sense-in-Intelligence"><span>The Role of Common Sense in Intelligence</span> </a>
+    </h2>
+<p><span>As humans, we learn about the world largely through observation and interaction. From an early age, we develop generalized </span>
+<span>predictive models about our environment, learning fundamental concepts like object permanence and gravity. This generalized knowledge, often referred </span>
+<span>to as common sense, is a cornerstone of human intelligence, enabling us to learn new skills with minimal instruction.</span></p>
+<p><span>For AI to reach similar levels of understanding and adaptability, it needs to acquire a form of common sense—something that </span>
+<span>has remained a significant challenge in AI research. The question then becomes: how can we equip machines with this kind of background knowledge?</span>
+<span>The answers lies on SSL (Self Supervised Learning)</span></p>
+</section>
+<section id="Enter-Self-Supervised-Learning">
+
+    <h2>
+    <a href="#Enter-Self-Supervised-Learning"><span>Enter Self-Supervised Learning</span> </a>
+    </h2>
+<p><span>One of the most promising approaches to addressing this challenge is self-supervised learning (SSL). Unlike supervised learning, which relies on </span>
+<span>labeled data, self-supervised learning allows AI systems to learn from vast amounts of unlabeled data. This approach is crucial for recognizing </span>
+<span>and understanding more subtle, less common patterns in the world.</span></p>
+<p><span>Self-supervised learning has already made significant strides in natural language processing (NLP). Models like Word2Vec, GloVe, BERT, RoBERTa, and others have been </span>
+<span>trained on large, unlabeled text datasets, resulting in systems that outperform those trained solely with supervised learning.</span></p>
+<p><span>While SSL has seen considerable success in NLP, its application in computer vision (CV) has been more challenging. Representing uncertainty in image </span>
+<span>predictions is significantly more complex than in text. However, recent developments are starting to overcome these hurdles.</span>
+<span>A notable example is the SEER project, which leverages SSL to pretrain a large network on a billion random, unlabeled images. This approach has </span>
+<span>led to top accuracy on a diverse set of vision tasks, demonstrating that SSL can excel in complex, real-world CV settings as well.</span></p>
+</section>
+<section id="Energy-Based-Models">
+
+    <h2>
+    <a href="#Energy-Based-Models"><span>Energy Based Models</span> </a>
+    </h2>
+<p><span>One of the more exciting developments in SSL is the exploration of energy-based models (EBMs). EBMs measure the compatibility between </span>
+<span>inputs, making them particularly well-suited for tasks where prediction uncertainty is high, such as in CV. By training these models </span>
+<span>to recognize compatible and incompatible pairs of inputs, we can create systems that are better at making nuanced predictions.</span></p>
+<p><span>Additionally, the use of joint embedding architectures, like Siamese networks, has shown promise in preventing the </span>
+<span>collapse of model training, where the system fails to differentiate between similar but distinct </span>
+<span>inputs. These architectures are being refined with both contrastive and non-contrastive methods </span>
+<span>to improve their effectiveness in SSL.</span></p>
+</section>
+<section id="The-future">
+
+    <h2>
+    <a href="#The-future"><span>The future</span> </a>
+    </h2>
+<p><span>Looking ahead, the challenge for AI researchers is to develop non-contrastive methods for latent-variable energy-based models that can </span>
+<span>produce robust representations of images, videos, and other signals. Achieving this will be a significant step toward creating AI systems that can </span>
+<span>learn and adapt with minimal labeled data, moving us closer to human-level intelligence.</span></p>
+</section>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Conditional Tabular GAN - CTGAN</title>
+<link href="https://mbottoni.github.io/2024/08/13/ctgan.html" rel="alternate" type="text/html" title="Conditional Tabular GAN - CTGAN" />
+<published>2024-08-13T00:00:00+00:00</published>
+<updated>2024-08-13T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2024/08/13/ctgan</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[One of the most interesting ideas on the last decades in machine learning is the GAN architecture for generatine model. While GANs have 
+shown remarkable success in generating high-quality images and other continuous data types, tabular data poses unique challenges. Tabular data often contains a 
+mix of discrete and continuous variables, with complex dependencies between them. Traditional GAN architectures struggle to capture these intricacies, leading 
+to poor performance when applied directly to tabular data. CTGAN addresses these challenges by introducing a specialized framework for generating 
+realistic synthetic tabular data.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2024/08/13/ctgan.html"><![CDATA[
+    <h1>
+    <a href="#Conditional-Tabular-GAN-CTGAN"><span>Conditional Tabular GAN - CTGAN</span> <time datetime="2024-08-13">Aug 13, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/gan.png">
+</figure>
+<p><span>One of the most interesting ideas on the last decades in machine learning is the GAN architecture for generatine model. While GANs have </span>
+<span>shown remarkable success in generating high-quality images and other continuous data types, tabular data poses unique challenges. Tabular data often contains a </span>
+<span>mix of discrete and continuous variables, with complex dependencies between them. Traditional GAN architectures struggle to capture these intricacies, leading </span>
+<span>to poor performance when applied directly to tabular data. CTGAN addresses these challenges by introducing a specialized framework for generating </span>
+<span>realistic synthetic tabular data.</span></p>
+<section id="CTGAN-Architecture">
+
+    <h2>
+    <a href="#CTGAN-Architecture"><span>CTGAN Architecture</span> </a>
+    </h2>
+<p><span>The CTGAN model is based on the GAN framework, comprising two main components: a generator and a discriminator.</span></p>
+<ul>
+<li>
+<span>Generator: The generator is responsible for producing synthetic data that resembles the real data. It takes as </span>
+<span>input a noise vector sampled from a standard normal distribution and a conditioning vector. The conditioning vector </span>
+<span>encodes specific values of categorical variables, enabling the generation of samples with particular characteristics. The generator </span>
+<span>outputs a vector representing a synthetic data sample, which includes both categorical and continuous features.</span>
+</li>
+<li>
+<span>Discriminator: The discriminator</span>&rsquo;<span>s role is to distinguish between real and synthetic data samples. It is a binary classifier </span>
+<span>trained to maximize the likelihood of correctly identifying real data from the generator</span>&rsquo;<span>s output. The discriminator receives </span>
+<span>both real and synthetic data as input and outputs a probability score indicating whether the input is real or fake.</span>
+</li>
+</ul>
+</section>
+<section id="Key-Innovations-in-CTGAN">
+
+    <h2>
+    <a href="#Key-Innovations-in-CTGAN"><span>Key Innovations in CTGAN</span> </a>
+    </h2>
+<p><span>CTGAN introduces several key innovations that enable it to handle the complexities of tabular data:</span></p>
+<ul>
+<li>
+<p><span>Conditional Vector and Mode-specific Normalization: This allows the generator to conditionally generate data based on specific categories. This is </span>
+<span>particularly useful in scenarios where some features are strongly dependent on others. For example, in a dataset with gender and age features, conditioning </span>
+<span>on gender can help the generator produce age values that are realistic for that gender. Mode-specific normalization is applied to continuous features </span>
+<span>during training, ensuring that each mode (category) is normalized  independently. This prevents the generator from learning spurious correlations </span>
+<span>between categorical and continuous features.</span></p>
+</li>
+<li>
+<p><span>Training by Sampling: To address the imbalance in categorical data, CTGAN uses a sampling strategy where the generator focuses </span>
+<span>on underrepresented categories during training. This ensures that the generator learns to produce realistic samples across </span>
+<span>all categories, not just the majority ones.</span></p>
+</li>
+<li>
+<p><span>Logistic Loss for the Generator: The generator</span>&rsquo;<span>s loss function is modified to include a logistic loss term. This encourages the generator to produce samples that </span>
+<span>are close to the decision boundary of the discriminator, promoting diversity in the generated samples. The inclusion of this term helps the generator avoid </span>
+<span>mode collapse, a common issue in GANs where the generator produces a limited variety of samples.</span></p>
+</li>
+<li>
+<p><span>Training Process. The training process for CTGAN follows the standard GAN training procedure.</span></p>
+</li>
+<li>
+<p><span>Preprocessing: The data is preprocessed to convert categorical variables into one-hot encoded vectors. Continuous variables </span>
+<span>are normalized using mode-specific normalization. The data is then split into real samples and conditional vectors.</span></p>
+</li>
+</ul>
+</section>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Simple Reinforcement Learning Example</title>
+<link href="https://mbottoni.github.io/2024/08/04/simple_rl.html" rel="alternate" type="text/html" title="Simple Reinforcement Learning Example" />
+<published>2024-08-04T00:00:00+00:00</published>
+<updated>2024-08-04T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2024/08/04/simple_rl</id>
+<author><name>Alex Kladov</name></author>
+<summary type="html"><![CDATA[A simple RL example, where i want an agent to navigate a grid to reach a goal while avoiding holes.
+For more details here is the colab where I implemented the RL example Link to code]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2024/08/04/simple_rl.html"><![CDATA[
+    <h1>
+    <a href="#Simple-Reinforcement-Learning-Example"><span>Simple Reinforcement Learning Example</span> <time datetime="2024-08-04">Aug 4, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/rl.png">
+</figure>
+<p><span>A simple RL example, where i want an agent to navigate a grid to reach a goal while avoiding holes.</span>
+<span>For more details here is the colab where I implemented the RL example </span><a href="https://colab.research.google.com/drive/1hxqDEdurKZZUtJ2DTrEm1UQJwCJmQIhj?usp=sharing"><span>Link to code</span></a></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">import</span> gym</span>
+<span class="line"><span class="hl-keyword">import</span> numpy <span class="hl-keyword">as</span> np</span>
+<span class="line">env = gym.make(<span class="hl-string">&#x27;FrozenLake-v1&#x27;</span>, is_slippery=<span class="hl-literal">False</span>, render_mode=<span class="hl-string">&#x27;human&#x27;</span>)</span>
+<span class="line"></span>
+<span class="line">num_episodes = <span class="hl-number">1000</span></span>
+<span class="line">max_steps_per_episode = <span class="hl-number">100</span></span>
+<span class="line">learning_rate = <span class="hl-number">0.1</span></span>
+<span class="line">discount_rate = <span class="hl-number">0.99</span></span>
+<span class="line">exploration_rate = <span class="hl-number">1.0</span></span>
+<span class="line">max_exploration_rate = <span class="hl-number">1.0</span></span>
+<span class="line">min_exploration_rate = <span class="hl-number">0.01</span></span>
+<span class="line">exploration_decay_rate = <span class="hl-number">0.001</span></span>
+<span class="line"></span>
+<span class="line">q_table = np.zeros((env.observation_space.n, env.action_space.n)) <span class="hl-comment"># q table</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">for</span> episode <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(num_episodes):</span>
+<span class="line">    state = env.reset()</span>
+<span class="line">    done = <span class="hl-literal">False</span></span>
+<span class="line">    step = <span class="hl-number">0</span></span>
+<span class="line"></span>
+<span class="line">    <span class="hl-keyword">for</span> step <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(max_steps_per_episode):</span>
+<span class="line">        <span class="hl-comment">#</span></span>
+<span class="line">        <span class="hl-comment"># Exploration-exploitation trade-off</span></span>
+<span class="line">        <span class="hl-comment">#</span></span>
+<span class="line">        exploration_threshold = np.random.uniform(<span class="hl-number">0</span>, <span class="hl-number">1</span>)</span>
+<span class="line">        <span class="hl-keyword">if</span> exploration_threshold &gt; exploration_rate:</span>
+<span class="line">            action = np.argmax(q_table[state, :])</span>
+<span class="line">        <span class="hl-keyword">else</span>:</span>
+<span class="line">            action = env.action_space.sample()</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment">#</span></span>
+<span class="line">        <span class="hl-comment"># Take the action and observe the outcome</span></span>
+<span class="line">        <span class="hl-comment">#</span></span>
+<span class="line">        new_state, reward, done, info = env.step(action)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment">#</span></span>
+<span class="line">        <span class="hl-comment"># Update Q-table</span></span>
+<span class="line">        <span class="hl-comment">#</span></span>
+<span class="line">        q_table[state, action] = q_table[state, action] + learning_rate * (reward + discount_rate * np.<span class="hl-built_in">max</span>(q_table[new_state, :]) - q_table[state, action])</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment">#</span></span>
+<span class="line">        <span class="hl-comment"># Transition to the new state</span></span>
+<span class="line">        <span class="hl-comment">#</span></span>
+<span class="line">        state = new_state</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment">#</span></span>
+<span class="line">        <span class="hl-comment"># If the episode is done, break the loop</span></span>
+<span class="line">        <span class="hl-comment">#</span></span>
+<span class="line">        <span class="hl-keyword">if</span> done:</span>
+<span class="line">            <span class="hl-keyword">break</span></span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment">#</span></span>
+<span class="line">    <span class="hl-comment"># Decay the exploration rate</span></span>
+<span class="line">    <span class="hl-comment">#</span></span>
+<span class="line">    exploration_rate = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate * episode)</span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line">state = env.reset()</span>
+<span class="line">env.render()</span>
+<span class="line">done = <span class="hl-literal">False</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">while</span> <span class="hl-keyword">not</span> done:</span>
+<span class="line">    action = np.argmax(q_table[state, :])</span>
+<span class="line">    new_state, reward, done, info = env.step(action)</span>
+<span class="line">    state = new_state</span>
+<span class="line">    env.render()</span>
+<span class="line"></span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;Test completed.&quot;</span>)</span></code></pre>
+
+</figure>
+]]></content>
+</entry>
+
+</feed>
