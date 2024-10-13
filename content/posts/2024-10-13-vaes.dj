@@ -1,0 +1,72 @@
+
+# A comprehensive list of different types of VAEs
+
+1. **VAE** (Vanilla VAE): The original VAE architecture consists of an encoder that 
+maps input data to a latent space, and a decoder that reconstructs the 
+input from the latent representation. It uses a variational inference 
+approach to learn the latent space distribution.
+
+2. **Conditional VAE**: This VAE variant incorporates additional conditioning 
+information into both the encoder and decoder networks. The conditioning 
+allows the model to generate samples conditioned on specific attributes or classes.
+
+3. **WAE - MMD** (with RBF Kernel): Wasserstein Autoencoders use Maximum Mean Discrepancy (MMD) with 
+a Radial Basis Function (RBF) kernel to minimize the distance between the encoded 
+distribution and a prior distribution, aiming for better-quality reconstructions.
+
+4. **WAE - MMD** (with IMQ Kernel): Similar to the RBF kernel version, but uses an Inverse MultiQuadric (IMQ) kernel 
+for the MMD calculation, which can provide different regularization properties.
+
+5. **Beta-VAE**: This architecture introduces a hyperparameter β to control the trade-off between 
+reconstruction quality and the disentanglement of latent representations, allowing for 
+more interpretable latent spaces.
+
+6. **Disentangled Beta-VAE**: An improved version of Beta-VAE that aims to achieve better disentanglement 
+of latent factors by modifying the training objective and architecture slightly.
+
+7. **Beta-TC-VAE**: This variant decomposes the KL divergence term in the VAE objective into three 
+components, with a β parameter applied to the total correlation term to 
+encourage disentanglement.
+
+8. **IWAE** (Importance Weighted Autoencoder): IWAE uses multiple samples 
+from the encoder to compute 
+a tighter lower bound on the marginal likelihood, potentially leading 
+to better generative models.
+
+9. **MIWAE** (Multiply Importance Weighted Autoencoder): An extension of IWAE that uses multiple 
+importance-weighted samples during both training and inference to improve performance.
+
+10. **DFCVAE** (Deep Feature Consistent VAE): This VAE incorporates perceptual losses based on features from 
+pre-trained neural networks to improve the quality and consistency of generated images.
+
+11. **MSSIM VAE** (Multi-Scale Structural Similarity VAE): This architecture uses a multi-scale 
+structural similarity index as part of its loss function 
+to improve the perceptual quality of reconstructed images.
+
+12. **Categorical VAE**: A VAE variant designed to work with 
+categorical latent variables, often using the Gumbel-Softmax 
+trick for differentiable sampling from discrete distributions.
+
+13. **Joint VAE**: This model combines continuous and discrete latent variables in 
+a single framework, allowing for representation of both continuous 
+and categorical factors.
+
+14. **Info VAE**: InfoVAE modifies the objective function to maximize the mutual information 
+between inputs and latent variables, aiming for more informative 
+latent representations.
+
+15. **LogCosh VAE**: This VAE uses the log-cosh loss function 
+instead of mean squared error for reconstruction, potentially 
+providing robustness to outliers.
+
+16. **SWAE** (Sliced-Wasserstein Autoencoder): SWAE uses the sliced Wasserstein distance to 
+measure the discrepancy between the encoded distribution and the prior, offering 
+an alternative to KL divergence.
+
+17. **VQ-VAE** (Vector Quantized VAE): This architecture uses vector quantization 
+in the latent space, mapping continuous encodings to discrete codes from a 
+codebook, useful for generating high-quality images and audio.
+
+18. **DIP VAE** (Disentangled Inferred Prior VAE): DIP-VAE modifies the VAE objective to encourage 
+the aggregate posterior to match the prior, aiming for better disentanglement 
+of latent factors.
