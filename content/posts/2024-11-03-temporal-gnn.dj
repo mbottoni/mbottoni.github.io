@@ -2,24 +2,31 @@
 
 # Temporal Graph Networks: A Deep Dive into Dynamic Graph Learning
 
-Real-world networks are rarely static. Social networks evolve as users form new connections, financial networks change with each transaction, and biological networks transform as proteins interact. Traditional Graph Neural Networks (GNNs) weren't designed for this dynamism. Enter Temporal Graph Networks (TGNs), a powerful framework for learning on dynamic graphs.
+Real-world networks are rarely static. Social networks evolve as users form 
+new connections, financial networks change with each transaction, and biological 
+networks transform as proteins interact. Traditional Graph Neural Networks (GNNs) weren't 
+designed for this dynamism. Enter Temporal Graph Networks (TGNs), a powerful framework for learning on dynamic graphs.
 
 ## Understanding Dynamic Graphs
 
-Before diving into TGNs, let's clarify what we mean by dynamic graphs. A temporal graph can be represented as a sequence of time-stamped events: G = {x(t₁), x(t₂), ...}. Each event can be:
+Before diving into TGNs, let's clarify what we mean by dynamic graphs. A temporal graph 
+can be represented as a sequence of time-stamped events: G = {x(t₁), x(t₂), ...}. Each event can be:
 
 1. Node-wise: Adding/updating a node with features
 2. Edge-wise: Creating an interaction between nodes
 
 ## Core Components of TGN
 
-### 1. Memory Module
+### Memory Module
 
-The memory module is TGN's secret weapon. Each node maintains a memory state that captures its history of interactions. This memory gets updated with each new event, allowing the network to learn long-term dependencies.
+The memory module is TGN's secret weapon. Each node maintains a memory state 
+that captures its history of interactions. This memory gets updated with each 
+new event, allowing the network to learn long-term dependencies.
 
-### 2. Message Function
+### Message Function
 
-When an interaction occurs between nodes, messages are computed to update their memories. Here's how the message functions work:
+When an interaction occurs between nodes, messages are computed 
+to update their memories. Here's how the message functions work:
 
 ```python
 class TemporalGraphNetwork:
@@ -64,9 +71,10 @@ class TemporalGraphNetwork:
         ])
 ```
 
-### 3. Message Aggregator
+### Message Aggregator
 
-When multiple events involve the same node in a batch, their messages need to be aggregated:
+When multiple events involve the same node in a batch, their 
+messages need to be aggregated:
 
 ```python
     def aggregate_messages(self, messages, aggregation_type="last"):
@@ -77,9 +85,10 @@ When multiple events involve the same node in a batch, their messages need to be
             return np.mean(messages, axis=0)  # Average all messages
 ```
 
-### 4. Memory Updater
+### Memory Updater
 
-The memory updater is typically implemented using a GRU or LSTM to update node memories based on aggregated messages:
+The memory updater is typically implemented using a GRU or LSTM to update 
+node memories based on aggregated messages:
 
 ```python
     def update_memory(self, node_id, message, time):
@@ -109,9 +118,10 @@ The memory updater is typically implemented using a GRU or LSTM to update node m
         self.last_update[node_id] = time
 ```
 
-### 5. Embedding Module
+### Embedding Module
 
-The embedding module generates node embeddings using the current memory state and graph structure:
+The embedding module generates node embeddings using the current memory 
+state and graph structure:
 
 ```python
     def compute_embedding(self, node_id, time, num_layers=1):
@@ -193,14 +203,12 @@ Training TGN requires careful handling of temporal dependencies. Here's the main
                 )
 ```
 
-## Key Advantages
+## Key Advantages and applications
 
 1. **Memory Efficiency**: TGN maintains a compact memory state for each node instead of storing the entire history.
 2. **Temporal Awareness**: The framework naturally handles time-stamped events and evolving graphs.
 3. **Flexibility**: Different message, aggregation, and memory update functions can be used based on the specific application.
 4. **Scalability**: The batched training process allows for efficient processing of large temporal graphs.
-
-## Applications
 
 TGNs have shown remarkable success in various domains:
 - Dynamic link prediction in social networks
@@ -211,10 +219,10 @@ TGNs have shown remarkable success in various domains:
 
 ## Implementation Considerations
 
-1. **Batch Size**: Smaller batches ensure more frequent memory updates but slower training.
-2. **Memory Dimension**: Larger memory can capture more complex patterns but requires more computation.
-3. **Neighbor Sampling**: Sampling recent neighbors often works better than uniform sampling.
-4. **Time Encoding**: Different time encoding strategies can be used based on the temporal patterns in the data.
+- **Batch Size**: Smaller batches ensure more frequent memory updates but slower training.
+- **Memory Dimension**: Larger memory can capture more complex patterns but requires more computation.
+- **Neighbor Sampling**: Sampling recent neighbors often works better than uniform sampling.
+- **Time Encoding**: Different time encoding strategies can be used based on the temporal patterns in the data.
 
 
 
