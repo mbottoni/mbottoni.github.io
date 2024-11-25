@@ -20,6 +20,7 @@ input features. Unlike domain-specific augmentation techniques, this method work
 ## Technical Mechanism
 
 The approach employs:
+
 - An encoder network (f)
 - A pre-training head network (g)
 - InfoNCE contrastive loss function
@@ -28,6 +29,7 @@ The core objective is generating representations that maintain semantic integrit
 while being robust to feature perturbations.
 
 Tested across 72 real-world classification datasets, SCARF demonstrated significant improvements:
+
 - Enhanced classification accuracy
 - Improved performance under label noise
 - Effective semi-supervised learning capabilities
