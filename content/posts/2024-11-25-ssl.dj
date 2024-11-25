@@ -1,7 +1,7 @@
 
 # Scarf: Self Supervised Learning for Tabular Data
 
-![](/assets/scarf.jpg)
+![](/assets/scarf.png)
 
 Machine learning often struggles with the scarcity of labeled data. While unlabeled datasets 
 are abundant, obtaining high-quality labeled data remains expensive and time-consuming. SCARF 
