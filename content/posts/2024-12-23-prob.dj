@@ -1,0 +1,81 @@
+
+# Probability Paradigms 
+
+When we think about probability, there are three 
+main philosophical approaches: frequentist, Bayesian, and propensity. Each offers 
+a different lens for understanding uncertainty and probability. 
+
+## The Scenario
+
+Imagine we're dealing with a new diagnostic test for a rare genetic condition that affects 1 in 1000 people. The test has the following characteristics:
+
+- If someone has the condition, the test will be positive 99% of the time (sensitivity)
+- If someone doesn't have the condition, the test will be negative 95% of the time (specificity)
+
+Now, let's say Sarah gets tested and receives a positive result. What's the probability that she 
+actually has the condition? Each probability paradigm approaches this question differently.
+
+## The Frequentist Approach
+
+The frequentist views probability as the long-run frequency of events in repeated trials. They might say:
+
+"If we were to run this test on a very large number of people, and look only at 
+the positive test results, what proportion of those people would actually have the condition?"
+
+The frequentist would focus on the sampling distribution and confidence intervals. They might 
+resist making a direct probability statement about Sarah's individual case, arguing that she 
+either has the condition or doesn't – there's no probability about it. Instead, they 
+would frame their analysis in terms of error rates and long-term frequencies.
+
+In this case, they would calculate the false positive and true positive rates across a hypothetical population:
+
+- In 1000 people, 1 person would have the condition
+- That 1 person would test positive 99% of the time = 0.99 true positives
+- The 999 people without the condition would test positive 5% of the time = 49.95 false positives
+- Total positive tests = 50.94
+- Proportion of positive tests that are true positives ≈ 1.94%
+
+## The Bayesian Approach
+
+The Bayesian sees probability as a degree of belief that gets updated with 
+new evidence. They would start with a prior probability (the base 
+rate of 1/1000) and update it with the new 
+evidence (the positive test result) using Bayes' Theorem.
+
+The Bayesian would say: "Before the test, we believed Sarah had a 0.1% chance 
+of having the condition. The positive test result gives us new information 
+to update this belief."
+
+Using Bayes' Theorem:
+P(Condition|Positive) = P(Positive|Condition) × P(Condition) / P(Positive)
+= 0.99 × 0.001 / (0.99 × 0.001 + 0.05 × 0.999)
+≈ 0.0194 or about 1.94%
+
+The Bayesian is comfortable making a direct probability statement about Sarah
+'s specific case, saying there's a 1.94% chance she has the condition.
+
+## The Propensity Approach
+
+The propensity theorist views probability as an objective 
+physical property – a tendency or disposition of a 
+system to produce certain outcomes. They might say:
+
+"The test result reflects the physical properties of Sarah's 
+genes and the testing mechanism. The probability emerges from 
+the actual physical setup of the situation."
+
+They would focus on the causal mechanisms involved: the biological 
+factors that cause the condition, the chemical reactions in the test, and how 
+these physical properties interact to produce results. They might analyze the 
+molecular basis of the test's accuracy and how it interacts with the genetic markers it's designed to detect.
+
+These different approaches can lead to different practical recommendations:
+
+- A frequentist might emphasize the need for additional testing, pointing out that in a large population, most positive results are false positives.
+
+- A Bayesian might focus on gathering more prior information about Sarah (family history, symptoms, etc.) to refine the probability estimate.
+
+- A propensity theorist might advocate for understanding the biological mechanism better, perhaps recommending a different type of test that targets the condition's physical manifestations more directly.
+
+
+
