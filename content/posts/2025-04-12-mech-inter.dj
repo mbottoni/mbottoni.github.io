@@ -6,7 +6,7 @@
 Here are some quick notes on concepts in Mechanistic Interpretability. The subject is vast and very recent and 
 try to interpret features for neural networks, specifically transformers and LLM's.
 
-This was based on my studies and mainly on this blog post [blog]. On the future when I advanced
+This was based on my studies and mainly on this blog post [Link to blog][blog]. On the future when I advanced
 my studies on this subject I will update this post.
 
 - Interpretability: The broader AI subfield focused on understanding why AI systems behave as they do and translating this into human-understandable explanations.
