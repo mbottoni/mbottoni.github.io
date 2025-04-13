@@ -1,0 +1,46 @@
+
+
+# Mechanistic Interpretability - Some concepts
+[blog]: https://www.neelnanda.io/mechanistic-interpretability/glossary
+
+Here are some quick notes on concepts in Mechanistic Interpretability. The subject is vast and very recent and 
+try to interpret features for neural networks, specifically transformers and LLM's.
+
+This was based on my studies and mainly on this blog post [blog]. On the future when I advanced
+my studies on this subject I will update this post.
+
+- Interpretability: The broader AI subfield focused on understanding why AI systems behave as they do and translating this into human-understandable explanations.
+
+- Feature: A property of the model's input or a part of it. Features are fundamental; the model's internal activations represent them, and computations (weights, non-linearities) transform earlier features into later ones.
+
+- Circuit: A specific part of the model that performs an understandable computation, transforming interpretable input features into interpretable output features.
+
+- Intervening on or editing an activation: The process of running the model up to a certain point, modifying a specific activation value, and then letting the model continue its computation with the changed value.
+
+- Pruning a neuron: A specific intervention where a neuron's activation is set to zero, preventing subsequent layers from using its output.
+
+- Equivariance / Neuron families: Groups of neurons or features that are distinct but operate analogously. Understanding one member of the family helps understand the others.
+
+- Neuron splitting: When a single feature represented in a smaller model gets broken down into multiple distinct features in a larger model.
+
+- Universality: The hypothesis that the same functional circuits will emerge and be discoverable across different models trained independently.
+
+- Motif: An abstract computational pattern or structure that recurs across different circuits or features in various models or contexts.
+
+- Localised/sparse model behaviour: When a model's specific behavior is determined by only a small number of its components.
+
+- Microscope AI: The idea that by reverse engineering a highly capable (potentially superhuman) AI, we could learn the novel knowledge and understanding of the world that the AI has acquired.
+
+- The curse of dimensionality: A concept highlighting the counter-intuitive properties and complexities that arise when dealing with high-dimensional spaces, like the activation spaces within neural networks.
+
+- Features as directions: A key hypothesis in MI suggesting that features within a model are represented as specific directions within the high-dimensional activation vector space.
+
+- Few-shot learning: A capability where a generative model learns to perform a new task based on just a few examples provided within its input prompt.
+
+- In-Context Learning: The ability of a model to use information from much earlier in its input sequence (context) to make predictions about the next token.
+
+- Indirect Object Identification (IOI): A specific linguistic task used to test language models, requiring the model to identify the indirect object in sentences like "When John and Mary went to the store, John gave the bag to [Mary]".
+
+- IOI Circuit: The specific network of components identified within the GPT-2 Small model that is responsible for correctly performing the IOI task.
+
+
