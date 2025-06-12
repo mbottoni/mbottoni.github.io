@@ -1,0 +1,243 @@
+
+# Swarm Structure Simulation
+
+After reading the book The Rules of the Flock I got inspired to test some 
+ideas of the book. Basically a swarm behavior is defined when individual agents, following 
+a simple set of local rules without a central leader, produce complex and 
+intelligent collective patterns.
+
+To see these rules in action, I developed the interactive Python simulation 
+detailed below. Using Matplotlib, the simulation visualizes a 
+flock of 'boids'. You can use the sliders to change the weight of 
+each rule in real-time—crank up 'Cohesion' to see the flock tighten, or increase 
+'Separation' to watch them spread out. You can also interact directly 
+with the swarm using your mouse, acting as a predator to 
+scatter the flock or a point of interest to draw them in. It's a fascinating look 
+at how complex, life-like motion can emerge from a few simple, local instructions.
+
+
+```python
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib.widgets import Slider
+
+# --- Simulation Configuration ---
+N_BOIDS = 150
+WIDTH, HEIGHT = 1200, 800
+PERCEPTION_RADIUS = 70
+MAX_SPEED = 5.0
+MIN_SPEED = 2.0
+MOUSE_INFLUENCE_RADIUS = 150.0
+
+# --- Weights for the rules ---
+INITIAL_SEPARATION_WEIGHT = 1.5
+INITIAL_ALIGNMENT_WEIGHT = 1.0
+INITIAL_COHESION_WEIGHT = 1.0
+MOUSE_ATTRACT_WEIGHT = 2.5
+MOUSE_REPEL_WEIGHT = 3.0
+INITIAL_COND = 'random' # circle, random, grid
+
+
+class Boids:
+    """
+    A class to manage the state and behavior of a flock of boids.
+    """
+    def __init__(self, count, width, height, initial_condition='random'):
+        self.width = width
+        self.height = height
+        self.count = count
+
+        self.positions, self.velocities = self._initialize_boids(initial_condition)
+
+        self.weights = {
+            'separation': INITIAL_SEPARATION_WEIGHT,
+            'alignment': INITIAL_ALIGNMENT_WEIGHT,
+            'cohesion': INITIAL_COHESION_WEIGHT
+        }
+
+        self.mouse_pos = None
+        self.mouse_mode = None # 'attract' or 'repel'
+
+    def _initialize_boids(self, condition):
+        """Sets the initial positions and velocities of the boids."""
+        if condition == 'circle':
+            center = np.array([self.width / 2, self.height / 2])
+            radius = min(self.width, self.height) / 4
+            angles = np.linspace(0, 2 * np.pi, self.count)
+            positions = center + radius * np.c_[np.cos(angles), np.sin(angles)]
+            velocities = (np.c_[-np.sin(angles), np.cos(angles)]) * MIN_SPEED
+        elif condition == 'grid':
+            grid_size = int(np.ceil(np.sqrt(self.count)))
+            x = np.linspace(self.width/4, 3*self.width/4, grid_size)
+            y = np.linspace(self.height/4, 3*self.height/4, grid_size)
+            xx, yy = np.meshgrid(x, y)
+            positions = np.c_[xx.ravel(), yy.ravel()][:self.count]
+            velocities = np.full((self.count, 2), [0, -MIN_SPEED])
+        else: # 'random'
+            positions = np.random.rand(self.count, 2) * np.array([self.width, self.height])
+            velocities = (np.random.rand(self.count, 2) - 0.5) * MAX_SPEED
+
+        return positions, velocities
+
+    def _apply_rules(self):
+        """Applies boid rules to calculate acceleration."""
+        deltas = self.positions[:, np.newaxis, :] - self.positions[np.newaxis, :, :]
+        distances = np.sqrt(np.sum(deltas**2, axis=2))
+
+        separation_vec = np.zeros_like(self.positions)
+        alignment_vec = np.zeros_like(self.positions)
+        cohesion_vec = np.zeros_like(self.positions)
+
+        neighbor_mask = (distances > 0) & (distances < PERCEPTION_RADIUS)
+
+        for i in range(self.count):
+            neighbors = neighbor_mask[i]
+            if not np.any(neighbors):
+                continue
+
+            close_mask = (distances[i] > 0) & (distances[i] < PERCEPTION_RADIUS / 2)
+            if np.any(close_mask):
+                avg_pos_close = np.mean(self.positions[close_mask], axis=0)
+                separation_vec[i] = self.positions[i] - avg_pos_close
+
+            alignment_vec[i] = np.mean(self.velocities[neighbors], axis=0)
+
+            avg_pos_all = np.mean(self.positions[neighbors], axis=0)
+            cohesion_vec[i] = avg_pos_all - self.positions[i]
+
+        for vec in [separation_vec, alignment_vec, cohesion_vec]:
+            norm = np.sqrt(np.sum(vec**2, axis=1))[:, np.newaxis]
+            non_zero_mask = norm.flatten() > 0
+            if np.any(non_zero_mask):
+                vec[non_zero_mask] /= norm[non_zero_mask]
+
+        mouse_steer = np.zeros_like(self.positions)
+        if self.mouse_pos is not None:
+            mouse_delta = self.mouse_pos - self.positions
+            mouse_dist = np.sqrt(np.sum(mouse_delta**2, axis=1))
+            influence_mask = mouse_dist < MOUSE_INFLUENCE_RADIUS
+
+            if self.mouse_mode == 'attract':
+                mouse_steer[influence_mask] = mouse_delta[influence_mask] * MOUSE_ATTRACT_WEIGHT
+            elif self.mouse_mode == 'repel':
+                repel_force = (MOUSE_INFLUENCE_RADIUS - mouse_dist[influence_mask, np.newaxis]) / MOUSE_INFLUENCE_RADIUS
+                mouse_steer[influence_mask] = -mouse_delta[influence_mask] * MOUSE_REPEL_WEIGHT * repel_force
+
+        acceleration = (separation_vec * self.weights['separation'] +
+                        alignment_vec * self.weights['alignment'] +
+                        cohesion_vec * self.weights['cohesion'] +
+                        mouse_steer)
+        return acceleration
+
+    def update(self):
+        """Updates the position and velocity of each boid."""
+        acceleration = self._apply_rules()
+        self.velocities += acceleration
+
+        speeds = np.sqrt(np.sum(self.velocities**2, axis=1))
+        speed_mask_max = speeds > MAX_SPEED
+        speed_mask_min = speeds < MIN_SPEED
+
+        if np.any(speed_mask_max):
+             self.velocities[speed_mask_max] *= (MAX_SPEED / speeds[speed_mask_max, np.newaxis])
+        if np.any(speed_mask_min):
+             self.velocities[speed_mask_min] *= (MIN_SPEED / speeds[speed_mask_min, np.newaxis])
+
+        self.positions += self.velocities
+
+        self.positions[:, 0] = np.mod(self.positions[:, 0], self.width)
+        self.positions[:, 1] = np.mod(self.positions[:, 1], self.height)
+
+# --- Visualization and Interactivity ---
+
+boids = Boids(N_BOIDS, WIDTH, HEIGHT, initial_condition=INITIAL_COND)
+
+fig, ax = plt.subplots(figsize=(12, 9))
+# Leave space at the bottom for sliders and description text
+plt.subplots_adjust(bottom=0.3, left=0.1)
+ax.set_xlim(0, WIDTH)
+ax.set_ylim(0, HEIGHT)
+ax.set_xticks([])
+ax.set_yticks([])
+ax.set_facecolor('k')
+fig.set_facecolor('k')
+
+quiver = ax.quiver(boids.positions[:, 0], boids.positions[:, 1],
+                   boids.velocities[:, 0], boids.velocities[:, 1],
+                   color='cyan', headwidth=2, headlength=3)
+
+mode_text = ax.text(10, HEIGHT - 20, "Mode: Normal", color='white', fontsize=12)
+
+# --- Mouse Click Event Handler ---
+def on_click(event):
+    if event.inaxes:
+        boids.mouse_pos = np.array([event.xdata, event.ydata])
+        if event.button == 1:
+            boids.mouse_mode = 'attract'
+            mode_text.set_text("Mode: Attract (Left-Click)")
+        elif event.button == 3:
+            boids.mouse_mode = 'repel'
+            mode_text.set_text("Mode: Repel (Right-Click)")
+        elif event.button == 2:
+            boids.mouse_mode = None
+            boids.mouse_pos = None
+            mode_text.set_text("Mode: Normal (Middle-Click)")
+fig.canvas.mpl_connect('button_press_event', on_click)
+
+# --- Sliders and Description Text ---
+ax_sep = plt.axes([0.25, 0.18, 0.65, 0.03])
+ax_ali = plt.axes([0.25, 0.13, 0.65, 0.03])
+ax_coh = plt.axes([0.25, 0.08, 0.65, 0.03])
+
+slider_sep = Slider(ax_sep, 'Separation', 0.1, 5.0, valinit=INITIAL_SEPARATION_WEIGHT, color='c')
+slider_ali = Slider(ax_ali, 'Alignment', 0.1, 5.0, valinit=INITIAL_ALIGNMENT_WEIGHT, color='c')
+slider_coh = Slider(ax_coh, 'Cohesion', 0.1, 5.0, valinit=INITIAL_COHESION_WEIGHT, color='c')
+
+# Add the text area for descriptions
+description_text = fig.text(
+    0.5, 0.02,
+    "Move a slider to see its description.",
+    color='yellow', ha='center', va='bottom', fontsize=10
+)
+
+# Descriptions for each slider
+descriptions = {
+    'separation': "Separation: Controls how strongly boids steer to avoid crowding neighbors. Higher values prevent collisions.",
+    'alignment': "Alignment: Controls how strongly boids steer to match the heading of their neighbors. Higher values create more parallel flight.",
+    'cohesion': "Cohesion: Controls how strongly boids steer towards the center of their neighbors. Higher values create tighter flocks."
+}
+
+# Functions to update weights AND the description text
+def update_separation(val):
+    boids.weights['separation'] = val
+    description_text.set_text(descriptions['separation'])
+
+def update_alignment(val):
+    boids.weights['alignment'] = val
+    description_text.set_text(descriptions['alignment'])
+
+def update_cohesion(val):
+    boids.weights['cohesion'] = val
+    description_text.set_text(descriptions['cohesion'])
+
+slider_sep.on_changed(update_separation)
+slider_ali.on_changed(update_alignment)
+slider_coh.on_changed(update_cohesion)
+
+# --- Animation Loop ---
+def animate(frame):
+    boids.update()
+
+    quiver.set_offsets(boids.positions)
+    quiver.set_UVC(boids.velocities[:, 0], boids.velocities[:, 1])
+
+    ax.set_title(f"Interactive Swarm Simulation", color='white')
+    return quiver, mode_text, description_text
+
+ani = animation.FuncAnimation(fig, animate, frames=200, interval=30, blit=False)
+
+plt.show()
+
+```
