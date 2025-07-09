@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Graph Convolutional Networks</title>
+  <meta name="description" content="Graph Convolutional Networks extend deep learning to graph-structured data by 
+generalizing the convolution operation from regular grids (like images) to 
+irregular graph domains. The key innovation lies in how they aggregate and transform 
+feature information from a node's local neighborhood through spectral or spatial convolutions.
+In GCNs, each layer performs neighborhood feature aggregation where a node's representation is 
+updated by combining its features with those of its 
+adjacent nodes. This aggregation is typically followed by a non-linear 
+transformation. The process can be mathematically represented as a function of 
+the normalized adjacency matrix, feature matrix, and learned weight matrices.
+Here's the pseudocode for a basic GCN layer:">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/10/26/gcn.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  <article >
+
+    <h1>
+    <a href="#Graph-Convolutional-Networks"><span>Graph Convolutional Networks</span> <time datetime="2024-10-26">Oct 26, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/gcn.png">
+</figure>
+<p><span>Graph Convolutional Networks extend deep learning to graph-structured data by </span>
+<span>generalizing the convolution operation from regular grids (like images) to </span>
+<span>irregular graph domains. The key innovation lies in how they aggregate and transform </span>
+<span>feature information from a node</span>&rsquo;<span>s local neighborhood through spectral or spatial convolutions.</span>
+<span>In GCNs, each layer performs neighborhood feature aggregation where a node</span>&rsquo;<span>s representation is </span>
+<span>updated by combining its features with those of its </span>
+<span>adjacent nodes. This aggregation is typically followed by a non-linear </span>
+<span>transformation. The process can be mathematically represented as a function of </span>
+<span>the normalized adjacency matrix, feature matrix, and learned weight matrices.</span>
+<span>Here</span>&rsquo;<span>s the pseudocode for a basic GCN layer:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">GCN_layer</span>(<span class="hl-params">adjacency_matrix A, feature_matrix X, weight_matrix W</span>):</span>
+<span class="line">    <span class="hl-comment"># Add self-loops to adjacency matrix</span></span>
+<span class="line">    A_hat = A + identity_matrix(A.shape[<span class="hl-number">0</span>])</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Compute degree matrix</span></span>
+<span class="line">    D = diagonal_matrix([<span class="hl-built_in">sum</span>(row) <span class="hl-keyword">for</span> row <span class="hl-keyword">in</span> A_hat])</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Symmetric normalization</span></span>
+<span class="line">    D_inv_sqrt = inverse_sqrt(D)</span>
+<span class="line">    A_norm = D_inv_sqrt @ A_hat @ D_inv_sqrt</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Feature transformation and aggregation</span></span>
+<span class="line">    H = relu(A_norm @ X @ W)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> H</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">GCN_forward</span>(<span class="hl-params">G, X</span>):</span>
+<span class="line">    <span class="hl-comment"># Initialize learnable weight matrices</span></span>
+<span class="line">    W1 = initialize_weights(input_dim, hidden_dim)</span>
+<span class="line">    W2 = initialize_weights(hidden_dim, output_dim)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># First GCN layer</span></span>
+<span class="line">    H1 = GCN_layer(G.adjacency, X, W1)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Second GCN layer</span></span>
+<span class="line">    H2 = GCN_layer(G.adjacency, H1, W2)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Final node representations</span></span>
+<span class="line">    <span class="hl-keyword">return</span> H2</span></code></pre>
+
+</figure>
+<p><span>The core operation performs message passing </span>
+<span>through Â = D</span><sup><span>(-1/2)(A + I)D</span></sup><span>(-1/2), where A is the adjacency matrix, I is the identity </span>
+<span>matrix (self-loops), and D is the degree matrix. This normalization prevents numerical </span>
+<span>instabilities and exploding/vanishing gradients. Each layer then applies this </span>
+<span>normalized adjacency matrix to the node features, followed by a learned weight </span>
+<span>transformation and non-linearity.</span></p>
+</article>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-10-26-gcn.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+</body>
+
+</html>

@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deepseek, an overview and quick notes</title>
+  <meta name="description" content="Some notes of DeepSeek-V3">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/12/28/deepseek.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  <article >
+
+    <h1>
+    <a href="#Deepseek-an-overview-and-quick-notes"><span>Deepseek, an overview and quick notes</span> <time datetime="2024-12-28">Dec 28, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/deekseek.webp">
+</figure>
+<p><span>Some notes of DeepSeek-V3</span></p>
+<ul>
+<li>
+<span>DeepSeek-V3 is a Mixture-of-Experts (MoE) language model with 671B total parameters, of which 37B are activated for each token</span>
+</li>
+<li>
+<span>Uses Multi-head Latent Attention (MLA) for efficient inference and DeepSeekMoE for cost-effective training</span>
+</li>
+<li>
+<span>Introduces an auxiliary-loss-free strategy for load balancing to minimize performance degradation while maintaining balanced expert utilization</span>
+</li>
+<li>
+<span>Implements a multi-token prediction training objective to enhance model performance</span>
+</li>
+<li>
+<span>Trained on 14.8T diverse tokens</span>
+</li>
+<li>
+<span>Uses FP8 mixed precision training with fine-grained quantization strategy</span>
+</li>
+<li>
+<span>Employs DualPipe algorithm for efficient pipeline parallelism with minimal communication overhead</span>
+</li>
+<li>
+<span>Achieves cost-effective training, requiring only 2.788M H800 GPU hours total:</span>
+<span>- 2664K hours for pre-training</span>
+<span>- 119K hours for context extension </span>
+<span>- 5K hours for post-training</span>
+<span>- Total cost approximately $5.576M at $2/GPU hour</span>
+</li>
+<li>
+<span>Outperforms other open-source models across multiple benchmarks</span>
+</li>
+<li>
+<span>Particularly strong in:</span>
+<span>- Math tasks (90.2% on MATH-500)</span>
+<span>- Code tasks (51.6% on Codeforces percentile)</span>
+<span>- Knowledge tasks (75.9% on MMLU-Pro)</span>
+</li>
+<li>
+<span>Demonstrates competitive performance against closed-source models like GPT-4 and Claude-3.5-Sonnet</span>
+</li>
+<li>
+<span>Supports context lengths up to 128K tokens through two-stage extension training</span>
+</li>
+<li>
+<span>Auxiliary-loss-free load balancing strategy that improves expert utilization without compromising performance</span>
+</li>
+<li>
+<span>Multi-token prediction training objective that enhances model capabilities while enabling speculative decoding</span>
+</li>
+<li>
+<span>FP8 training framework with tile-wise and block-wise quantization strategies</span>
+</li>
+<li>
+<span>DualPipe algorithm that achieves efficient pipeline parallelism with minimal communication overhead</span>
+</li>
+</ul>
+</article>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-12-28-deepseek.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+</body>
+
+</html>
