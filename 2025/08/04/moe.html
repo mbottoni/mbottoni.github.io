@@ -1,0 +1,201 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mixture of Experts</title>
+  <meta name="description" content="In the pursuit of scaling neural networks to unprecedented parameter counts while 
+maintaining computational tractability, the paradigm of conditional computation 
+has emerged as a cornerstone of modern deep learning architectures. A prominent and 
+highly successful incarnation of this principle is the Mixture of Experts (MoE) layer. At its core, an MoE model eschews 
+the monolithic, dense activation of traditional networks, wherein every parameter is engaged 
+for every input. Instead, it employs a collection of specialized 
+subnetworks, termed experts, and dynamically selects a sparse combination of these 
+experts to process each input token. This approach allows for a dramatic increase in 
+model capacity without a commensurate rise in computational cost (FLOPs), as only 
+a fraction of the network's parameters are utilized for any given forward pass.">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2025/08/04/moe.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  <article >
+
+    <h1>
+    <a href="#Mixture-of-Experts"><span>Mixture of Experts</span> <time datetime="2025-08-04">Aug 4, 2025</time></a>
+    </h1>
+<p><span>In the pursuit of scaling neural networks to unprecedented parameter counts while </span>
+<span>maintaining computational tractability, the paradigm of conditional computation </span>
+<span>has emerged as a cornerstone of modern deep learning architectures. A prominent and </span>
+<span>highly successful incarnation of this principle is the Mixture of Experts (MoE) layer. At its core, an MoE model eschews </span>
+<span>the monolithic, dense activation of traditional networks, wherein every parameter is engaged </span>
+<span>for every input. Instead, it employs a collection of specialized </span>
+<span>subnetworks, termed </span>&ldquo;<span>experts,</span>&rdquo;<span> and dynamically selects a sparse combination of these </span>
+<span>experts to process each input token. This approach allows for a dramatic increase in </span>
+<span>model capacity without a commensurate rise in computational cost (FLOPs), as only </span>
+<span>a fraction of the network</span>&rsquo;<span>s parameters are utilized for any given forward pass.</span></p>
+<p><span>The architecture is orchestrated by two primary components: a set of N expert </span>
+<span>networks, E</span><em><span>1, E</span></em><span>2, </span>&hellip;<span>, E_N, and a trainable gating network, G. The expert </span>
+<span>networks are typically homogenous in their architecture (e.g., small feed-forward networks) but learn </span>
+<span>distinct functions over the course of training. The gating network, often a simple linear layer </span>
+<span>followed by a softmax function, serves as a dynamic router. For a given input vector x, the gating network produces a </span>
+<span>normalized distribution of weights over the N experts, effectively learning to predict which experts </span>
+<span>are most suitable for processing that specific input.</span></p>
+<p><span>The final output of the MoE layer, y, is not the output of a single chosen expert but </span>
+<span>rather a weighted sum of the outputs from all experts. The weights for this </span>
+<span>summation are precisely the probabilities generated by the gating network. The output is thus computed as: y = \sum</span><em><span>^{N} g</span></em><span>i(x)  E_i(x)</span>
+<span>where E</span><span>_i(x) is the output of the i-th expert for the input x, and g(x) is the vector of gating weights produced by the gating </span>
+<span>network G. The weights are typically computed via a softmax over the logits.</span></p>
+<p><span>In practice, to enforce sparsity and reduce computation, a variant known as </span>
+<span>the Sparse Mixture of Experts is commonly deployed. In this formulation, only the </span>
+<span>experts with the highest gating weights—the </span>&ldquo;<span>top-k</span>&rdquo;<span> experts, where $k$ is a small </span>
+<span>integer (e.g., 1 or 2)—are activated. The gating weights are re-normalized over </span>
+<span>this small subset of selected experts. This ensures that the computational cost is independent </span>
+<span>of the total number of experts, N, and dependent only on k. This sparse, conditional activation is the key to the MoE</span>&rsquo;<span>s efficiency.</span></p>
+<section id="Pseudocode-Top-k-Mixture-of-Experts-Forward-Pass">
+
+    <h3>
+    <a href="#Pseudocode-Top-k-Mixture-of-Experts-Forward-Pass"><span>Pseudocode: Top-k Mixture of Experts Forward Pass</span> </a>
+    </h3>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-comment"># Let x be the input token representation</span></span>
+<span class="line"><span class="hl-comment"># Let E be the set of N expert networks {E_1, ..., E_N}</span></span>
+<span class="line"><span class="hl-comment"># Let G be the gating network</span></span>
+<span class="line"><span class="hl-comment"># Let k be the number of experts to select</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 1. Compute gating logits for the input token x.</span></span>
+<span class="line"><span class="hl-comment"># W_g is the weight matrix of the gating network.</span></span>
+<span class="line">logits = G(x)  <span class="hl-comment"># Shape: [N]</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 2. Select the top k experts.</span></span>
+<span class="line"><span class="hl-comment"># Get the k largest logit values and their corresponding indices.</span></span>
+<span class="line">top_k_logits, top_k_indices = TopK(logits, k)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 3. Compute the normalized routing weights for the selected experts.</span></span>
+<span class="line"><span class="hl-comment"># Apply softmax only to the selected logits to get sparse weights.</span></span>
+<span class="line">routing_weights = Softmax(top_k_logits) <span class="hl-comment"># Shape: [k]</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 4. Initialize the final output vector.</span></span>
+<span class="line"><span class="hl-comment"># The output has the same dimension as the expert outputs.</span></span>
+<span class="line">final_output = <span class="hl-number">0</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 5. Compute the weighted sum of the selected expert outputs.</span></span>
+<span class="line"><span class="hl-comment"># Iterate through the chosen experts and their corresponding weights.</span></span>
+<span class="line"><span class="hl-keyword">for</span> i <span class="hl-keyword">in</span> <span class="hl-number">1.</span>.k:</span>
+<span class="line">    <span class="hl-comment"># Get the index of the i-th expert in the top-k set.</span></span>
+<span class="line">    expert_index = top_k_indices[i]</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Get the routing weight for this expert.</span></span>
+<span class="line">    weight = routing_weights[i]</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Retrieve the corresponding expert network.</span></span>
+<span class="line">    selected_expert = E[expert_index]</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Process the input token with the selected expert.</span></span>
+<span class="line">    expert_output = selected_expert(x)</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Accumulate the weighted expert output.</span></span>
+<span class="line">    final_output += weight * expert_output</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 6. Return the combined output.</span></span>
+<span class="line"><span class="hl-comment"># This output is then passed to the next layer in the network.</span></span>
+<span class="line"><span class="hl-keyword">return</span> final_output</span></code></pre>
+
+</figure>
+</section>
+</article>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2025-08-04-moe.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+</body>
+
+</html>

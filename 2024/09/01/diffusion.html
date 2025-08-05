@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diffusion models or Autoencoders?</title>
+  <meta name="description" content="Recent advancements in generative AI have brought diffusion models to the forefront, particularly 
+for their impressive performance in image generation. While these models are often seen as 
+distinct from traditional approaches, there's a compelling argument for viewing diffusion models 
+as a form of hierarchical autoencoder.">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/09/01/diffusion.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  <article >
+
+    <h1>
+    <a href="#Diffusion-models-or-Autoencoders"><span>Diffusion models or Autoencoders?</span> <time datetime="2024-09-01">Sep 1, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/diffusion.webp">
+</figure>
+<section id="Unmasking-the-Secret-Link-Are-Diffusion-Models-Just-Fancy-Autoencoders">
+
+    <h2>
+    <a href="#Unmasking-the-Secret-Link-Are-Diffusion-Models-Just-Fancy-Autoencoders"><span>Unmasking the Secret Link: Are Diffusion Models Just Fancy Autoencoders?</span> </a>
+    </h2>
+<p><span>Recent advancements in generative AI have brought diffusion models to the forefront, particularly </span>
+<span>for their impressive performance in image generation. While these models are often seen as </span>
+<span>distinct from traditional approaches, there</span>&rsquo;<span>s a compelling argument for viewing diffusion models </span>
+<span>as a form of hierarchical autoencoder.</span></p>
+<p><span>The key insight lies in the similarity between the noise addition process in diffusion models </span>
+<span>and the compression step in autoencoders. When a diffusion model adds noise to data, it</span>&rsquo;<span>s </span>
+<span>effectively compressing the information, retaining only the most robust features. This </span>
+<span>is analogous to how an autoencoder</span>&rsquo;<span>s encoder compresses input data into a </span>
+<span>lower-dimensional representation.</span></p>
+<p><span>Conversely, the denoising process in diffusion models resembles the reconstruction phase </span>
+<span>of autoencoders. The critical difference is that diffusion models perform this reconstruction </span>
+<span>gradually, over multiple steps, allowing them to capture a hierarchy of details. This </span>
+<span>multi-step process creates a series of latent representations at different levels of </span>
+<span>abstraction, much like a hierarchical autoencoder.</span></p>
+<p><span>The noise in diffusion models serves a similar purpose to the bottleneck layer in </span>
+<span>autoencoders, acting as an information constraint that forces the model to learn </span>
+<span>efficient, robust representations. This perspective suggests that diffusion models implicitly </span>
+<span>learn a series of nested representations, each corresponding to a different noise level.</span></p>
+<p><span>Viewing diffusion models through this lens opens up new possibilities for research </span>
+<span>and improvement. It suggests potential hybrid architectures combining elements of both </span>
+<span>approaches, and hints at applications beyond generation, such as in data compression.</span></p>
+</section>
+</article>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-09-01-diffusion.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+</body>
+
+</html>
