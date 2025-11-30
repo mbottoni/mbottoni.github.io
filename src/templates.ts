@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { Post } from "./main.ts";
+import { themes, type ThemeConfig } from "./themes.ts";
 
 const site_url = "https://mbottoni.github.io";
 
@@ -75,6 +76,26 @@ export const base = (
   footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
   footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
 
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1rem; }
+  .post-list li h3 { font-size: 1.1em; }
+  .post-list li p { margin-top: .25rem; color: rgba(0, 0, 0, .7); }
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+
   </style>
 
   <link rel="stylesheet" href="/css/main.css">
@@ -122,6 +143,11 @@ export const base = (
 
 const blurb = "Yet another programming blog by Maruan Bakri Ottoni aka mbottoni.";
 
+export type ThemeGroup = {
+  theme: ThemeConfig;
+  posts: Post[];
+};
+
 export function page(name: string, content: HtmlString) {
   return base({
     path: `/${name}`,
@@ -133,20 +159,62 @@ export function page(name: string, content: HtmlString) {
   });
 }
 
-export const post_list = (posts: Post[]): HtmlString => {
-  const list_items = posts.map((post) =>
-    html`
-<li>
-  <h2>${time(post.date)} <a href="${post.path}">${post.title}</a></h2>
-</li>`
-  );
+export const post_list = (groups: ThemeGroup[]): HtmlString => {
+  const cards = groups.map((group) => {
+    const latest = group.posts[0];
+    return html`
+      <article class="theme-card">
+        <div>
+          <h2><a href="${group.theme.path}">${group.theme.title}</a></h2>
+          <p>${group.theme.description}</p>
+        </div>
+        <p class="theme-meta">
+          ${group.posts.length} post${group.posts.length === 1 ? "" : "s"}
+          · Latest: ${time(latest.date)}
+        </p>
+      </article>
+    `;
+  });
 
   return base({
     path: "",
     title: "mbottoni",
     description: blurb,
     src: "/src/templates.ts",
-    content: html`<ul class="post-list">${list_items}</ul>`,
+    content: html`
+      <section class="theme-grid">
+        ${cards}
+      </section>
+    `,
+  });
+};
+
+export const theme_page = (theme: ThemeConfig, posts: Post[]): HtmlString => {
+  const items = posts.map((post) =>
+    html`
+      <li>
+        <h3>${time(post.date)} · <a href="${post.path}">${post.title}</a></h3>
+        <p>${post.summary}</p>
+      </li>
+    `
+  );
+
+  return base({
+    path: theme.path,
+    title: `${theme.title} — mbottoni`,
+    description: theme.description,
+    src: "/src/templates.ts",
+    content: html`
+      <section class="theme-page">
+        <header class="theme-section">
+          <h1>${theme.title}</h1>
+          <p>${theme.description}</p>
+        </header>
+        <ul class="post-list">
+          ${items}
+        </ul>
+      </section>
+    `,
   });
 };
 
@@ -156,9 +224,17 @@ export function post(post: Post, spellcheck: boolean): HtmlString {
     title: post.title,
     description: post.summary,
     path: post.path,
-    content: html`<article ${
+    content: html`
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="${post.theme.path}">
+          ${post.theme.title}
+        </a>
+      </div>
+      <article ${
       spellcheck ? 'contentEditable="true"' : ""
-    }>\n${post.content}</article>`,
+    }>\n${post.content}</article>
+    `,
   });
 }
 

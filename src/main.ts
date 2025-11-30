@@ -3,6 +3,7 @@ import * as fs from "std/fs/mod.ts";
 import * as templates from "./templates.ts";
 import * as djot from "./djot.ts";
 import { HtmlString } from "./templates.ts";
+import { resolveTheme, themes, type ThemeConfig } from "./themes.ts";
 
 async function main() {
   const params = {
@@ -110,7 +111,21 @@ async function build(params: {
   }
 
   const posts = await collect_posts(ctx, params.filter);
-  await update_file("out/res/index.html", templates.post_list(posts).value);
+  const themeGroups = themes.map((theme) => ({
+    theme,
+    posts: posts.filter((post) => post.theme.key === theme.key),
+  })).filter((group) => group.posts.length > 0);
+
+  await update_file(
+    "out/res/index.html",
+    templates.post_list(themeGroups).value,
+  );
+  for (const group of themeGroups) {
+    await update_file(
+      `out/res${group.theme.path}`,
+      templates.theme_page(group.theme, group.posts).value,
+    );
+  }
   await update_file("out/res/feed.xml", templates.feed(posts).value);
   for (const post of posts) {
     await update_file(
@@ -186,6 +201,7 @@ export type Post = {
   src: string;
   content: HtmlString;
   summary: string;
+  theme: ThemeConfig;
 };
 
 async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
@@ -228,6 +244,7 @@ async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
       summary: render_ctx.summary!,
       path: `/${y}/${m}/${d}/${slug}.html`,
       src: `/content/posts/${y}-${m}-${d}-${slug}.dj`,
+      theme: resolveTheme(slug),
     });
   }
   posts.sort((l, r) => l.path < r.path ? 1 : -1);
