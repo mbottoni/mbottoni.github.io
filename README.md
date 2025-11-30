@@ -5,7 +5,6 @@ Source code for the blog. The `./src` directory contains a deno script that read
 
 
 $ deno task build
-$ deno tasks serve
 $ deno task watch
 ```
 
@@ -17,9 +16,3 @@ $ deno task watch
 3. Assign the post to one of the homepage subtopics by listing its slug in `src/themes.ts`. Each theme owns an array of post slugs; add your slug to the appropriate array so the post appears under that theme. If you skip this step the post defaults to the “Foundations” theme.
 4. Run `deno task build` (or `deno task watch` while editing) to regenerate HTML and theme pages under `out/res/`.
 5. Preview locally by serving `out/res/` (e.g. `deno task serve`) before committing and pushing.
-
-## Math / LaTeX
-
-- Inline math: wrap expressions with `\( ... \)` or `$...$`.  
-- Display math: use `\[ ... \]` or `$$...$$`.  
-- KaTeX assets are vendored under `content/assets/vendor/katex/` and are loaded on every page, so math renders client-side without extra build steps.

@@ -109,10 +109,7 @@ export const base = (
   </style>
 
   <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/assets/vendor/katex/katex.min.css">
   ${extra_css ? html`<link rel="stylesheet" href="/css/${extra_css}">` : ""}
-  <script defer src="/assets/vendor/katex/katex.min.js"></script>
-  <script defer src="/assets/vendor/katex/auto-render.min.js"></script>
 </head>
 
 <body>
@@ -149,21 +146,6 @@ export const base = (
       </a>
     </p>
   </footer>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      if (window.renderMathInElement) {
-        window.renderMathInElement(document.body, {
-          delimiters: [
-            { left: "$$", right: "$$", display: true },
-            { left: "\\[", right: "\\]", display: true },
-            { left: "$", right: "$", display: false },
-            { left: "\\(", right: "\\)", display: false },
-          ],
-          ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
-        });
-      }
-    });
-  </script>
 </body>
 
 </html>
