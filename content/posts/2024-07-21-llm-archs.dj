@@ -2,7 +2,7 @@
 
 # Encoder vs Decoder vs EncoderDecoder Architectures
 
-![](/assets/llm_tree.jpg)
+![](/assets/frontier/llm_tree.jpg)
 
 ## Differences Between Encoder-Only, Decoder-Only, and Encoder-Decoder Architectures for Language Models
 

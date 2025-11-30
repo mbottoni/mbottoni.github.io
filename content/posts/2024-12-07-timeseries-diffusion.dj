@@ -36,7 +36,7 @@ The paper presents a detailed explanation of the UTSD model architecture and its
 to address the challenges of modeling probability distributions across multiple time series domains and generating accurate 
 long-term forecasts.
 
-![](/assets/time-series-diffusion.png)
+![](/assets/generative/time-series-diffusion.png)
 
 ### 1. Condition-Denoising Architecture
 

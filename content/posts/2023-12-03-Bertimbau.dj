@@ -11,7 +11,7 @@ context understanding of words in sentences. This architecture, based on the Tra
 encoder component, marks a departure from previous sequential learning methods by employing attention mechanisms exclusively.
 Here is a image of the architecture
 
-![](/assets/arch.jpg)
+![](/assets/frontier/arch.jpg)
 
 My study delves into the application of BERT in two areas. First, I investigated the regression of vowel
 density in texts. This involved calculating the proportion of vowels (ignoring spaces, punctuation, and

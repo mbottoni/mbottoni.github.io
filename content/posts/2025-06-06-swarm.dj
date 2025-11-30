@@ -1,6 +1,8 @@
 
 # Swarm Structure Simulation
 
+![](/assets/graph_rl/swarm.jpg)
+
 After reading the book The Rules of the Flock I got inspired to test some 
 ideas of the book. Basically a swarm behavior is defined when individual agents, following 
 a simple set of local rules without a central leader, produce complex and 

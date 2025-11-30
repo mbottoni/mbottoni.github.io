@@ -1,6 +1,6 @@
 # Hopfield Networks for dummies
 
-![](/assets/hopfield.gif)
+![](/assets/foundations/hopfield.gif)
 
 ## Introduction to Hopfield Networks
 
@@ -25,7 +25,7 @@ retrieve them with only one update and the update rule is equivalent to
 the attention mechanism used in transformers*.
 
 Now let's dive little deep into the details. The basic architecture is on
-![](/assets/modern_hopfield.png)
+![](/assets/foundations/modern_hopfield.png)
 
 The evolution of Hopfield Networks towards modern architectures involves a transition from binary to continuous neuron states, allowing for more complex and
 nuanced representations. This advancement closely aligns with the mechanisms used in transformer models in deep learning.

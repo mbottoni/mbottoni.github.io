@@ -1,7 +1,7 @@
 
 # DDIM vs DDPM
 
-![](/assets/ddim.png)
+![](/assets/generative/ddim.png)
 
 Diffusion models have emerged as a powerful class of deep generative models, particularly excelling in image synthesis tasks. This article 
 delves into a comprehensive comparison of two significant variants: Denoising Diffusion Probabilistic Models (DDPM) and Denoising 

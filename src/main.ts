@@ -179,6 +179,8 @@ async function update_path(path: string) {
     for await (const entry of Deno.readDir(`content/${dir}`)) {
       if (entry.isFile) {
         futs.push(update_path(`${dir}/${entry.name}`));
+      } else if (entry.isDirectory) {
+        futs.push(update_path(`${dir}/${entry.name}/*`));
       }
     }
     await Promise.all(futs);
@@ -202,6 +204,7 @@ export type Post = {
   content: HtmlString;
   summary: string;
   theme: ThemeConfig;
+  image?: string;
 };
 
 async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
@@ -222,16 +225,20 @@ async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
 
     let t = performance.now();
     const text = await Deno.readTextFile(entry.path);
+    const { text: math_safe_text, segments: math_segments } = protect_math(text);
     ctx.read_ms += performance.now() - t;
 
     t = performance.now();
-    const ast = djot.parse(text);
+    const ast = djot.parse(math_safe_text);
     ctx.parse_ms += performance.now() - t;
 
     t = performance.now();
     const render_ctx = { date, summary: undefined, title: undefined };
-    const html = djot.render(ast, render_ctx);
+    const raw_html = djot.render(ast, render_ctx);
+    const html = new HtmlString(restore_math(raw_html.value, math_segments));
     ctx.render_ms += performance.now() - t;
+
+    const hero = extract_first_image(text);
 
     posts.push({
       year,
@@ -245,11 +252,61 @@ async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
       path: `/${y}/${m}/${d}/${slug}.html`,
       src: `/content/posts/${y}-${m}-${d}-${slug}.dj`,
       theme: resolveTheme(slug),
+      image: hero,
     });
   }
   posts.sort((l, r) => l.path < r.path ? 1 : -1);
   ctx.collect_ms = performance.now() - start;
   return posts;
+}
+
+function extract_first_image(source: string): string | undefined {
+  const markdown_image = source.match(/!\[[^\]]*\]\(([^\s)]+)(?:\s"[^"]*")?\)/);
+  if (markdown_image) return markdown_image[1];
+  return undefined;
+}
+
+type MathSegment = { token: string; html: string };
+
+function protect_math(text: string): { text: string; segments: MathSegment[] } {
+  const segments: MathSegment[] = [];
+  let protected_text = text;
+
+  function store(html: string) {
+    const token = `§§MATHSEG${segments.length}§§`;
+    segments.push({ token, html });
+    return token;
+  }
+
+  protected_text = protected_text.replaceAll(
+    /\$\$([\s\S]+?)\$\$/g,
+    (_, expr) => store(`<span class="math-tex">\\[${expr}\\]</span>`),
+  );
+
+  protected_text = protected_text.replaceAll(
+    /\\\[([\s\S]+?)\\\]/g,
+    (_, expr) => store(`<span class="math-tex">\\[${expr}\\]</span>`),
+  );
+
+  protected_text = protected_text.replaceAll(
+    /(?<!\$)\$([^$\n]+?)\$(?!\$)/g,
+    (_, expr) => store(`<span class="math-tex">\$${expr}\$</span>`),
+  );
+
+  protected_text = protected_text.replaceAll(
+    /\\\(([\s\S]+?)\\\)/g,
+    (_, expr) => store(`<span class="math-tex">\\(${expr}\\)</span>`),
+  );
+
+  return { text: protected_text, segments };
+}
+
+function restore_math(html: string, segments: MathSegment[]): string {
+  let restored = html;
+  for (const segment of segments) {
+    restored = restored.replace(segment.token, segment.html);
+  }
+  return restored;
 }
 
 if (import.meta.main) await main();

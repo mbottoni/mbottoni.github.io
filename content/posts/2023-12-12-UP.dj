@@ -1,6 +1,6 @@
 # Implementing from scratch a Hopfield Network
 
-![](/assets/cat_coding.jpg)
+![](/assets/foundations/cat_coding.jpg)
 
 A while ago I posted about Hopfield Networks. I wanted to further explore this theme
 by trying to implement this type of idea from scratch in python.
@@ -11,8 +11,8 @@ Some nice results are shown here:
 
 The reconstruction of the images using associative memory of the network:
 
-![](/assets/weights_hopfield.png)
+![](/assets/foundations/weights_hopfield.png)
 
 The weights of the hopfield network graph
 
-![](/assets/result_mnist_hopfield.png)
+![](/assets/foundations/result_mnist_hopfield.png)

@@ -1,7 +1,7 @@
 
 # Understanding and Implementing RAG (Retrieval-Augmented Generation)
 
-![](/assets/rag.png)
+![](/assets/frontier/rag.png)
 
 Retrieval-Augmented Generation (RAG) is a powerful technique that combines the strengths of large language 
 models with the ability to retrieve relevant information from external sources. This approach enhances the 

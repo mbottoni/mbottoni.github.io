@@ -1,7 +1,7 @@
 
 # Conditional Tabular GAN - CTGAN
 
-![](/assets/gan.png)
+![](/assets/generative/gan.png)
 
 One of the most interesting ideas on the last decades in machine learning is the GAN architecture for generatine model. While GANs have 
 shown remarkable success in generating high-quality images and other continuous data types, tabular data poses unique challenges. Tabular data often contains a 

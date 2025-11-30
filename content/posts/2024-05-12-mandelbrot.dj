@@ -1,7 +1,7 @@
 
 # Some tests with the Mandelbrot set and parallelization
 
-![](/assets/mandelbrot.png)
+![](/assets/foundations/mandelbrot.png)
 
 Hello. It has been a while since I lasted programed
 with OpenMP and C. For refreshing my mind and keeping

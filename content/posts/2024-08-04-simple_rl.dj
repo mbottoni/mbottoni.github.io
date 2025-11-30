@@ -2,7 +2,7 @@
 # Simple Reinforcement Learning Example
 [colab]: https://colab.research.google.com/drive/1hxqDEdurKZZUtJ2DTrEm1UQJwCJmQIhj?usp=sharing
 
-![](/assets/rl.png)
+![](/assets/graph_rl/rl.png)
 
 A simple RL example, where i want an agent to navigate a grid to reach a goal while avoiding holes.
 For more details here is the colab where I implemented the RL example [Link to code][colab]

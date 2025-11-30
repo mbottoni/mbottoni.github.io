@@ -88,9 +88,19 @@ export const base = (
   .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
   .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
 
-  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1rem; }
-  .post-list li h3 { font-size: 1.1em; }
-  .post-list li p { margin-top: .25rem; color: rgba(0, 0, 0, .7); }
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
   .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
   .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
   .theme-banner { margin-bottom: 1rem; }
@@ -99,7 +109,10 @@ export const base = (
   </style>
 
   <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/assets/vendor/katex/katex.min.css">
   ${extra_css ? html`<link rel="stylesheet" href="/css/${extra_css}">` : ""}
+  <script defer src="/assets/vendor/katex/katex.min.js"></script>
+  <script defer src="/assets/vendor/katex/auto-render.min.js"></script>
 </head>
 
 <body>
@@ -136,6 +149,21 @@ export const base = (
       </a>
     </p>
   </footer>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      if (window.renderMathInElement) {
+        window.renderMathInElement(document.body, {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "\\[", right: "\\]", display: true },
+            { left: "$", right: "$", display: false },
+            { left: "\\(", right: "\\)", display: false },
+          ],
+          ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+        });
+      }
+    });
+  </script>
 </body>
 
 </html>
@@ -192,9 +220,18 @@ export const post_list = (groups: ThemeGroup[]): HtmlString => {
 export const theme_page = (theme: ThemeConfig, posts: Post[]): HtmlString => {
   const items = posts.map((post) =>
     html`
-      <li>
-        <h3>${time(post.date)} · <a href="${post.path}">${post.title}</a></h3>
-        <p>${post.summary}</p>
+      <li class="post-card">
+        <div class="post-card__media">
+          ${
+        post.image
+          ? html`<a href="${post.path}"><img src="${post.image}" alt="${post.title} preview"></a>`
+          : ""
+      }
+        </div>
+        <div class="post-card__body">
+          <h3>${time(post.date)} · <a href="${post.path}">${post.title}</a></h3>
+          <p>${post.summary}</p>
+        </div>
       </li>
     `
   );

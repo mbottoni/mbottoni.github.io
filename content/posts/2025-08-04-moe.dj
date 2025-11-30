@@ -80,3 +80,30 @@ for i in 1..k:
 return final_output
 
 ```
+
+### Math sanity check
+
+As a sanity check that the blog renders math, here are a few inline formulas:
+the gating network can be written as \( G(x) = \operatorname{softmax}(W_g x + b) \),
+the load-balance loss uses \( \sum_i p_i^2 \), and the routed activation is
+\( y = \sum_{i \in \mathcal{K}(x)} g_i(x) \, E_i(x) \).
+
+And a couple of display equations:
+
+\[
+\mathcal{L}_{\text{MoE}} =
+\mathbb{E}_{x \sim \mathcal{D}} \Big[
+  \underbrace{\mathcal{L}_{\text{task}}(x)}_{\text{primary objective}}
+  + \lambda_{\text{balance}}
+    \big( k \sum_{i=1}^N p_i(x)^2 - 1 \big)
+\Big]
+\]
+
+$$
+\begin{aligned}
+\text{TopK}(x, k)
+&= \operatorname*{arg\,top}_{i \in \{1,\dots,N\}}^{k} x_i \\
+&= \{ i_1, \dots, i_k \} \quad
+\text{s.t. } x_{i_1} \ge \dots \ge x_{i_k} \text{ and } x_{i_k} \ge x_j \ \forall j \notin \{i_1,\dots,i_k\}.
+\end{aligned}
+$$

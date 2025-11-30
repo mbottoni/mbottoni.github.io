@@ -1,6 +1,8 @@
 
 # Temporal Graph Networks: A Deep Dive into Dynamic Graph Learning
 
+![](/assets/graph_rl/temp_graphs.webp)
+
 Real-world networks are rarely static. Social networks evolve as users form 
 new connections, financial networks change with each transaction, and biological 
 networks transform as proteins interact. Traditional Graph Neural Networks (GNNs) weren't 

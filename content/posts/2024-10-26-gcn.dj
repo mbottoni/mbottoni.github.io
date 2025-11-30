@@ -1,7 +1,7 @@
 
 # Graph Convolutional Networks
 
-![](/assets/gcn.png)
+![](/assets/graph_rl/gcn.png)
 
 Graph Convolutional Networks extend deep learning to graph-structured data by 
 generalizing the convolution operation from regular grids (like images) to 

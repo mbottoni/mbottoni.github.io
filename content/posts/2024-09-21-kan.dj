@@ -2,7 +2,7 @@
 # Kolmogorov-Arnold Networks 
 [colab]: https://colab.research.google.com/drive/1N9gmXIGNU-lRnyaCCMwCNab4AQu5NnUF?usp=sharing
 
-![](/assets/kan.png)
+![](/assets/frontier/kan.png)
 
 I have been playing with some implementations of Kolmogorov-Arnold Networks.
 Here is an easy implementation for anyone who wants to try it out.

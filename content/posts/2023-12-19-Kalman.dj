@@ -1,6 +1,6 @@
 # Implementing the Kalman Filter in Python
 
-![](/assets/kalman1.jpg)
+![](/assets/foundations/kalman1.jpg)
 
 Hello. I'm trying to experiment with some recent articles that tries to 
 connect transformers and kalman filter. I remember that I saw in my undergrad
@@ -46,6 +46,6 @@ While the GPS example is straightforward, the Kalman filter is used in much more
 situations. It's vital in the operation of satellites and spacecraft, where precise navigation is crucial. In the financial world, it
 helps in predicting market trends and in robotics, it's used for navigation and tracking movements.
 
-![](/assets/kalman2.svg)
+![](/assets/foundations/kalman2.svg)
 
 Finally here is the notebook : [Colab](https://colab.research.google.com/drive/1g0BNY3ov6DiauAGLEfB-Ka-7836NZMo1?usp=sharing)
