@@ -110,6 +110,7 @@ export const base = (
 
   <link rel="stylesheet" href="/css/main.css">
   ${extra_css ? html`<link rel="stylesheet" href="/css/${extra_css}">` : ""}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 </head>
 
 <body>
@@ -146,6 +147,42 @@ export const base = (
       </a>
     </p>
   </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\\(", right: "\\)", display: false },
+              { left: "\\[", right: "\\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
 </body>
 
 </html>

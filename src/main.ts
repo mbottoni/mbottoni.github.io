@@ -137,8 +137,8 @@ async function build(params: {
   const pages = ["about", "resume", "links", "style"];
   for (const page of pages) {
     const text = await Deno.readTextFile(`content/${page}.dj`);
-    const ast = await djot.parse(text);
-    const html = djot.render(ast, {});
+    const parsed = djot.parse(text);
+    const html = djot.render(parsed.doc, {}, parsed.math);
     await update_file(`out/res/${page}.html`, templates.page(page, html).value);
   }
 
@@ -228,12 +228,12 @@ async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
     ctx.read_ms += performance.now() - t;
 
     t = performance.now();
-    const ast = djot.parse(text);
+    const parsed = djot.parse(text);
     ctx.parse_ms += performance.now() - t;
 
     t = performance.now();
     const render_ctx = { date, summary: undefined, title: undefined };
-    const html = djot.render(ast, render_ctx);
+    const html = djot.render(parsed.doc, render_ctx, parsed.math);
     ctx.render_ms += performance.now() - t;
 
     const hero = extract_first_image(text);

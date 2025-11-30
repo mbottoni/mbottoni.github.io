@@ -19,8 +19,24 @@ import {
   Str,
 } from "djot/ast.ts";
 
-export function parse(source: string): Doc {
-  return djot.parse(source);
+type MathPlaceholder = {
+  token: string;
+  content: string;
+  open: string;
+  close: string;
+};
+
+type ParsedDoc = {
+  doc: Doc;
+  math: MathPlaceholder[];
+};
+
+export function parse(source: string): ParsedDoc {
+  const { text, math } = extract_math(source);
+  return {
+    doc: djot.parse(text),
+    math,
+  };
 }
 
 type RenderCtx = {
@@ -29,7 +45,11 @@ type RenderCtx = {
   title?: string;
 };
 
-export function render(doc: Doc, ctx: RenderCtx): HtmlString {
+export function render(
+  doc: Doc,
+  ctx: RenderCtx,
+  math: MathPlaceholder[] = [],
+): HtmlString {
   let section: Section | undefined = undefined;
   const overrides: Visitor<djot.HTMLRenderer, string> = {
     section: (node: Section, r: djot.HTMLRenderer): string => {
@@ -216,7 +236,7 @@ ${pre}
   };
 
   const result = djot.renderHTML(doc, { overrides });
-  return new HtmlString(result);
+  return new HtmlString(inject_math(result, math));
 }
 
 type AstTag = AstNode["tag"];
@@ -274,3 +294,55 @@ const add_string_content = function (
     }
   }
 };
+
+function extract_math(source: string): {
+  text: string;
+  math: MathPlaceholder[];
+} {
+  const math: MathPlaceholder[] = [];
+  let text = source;
+
+  const replace = (
+    pattern: RegExp,
+    open: string,
+    close: string,
+    trim: boolean,
+  ) => {
+    text = text.replace(pattern, (_match, content: string) => {
+      const token = `MATHPH${math.length}XX`;
+      math.push({
+        token,
+        content: trim ? content.trim() : content,
+        open,
+        close,
+      });
+      return token;
+    });
+  };
+
+  replace(/(?<!\\)\$\$([\s\S]+?)(?<!\\)\$\$/g, "$$", "$$", true);
+  replace(/(?<!\\)\\\[([\s\S]+?)(?<!\\)\\\]/g, "\\[", "\\]", true);
+  replace(/(?<!\\)\\\((.+?)(?<!\\)\\\)/g, "\\(", "\\)", false);
+  replace(/(?<!\\)\$(?!\$)([^\n]+?)(?<!\\)\$(?!\$)/g, "$", "$", false);
+
+  text = text.replace(/\\\$/g, "$");
+
+  return { text, math };
+}
+
+function inject_math(html: string, math: MathPlaceholder[]): string {
+  let result = html;
+  for (const placeholder of math) {
+    const chunk = `${placeholder.open}${escape_html(placeholder.content)}${placeholder.close}`;
+    result = result.split(placeholder.token).join(chunk);
+  }
+  return result;
+}
+
+function escape_html(data: string): string {
+  return data
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
