@@ -1,67 +1,62 @@
 # Resume
 [resume.pdf]: https://mbottoni.github.io/resume.pdf
 
-Welcome to my resume! 
+Welcome to my resume!  
 The resume is available as [.html][resume.html] and [.pdf][resume.pdf].
+
+## CONTACT
+
+- **Phone**: +55 41 99209-2810  
+- **Email**: maruanbakriottoni@gmail.com  
+- **GitHub**: [github.com/mbottoni](https://github.com/mbottoni)  
+- **Site**: [mbottoni.github.io](https://mbottoni.github.io)
 
 ## EDUCATION
 
-### Master of Science in Computer Science 
-* Universidade de São Paulo, Brazil
+### MSc in Computer Science — University of São Paulo (USP), Brazil
+*Ongoing*  
+- Research focus on computational neuroscience and random graph modeling for neural and social networks.  
+- Coursework: Graph Theory, Statistical Methods, Deep Learning, NLP, Parallel Computing.
 
-2023 - Expected 2024  
-_Keywords: Machine Learning, Bioinformatics, Causal Inference, Generative Models_
-
-### Bachelor of Electrical Engineering 
-* Unicamp, Brazil
-
-2018 - 2022  
-_GPA: 8.5/10_  
-_Relevant Postgraduate Coursework: Information Theory, Stochastic Processes, Bayesian Inference, Linear Programming, Machine Learning_
+### BSc in Electrical Engineering — University of Campinas (Unicamp), Brazil
+*2018 – 2022*  
+- MSc/PhD-level coursework: Information Theory, Stochastic Processes, Bayesian Inference, Machine Learning.  
+- Research projects: lattice-based cryptography (CNPQ Scholarship 2021–2022) and information geometry for ML (CNPQ Scholarship 2022–2023).
 
 ## PROFESSIONAL EXPERIENCE
 
-### Data Scientist
-* CloudWalk Inc, São Paulo, Brazil
-September 2023 - Present  
-- Worked on the research and development front developing state-of-the-art models and feature analysis for possible improvements.
+### Data Scientist — CloudWalk Inc. (São Paulo, Brazil)
+*September 2023 – Present*  
+- Designed and shipped monitoring infrastructure that tracks the health of 3 000+ ML features, boosting model reliability.  
+- Built diffusion-based generative models for tabular feature synthesis, improving downstream classification metrics by ~1%.  
+- Pretrained and finetuned LLM-inspired credit assignment models that unlocked R$100M+ in approved client credit.  
+- Led exploratory AI projects spanning self-supervised learning, graph neural networks for fraud, and LLM interpretability.
 
-### Strats Summer Internship
-* Goldman Sachs, São Paulo, Brazil
-January 2023 - March 2023  
-- Worked with the inventory management team in Bangalore, India and New York, USA developing a collateral optimization software.  
-- Mainly developed reports and analysis regarding the output of the linear optimization software.
+### Quant Analyst Summer Intern — Goldman Sachs (São Paulo, Brazil)
+*January 2023 – March 2023*  
+- Helped develop linear optimization software for asset inventory management across global entities.  
+- Engineered reports and analyses that reduced redundant asset movements and improved operational efficiency.
 
-### Quant Engineering Internship
-* UHedge Trading Solutions, Campinas, Brazil
-October 2022 - November 2022  
-- Helped with mathematical analysis regarding the derivatives strategies.
+### Quant Analyst Intern — UHedge Trading Solutions (Campinas, Brazil)
+*October 2022 – November 2022*  
+- Produced mathematical analyses of derivatives strategies to evaluate opportunities and risk/return trade-offs.
 
-## RESEARCH EXPERIENCE
+## RESEARCH PROJECTS
 
-### Undergraduate Research 2021-2022
+- _Introduction to Lattice-based Cryptography_ — investigated reliable lattice constructions for secure communications (CNPQ Scholarship 2021–2022).  
+- _Information Geometry for Machine Learning_ — studied differential geometry formulations of statistical manifolds and ML loss landscapes (CNPQ Scholarship 2022–2023).
 
-- _An Introduction to Codes, Lattices and Applications in Signal Transmission_  
-(Written in Portuguese). Research project in mathematics trying to understand optimal ways to use lattices for reliable and secure transmission of information.
+## RELEVANT SIDE PROJECTS
 
-### Undergraduate Research 2022-2023
+- **Logit Graph**: Library for probabilistic graph generation via logit-based edge processes with benchmarks against state-of-the-art statistical models.  
+- **Horror Movie Recommendation App**: FastAPI service that blends semantic retrieval, IMDb priors, reranking, and integrates UI, PostgreSQL, CI/CD, and payments.  
+- **Auction RAG Assistant**: LangChain + MongoDB chatbot (Flask UI) that navigates hundreds of auction documents through retrieval-augmented generation.  
+- **Graph Similarity via Representation Learning**: Contributed ML architectures and baselines for graph distance estimation problems.
 
-- _An Introduction to Information Geometry and Applications_  
-(Written in Portuguese). Research project in mathematics trying to understand how to use differential geometry in the context of statistical manifolds on machine learning cost functions.
+## SKILLS & LANGUAGES
 
-## Skills
-
-- Programming Languages: Python, Matlab, C, Java  
-- Tools: Shell Scripting, Git, Torch, Scikit-learn, TensorFlow, Linux
-
-## RELEVANT EXTRACURRICULAR COURSES
-- Bahia Asset Management - Course in applied mathematical modeling for finance.  
-  _Summer school at IMPA - Rio de Janeiro, Brazil during 2020._  
-  _Courses: Mathematical Economics and Real Analysis._
-- Summer school at IME-USP - São Paulo, Brazil during 2021-2022.  
-  _Courses: Introduction to data science using jupyter notebook and introduction to machine learning._
-
-## AWARDS AND LANGUAGES
-
-**Languages**: Portuguese (Native), English (Fluent C2), German (Basic A2), French (Basic A2).  
-**Awards**: CNPQ Scholarship 2021-2022, CNPQ Scholarship 2022-2023.
+- **Programming**: Python, Matlab, C, Java.  
+- **Tools & Platforms**: Google Cloud Platform, Docker, Git, Linux, Kubernetes, Spark.  
+- **ML/AI**: PyTorch, TensorFlow, Scikit-learn, Hugging Face, FSDP training.  
+- **Data & Visualization**: SQL, Matplotlib, Seaborn, Plotly.  
+- **Languages**: Portuguese (Native), English (Fluent C2), French (Basic A2).
