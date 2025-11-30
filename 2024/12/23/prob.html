@@ -1,0 +1,311 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Probability Paradigms</title>
+  <meta name="description" content="When we think about probability, there are three 
+main philosophical approaches: frequentist, Bayesian, and propensity. Each offers 
+a different lens for understanding uncertainty and probability.">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/12/23/prob.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/foundations.html">
+          Math, Physics &amp; Foundations
+        </a>
+      </div>
+      <article >
+
+    <h1>
+    <a href="#Probability-Paradigms"><span>Probability Paradigms</span> <time datetime="2024-12-23">Dec 23, 2024</time></a>
+    </h1>
+<p><span>When we think about probability, there are three </span>
+<span>main philosophical approaches: frequentist, Bayesian, and propensity. Each offers </span>
+<span>a different lens for understanding uncertainty and probability.</span></p>
+<section id="The-Scenario">
+
+    <h2>
+    <a href="#The-Scenario"><span>The Scenario</span> </a>
+    </h2>
+<p><span>Imagine we</span>&rsquo;<span>re dealing with a new diagnostic test for a rare genetic condition that affects 1 in 1000 people. The test has the following characteristics:</span></p>
+<ul>
+<li>
+<span>If someone has the condition, the test will be positive 99% of the time (sensitivity)</span>
+</li>
+<li>
+<span>If someone doesn</span>&rsquo;<span>t have the condition, the test will be negative 95% of the time (specificity)</span>
+</li>
+</ul>
+<p><span>Now, let</span>&rsquo;<span>s say Sarah gets tested and receives a positive result. What</span>&rsquo;<span>s the probability that she </span>
+<span>actually has the condition? Each probability paradigm approaches this question differently.</span></p>
+</section>
+<section id="The-Frequentist-Approach">
+
+    <h2>
+    <a href="#The-Frequentist-Approach"><span>The Frequentist Approach</span> </a>
+    </h2>
+<p><span>The frequentist views probability as the long-run frequency of events in repeated trials. They might say:</span></p>
+<p>&ldquo;<span>If we were to run this test on a very large number of people, and look only at </span>
+<span>the positive test results, what proportion of those people would actually have the condition?</span>&rdquo;</p>
+<p><span>The frequentist would focus on the sampling distribution and confidence intervals. They might </span>
+<span>resist making a direct probability statement about Sarah</span>&rsquo;<span>s individual case, arguing that she </span>
+<span>either has the condition or doesn</span>&rsquo;<span>t – there</span>&rsquo;<span>s no probability about it. Instead, they </span>
+<span>would frame their analysis in terms of error rates and long-term frequencies.</span></p>
+<p><span>In this case, they would calculate the false positive and true positive rates across a hypothetical population:</span></p>
+<ul>
+<li>
+<span>In 1000 people, 1 person would have the condition</span>
+</li>
+<li>
+<span>That 1 person would test positive 99% of the time = 0.99 true positives</span>
+</li>
+<li>
+<span>The 999 people without the condition would test positive 5% of the time = 49.95 false positives</span>
+</li>
+<li>
+<span>Total positive tests = 50.94</span>
+</li>
+<li>
+<span>Proportion of positive tests that are true positives ≈ 1.94%</span>
+</li>
+</ul>
+</section>
+<section id="The-Bayesian-Approach">
+
+    <h2>
+    <a href="#The-Bayesian-Approach"><span>The Bayesian Approach</span> </a>
+    </h2>
+<p><span>The Bayesian sees probability as a degree of belief that gets updated with </span>
+<span>new evidence. They would start with a prior probability (the base </span>
+<span>rate of 1/1000) and update it with the new </span>
+<span>evidence (the positive test result) using Bayes</span>&rsquo;<span> Theorem.</span></p>
+<p><span>The Bayesian would say: </span>&ldquo;<span>Before the test, we believed Sarah had a 0.1% chance </span>
+<span>of having the condition. The positive test result gives us new information </span>
+<span>to update this belief.</span>&rdquo;</p>
+<p><span>Using Bayes</span>&rsquo;<span> Theorem:</span>
+<span>P(Condition|Positive) = P(Positive|Condition) × P(Condition) / P(Positive)</span>
+<span>= 0.99 × 0.001 / (0.99 × 0.001 + 0.05 × 0.999)</span>
+<span>≈ 0.0194 or about 1.94%</span></p>
+<p><span>The Bayesian is comfortable making a direct probability statement about Sarah</span>
+&lsquo;<span>s specific case, saying there</span>&rsquo;<span>s a 1.94% chance she has the condition.</span></p>
+</section>
+<section id="The-Propensity-Approach">
+
+    <h2>
+    <a href="#The-Propensity-Approach"><span>The Propensity Approach</span> </a>
+    </h2>
+<p><span>The propensity theorist views probability as an objective </span>
+<span>physical property – a tendency or disposition of a </span>
+<span>system to produce certain outcomes. They might say:</span></p>
+<p>&ldquo;<span>The test result reflects the physical properties of Sarah</span>&rsquo;<span>s </span>
+<span>genes and the testing mechanism. The probability emerges from </span>
+<span>the actual physical setup of the situation.</span>&rdquo;</p>
+<p><span>They would focus on the causal mechanisms involved: the biological </span>
+<span>factors that cause the condition, the chemical reactions in the test, and how </span>
+<span>these physical properties interact to produce results. They might analyze the </span>
+<span>molecular basis of the test</span>&rsquo;<span>s accuracy and how it interacts with the genetic markers it</span>&rsquo;<span>s designed to detect.</span></p>
+<p><span>These different approaches can lead to different practical recommendations:</span></p>
+<ul>
+<li>
+<p><span>A frequentist might emphasize the need for additional testing, pointing out that in a large population, most positive results are false positives.</span></p>
+</li>
+<li>
+<p><span>A Bayesian might focus on gathering more prior information about Sarah (family history, symptoms, etc.) to refine the probability estimate.</span></p>
+</li>
+<li>
+<p><span>A propensity theorist might advocate for understanding the biological mechanism better, perhaps recommending a different type of test that targets the condition</span>&rsquo;<span>s physical manifestations more directly.</span></p>
+</li>
+</ul>
+</section>
+</article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-12-23-prob.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\(", right: "\)", display: false },
+              { left: "\[", right: "\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+</body>
+
+</html>

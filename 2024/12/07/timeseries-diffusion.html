@@ -1,0 +1,306 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diffusion models for time series</title>
+  <meta name="description" content="On this post I will explore the main findings from the paper UTSD: Unified Time Series Diffusion Model and an explanation 
+of the content. For more details here is the link to the paper Link to paper">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/12/07/timeseries-diffusion.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/generative.html">
+          Diffusion &amp; Generative Modeling
+        </a>
+      </div>
+      <article >
+
+    <h1>
+    <a href="#Diffusion-models-for-time-series"><span>Diffusion models for time series</span> <time datetime="2024-12-07">Dec 7, 2024</time></a>
+    </h1>
+<p><span>On this post I will explore the main findings from the paper </span>&ldquo;<span>UTSD: Unified Time Series Diffusion Model</span>&rdquo;<span> and an explanation </span>
+<span>of the content. For more details here is the link to the paper </span><a href="https://arxiv.org/pdf/2412.03068.pdf"><span>Link to paper</span></a></p>
+<section id="Summary-of-Findings-from-UTSD-Paper">
+
+    <h2>
+    <a href="#Summary-of-Findings-from-UTSD-Paper"><span>Summary of Findings from UTSD Paper</span> </a>
+    </h2>
+<p><span>The authors of the paper propose a novel architecture, UTSD, for time </span>
+<span>series analysis. The researchers note the prevalence of time series </span>
+<span>data in a variety of real world applications. They also point out that </span>
+<span>data across different domains often have different statistical properties. They posit that this </span>
+<span>creates a challenge to the generalizability and robustness of time </span>
+<span>series analysis. In order to address this, the authors propose a unified time </span>
+<span>series diffusion model. The paper explains that the UTSD model </span>
+<span>uses a diffusion denoising process, in contrast to autoregressive models, to model </span>
+<span>the mixture distribution of cross-domain data and generate a prediction sequence for </span>
+<span>the target domain. The model learns from time series data across a range of domains </span>
+<span>with the goal of having strong generalization capabilities and robustness to achieve zero-shot </span>
+<span>inference on unseen domains. UTSD consists of three key designs:</span></p>
+<ul>
+<li>
+<span>Condition-denoising architecture</span>
+</li>
+<li>
+<span>Reverse noise reduction process in the actual sequence space</span>
+</li>
+<li>
+<span>Conditional generation strategy based on improved classifier-free guidance</span>
+</li>
+</ul>
+<p><span>The paper reports that UTSD outperforms existing foundation models on all data domains. It achieves an average </span>
+<span>MSE reduction of 14.2%, 20.1%, and 27.6% compared to the existing Moirai, UniTime, and GPT4TS, respectively. The paper also </span>
+<span>reports that UTSD, when trained from scratch, achieves comparable performance to domain-specific models. In the paper, the authors </span>
+<span>contend that UTSD shows stable and reliable time series generation which indicates the </span>
+<span>model</span>&rsquo;<span>s potential as a foundational model for time series analysis.</span></p>
+</section>
+<section id="Explanation-of-the-Paper">
+
+    <h2>
+    <a href="#Explanation-of-the-Paper"><span>Explanation of the Paper</span> </a>
+    </h2>
+<p><span>The paper presents a detailed explanation of the UTSD model architecture and its three key design elements. These designs aim </span>
+<span>to address the challenges of modeling probability distributions across multiple time series domains and generating accurate </span>
+<span>long-term forecasts.</span></p>
+
+<figure>
+
+<img alt="" src="/assets/generative/time-series-diffusion.png">
+</figure>
+<section id="1-Condition-Denoising-Architecture">
+
+    <h3>
+    <a href="#1-Condition-Denoising-Architecture"><span>1. Condition-Denoising Architecture</span> </a>
+    </h3>
+<p><span>This architecture includes a Condition Net and a Denoising Net. The Condition Net learns multi-scale </span>
+<span>representations of temporal fluctuation patterns from different time series domains. These representations </span>
+<span>are then used as conditional variables to guide the Denoising Net in generating the prediction sequence. The paper argues </span>
+<span>that capturing multi-scale representations is crucial because time series from various domains often exhibit different latent patterns.</span></p>
+</section>
+<section id="2-Reverse-Noise-Reduction-in-Actual-Sequence-Space">
+
+    <h3>
+    <a href="#2-Reverse-Noise-Reduction-in-Actual-Sequence-Space"><span>2. Reverse Noise Reduction in Actual Sequence Space</span> </a>
+    </h3>
+<p><span>UTSD performs the reverse noise reduction process directly in the actual sequence space, unlike traditional </span>
+<span>diffusion models that operate in a latent space. This design choice is justified by the fact that iterative </span>
+<span>denoising in the latent space can lead to error accumulation, which is amplified when aligning </span>
+<span>the latent space back to the actual sequence space.</span></p>
+</section>
+<section id="3-Improved-Classifier-Free-Guidance">
+
+    <h3>
+    <a href="#3-Improved-Classifier-Free-Guidance"><span>3. Improved Classifier-Free Guidance</span> </a>
+    </h3>
+<p><span>The UTSD model uses an improved classifier-free guidance strategy to ensure strong generalization ability. This strategy leverages the multi-scale </span>
+<span>representation captured by the Condition Net as a conditional variable to guide the reconstruction of the forecast from Gaussian noise.</span></p>
+</section>
+<section id="Additional-Architectural-Components">
+
+    <h3>
+    <a href="#Additional-Architectural-Components"><span>Additional Architectural Components</span> </a>
+    </h3>
+<ul>
+<li>
+<strong><strong><span>Transfer-Adapter Module:</span></strong></strong><span> This module allows for efficient fine-tuning of the pre-trained UTSD model on specific downstream tasks. It transforms </span>
+<span>the fluctuation patterns learned during pre-training into the latent space of the target domain, enabling the generation of domain-specific time series samples.</span>
+</li>
+<li>
+<strong><strong><span>Blocks Implementation:</span></strong></strong><span> The Condition Net and Denoising Net are built using ResNet1D and Transformer1D modules. The ResNet1D modules handle </span>
+<span>the embedding of diffusion timesteps and latent representations, while the Transformer1D modules capture dependencies within the observation sequence and leverage historical fluctuation patterns as context for denoising.</span>
+</li>
+</ul>
+</section>
+</section>
+</article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-12-07-timeseries-diffusion.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\(", right: "\)", display: false },
+              { left: "\[", right: "\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+</body>
+
+</html>

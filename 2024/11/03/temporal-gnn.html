@@ -1,0 +1,510 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Temporal Graph Networks: A Deep Dive into Dynamic Graph Learning</title>
+  <meta name="description" content="Real-world networks are rarely static. Social networks evolve as users form 
+new connections, financial networks change with each transaction, and biological 
+networks transform as proteins interact. Traditional Graph Neural Networks (GNNs) weren't 
+designed for this dynamism. Enter Temporal Graph Networks (TGNs), a powerful framework for learning on dynamic graphs.">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/11/03/temporal-gnn.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/graph-rl.html">
+          Graphs, Agents &amp; RL
+        </a>
+      </div>
+      <article >
+
+    <h1>
+    <a href="#Temporal-Graph-Networks-A-Deep-Dive-into-Dynamic-Graph-Learning"><span>Temporal Graph Networks: A Deep Dive into Dynamic Graph Learning</span> <time datetime="2024-11-03">Nov 3, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/graph_rl/temp_graphs.webp">
+</figure>
+<p><span>Real-world networks are rarely static. Social networks evolve as users form </span>
+<span>new connections, financial networks change with each transaction, and biological </span>
+<span>networks transform as proteins interact. Traditional Graph Neural Networks (GNNs) weren</span>&rsquo;<span>t </span>
+<span>designed for this dynamism. Enter Temporal Graph Networks (TGNs), a powerful framework for learning on dynamic graphs.</span></p>
+<section id="Understanding-Dynamic-Graphs">
+
+    <h2>
+    <a href="#Understanding-Dynamic-Graphs"><span>Understanding Dynamic Graphs</span> </a>
+    </h2>
+<p><span>Before diving into TGNs, let</span>&rsquo;<span>s clarify what we mean by dynamic graphs. A temporal graph </span>
+<span>can be represented as a sequence of time-stamped events: G = {x(t₁), x(t₂), </span>&hellip;<span>}. Each event can be:</span></p>
+<ol>
+<li>
+<span>Node-wise: Adding/updating a node with features</span>
+</li>
+<li>
+<span>Edge-wise: Creating an interaction between nodes</span>
+</li>
+</ol>
+</section>
+<section id="Core-Components-of-TGN">
+
+    <h2>
+    <a href="#Core-Components-of-TGN"><span>Core Components of TGN</span> </a>
+    </h2>
+<section id="Memory-Module">
+
+    <h3>
+    <a href="#Memory-Module"><span>Memory Module</span> </a>
+    </h3>
+<p><span>The memory module is TGN</span>&rsquo;<span>s secret weapon. Each node maintains a memory state </span>
+<span>that captures its history of interactions. This memory gets updated with each </span>
+<span>new event, allowing the network to learn long-term dependencies.</span></p>
+</section>
+<section id="Message-Function">
+
+    <h3>
+    <a href="#Message-Function"><span>Message Function</span> </a>
+    </h3>
+<p><span>When an interaction occurs between nodes, messages are computed </span>
+<span>to update their memories. Here</span>&rsquo;<span>s how the message functions work:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">class</span> <span class="hl-title class_">TemporalGraphNetwork</span>:</span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">__init__</span>(<span class="hl-params">self, node_features, edge_features, memory_dimension</span>):</span>
+<span class="line">        self.node_features = node_features</span>
+<span class="line">        self.edge_features = edge_features</span>
+<span class="line">        self.memory = {node_id: np.zeros(memory_dimension) <span class="hl-keyword">for</span> node_id <span class="hl-keyword">in</span> node_features}</span>
+<span class="line">        </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">compute_messages</span>(<span class="hl-params">self, source, target, time, edge_features</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;Compute messages for source and target nodes.&quot;&quot;&quot;</span></span>
+<span class="line">        <span class="hl-comment"># Get current memory states</span></span>
+<span class="line">        source_memory = self.memory[source]</span>
+<span class="line">        target_memory = self.memory[target]</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Compute time delta from last update</span></span>
+<span class="line">        delta_time = time - self.last_update[source]</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Compute messages for both nodes</span></span>
+<span class="line">        source_message = self.message_function(</span>
+<span class="line">            source_memory=source_memory,</span>
+<span class="line">            target_memory=target_memory,</span>
+<span class="line">            delta_time=delta_time,</span>
+<span class="line">            edge_features=edge_features</span>
+<span class="line">        )</span>
+<span class="line">        </span>
+<span class="line">        target_message = self.message_function(</span>
+<span class="line">            source_memory=target_memory,</span>
+<span class="line">            target_memory=source_memory,</span>
+<span class="line">            delta_time=delta_time,</span>
+<span class="line">            edge_features=edge_features</span>
+<span class="line">        )</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-keyword">return</span> source_message, target_message</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">message_function</span>(<span class="hl-params">self, source_memory, target_memory, delta_time, edge_features</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;Simple concatenation-based message function.&quot;&quot;&quot;</span></span>
+<span class="line">        <span class="hl-keyword">return</span> np.concatenate([</span>
+<span class="line">            source_memory,</span>
+<span class="line">            target_memory,</span>
+<span class="line">            [delta_time],</span>
+<span class="line">            edge_features</span>
+<span class="line">        ])</span></code></pre>
+
+</figure>
+</section>
+<section id="Message-Aggregator">
+
+    <h3>
+    <a href="#Message-Aggregator"><span>Message Aggregator</span> </a>
+    </h3>
+<p><span>When multiple events involve the same node in a batch, their </span>
+<span>messages need to be aggregated:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">aggregate_messages</span>(<span class="hl-params">self, messages, aggregation_type=<span class="hl-string">&quot;last&quot;</span></span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;Aggregate multiple messages for the same node.&quot;&quot;&quot;</span></span>
+<span class="line">        <span class="hl-keyword">if</span> aggregation_type == <span class="hl-string">&quot;last&quot;</span>:</span>
+<span class="line">            <span class="hl-keyword">return</span> messages[-<span class="hl-number">1</span>]  <span class="hl-comment"># Return most recent message</span></span>
+<span class="line">        <span class="hl-keyword">elif</span> aggregation_type == <span class="hl-string">&quot;mean&quot;</span>:</span>
+<span class="line">            <span class="hl-keyword">return</span> np.mean(messages, axis=<span class="hl-number">0</span>)  <span class="hl-comment"># Average all messages</span></span></code></pre>
+
+</figure>
+</section>
+<section id="Memory-Updater">
+
+    <h3>
+    <a href="#Memory-Updater"><span>Memory Updater</span> </a>
+    </h3>
+<p><span>The memory updater is typically implemented using a GRU or LSTM to update </span>
+<span>node memories based on aggregated messages:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">update_memory</span>(<span class="hl-params">self, node_id, message, time</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;Update node memory using GRU-like update.&quot;&quot;&quot;</span></span>
+<span class="line">        current_memory = self.memory[node_id]</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># GRU-like update equations</span></span>
+<span class="line">        update_gate = sigmoid(</span>
+<span class="line">            self.W_update @ np.concatenate([current_memory, message])</span>
+<span class="line">        )</span>
+<span class="line">        reset_gate = sigmoid(</span>
+<span class="line">            self.W_reset @ np.concatenate([current_memory, message])</span>
+<span class="line">        )</span>
+<span class="line">        </span>
+<span class="line">        candidate_memory = tanh(</span>
+<span class="line">            self.W_candidate @ np.concatenate([</span>
+<span class="line">                reset_gate * current_memory,</span>
+<span class="line">                message</span>
+<span class="line">            ])</span>
+<span class="line">        )</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Update memory</span></span>
+<span class="line">        self.memory[node_id] = (</span>
+<span class="line">            update_gate * current_memory +</span>
+<span class="line">            (<span class="hl-number">1</span> - update_gate) * candidate_memory</span>
+<span class="line">        )</span>
+<span class="line">        self.last_update[node_id] = time</span></code></pre>
+
+</figure>
+</section>
+<section id="Embedding-Module">
+
+    <h3>
+    <a href="#Embedding-Module"><span>Embedding Module</span> </a>
+    </h3>
+<p><span>The embedding module generates node embeddings using the current memory </span>
+<span>state and graph structure:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">compute_embedding</span>(<span class="hl-params">self, node_id, time, num_layers=<span class="hl-number">1</span></span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;Compute node embedding using temporal graph attention.&quot;&quot;&quot;</span></span>
+<span class="line">        current_embedding = self.memory[node_id]</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-keyword">for</span> layer <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(num_layers):</span>
+<span class="line">            <span class="hl-comment"># Get temporal neighbors</span></span>
+<span class="line">            neighbors = self.get_temporal_neighbors(node_id, time)</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># Compute attention scores</span></span>
+<span class="line">            attention_scores = self.compute_temporal_attention(</span>
+<span class="line">                query=current_embedding,</span>
+<span class="line">                keys=[self.memory[n] <span class="hl-keyword">for</span> n <span class="hl-keyword">in</span> neighbors],</span>
+<span class="line">                times=[self.last_update[n] <span class="hl-keyword">for</span> n <span class="hl-keyword">in</span> neighbors]</span>
+<span class="line">            )</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># Aggregate neighbor information</span></span>
+<span class="line">            neighbor_info = <span class="hl-built_in">sum</span>(</span>
+<span class="line">                score * self.memory[neighbor]</span>
+<span class="line">                <span class="hl-keyword">for</span> score, neighbor <span class="hl-keyword">in</span> <span class="hl-built_in">zip</span>(attention_scores, neighbors)</span>
+<span class="line">            )</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># Update embedding</span></span>
+<span class="line">            current_embedding = self.embedding_update(</span>
+<span class="line">                current_embedding,</span>
+<span class="line">                neighbor_info</span>
+<span class="line">            )</span>
+<span class="line">            </span>
+<span class="line">        <span class="hl-keyword">return</span> current_embedding</span></code></pre>
+
+</figure>
+</section>
+</section>
+<section id="Training-Process">
+
+    <h2>
+    <a href="#Training-Process"><span>Training Process</span> </a>
+    </h2>
+<p><span>Training TGN requires careful handling of temporal dependencies. Here</span>&rsquo;<span>s the main training loop:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">train</span>(<span class="hl-params">self, temporal_edges, batch_size=<span class="hl-number">200</span></span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;Train the model on temporal edges.&quot;&quot;&quot;</span></span>
+<span class="line">        message_store = {}  <span class="hl-comment"># Store for raw messages</span></span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-keyword">for</span> batch <span class="hl-keyword">in</span> create_batches(temporal_edges, batch_size):</span>
+<span class="line">            <span class="hl-comment"># 1. Update memories using stored messages</span></span>
+<span class="line">            self.process_message_store(message_store)</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># 2. Compute embeddings</span></span>
+<span class="line">            source_embeddings = [</span>
+<span class="line">                self.compute_embedding(edge.source, edge.time)</span>
+<span class="line">                <span class="hl-keyword">for</span> edge <span class="hl-keyword">in</span> batch</span>
+<span class="line">            ]</span>
+<span class="line">            target_embeddings = [</span>
+<span class="line">                self.compute_embedding(edge.target, edge.time)</span>
+<span class="line">                <span class="hl-keyword">for</span> edge <span class="hl-keyword">in</span> batch</span>
+<span class="line">            ]</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># 3. Compute loss</span></span>
+<span class="line">            loss = self.compute_loss(</span>
+<span class="line">                source_embeddings,</span>
+<span class="line">                target_embeddings,</span>
+<span class="line">                batch.labels</span>
+<span class="line">            )</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># 4. Backward pass</span></span>
+<span class="line">            loss.backward()</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># 5. Store raw messages for next batch</span></span>
+<span class="line">            <span class="hl-keyword">for</span> edge <span class="hl-keyword">in</span> batch:</span>
+<span class="line">                message_store[edge.source] = (</span>
+<span class="line">                    edge.source,</span>
+<span class="line">                    edge.target,</span>
+<span class="line">                    edge.time,</span>
+<span class="line">                    edge.features</span>
+<span class="line">                )</span>
+<span class="line">                message_store[edge.target] = (</span>
+<span class="line">                    edge.target,</span>
+<span class="line">                    edge.source,</span>
+<span class="line">                    edge.time,</span>
+<span class="line">                    edge.features</span>
+<span class="line">                )</span></code></pre>
+
+</figure>
+</section>
+<section id="Key-Advantages-and-applications">
+
+    <h2>
+    <a href="#Key-Advantages-and-applications"><span>Key Advantages and applications</span> </a>
+    </h2>
+<ol>
+<li>
+<strong><strong><span>Memory Efficiency</span></strong></strong><span>: TGN maintains a compact memory state for each node instead of storing the entire history.</span>
+</li>
+<li>
+<strong><strong><span>Temporal Awareness</span></strong></strong><span>: The framework naturally handles time-stamped events and evolving graphs.</span>
+</li>
+<li>
+<strong><strong><span>Flexibility</span></strong></strong><span>: Different message, aggregation, and memory update functions can be used based on the specific application.</span>
+</li>
+<li>
+<strong><strong><span>Scalability</span></strong></strong><span>: The batched training process allows for efficient processing of large temporal graphs.</span>
+</li>
+</ol>
+<p><span>TGNs have shown remarkable success in various domains:</span>
+<span>- Dynamic link prediction in social networks</span>
+<span>- User-item interaction modeling in recommender systems</span>
+<span>- Temporal knowledge graph completion</span>
+<span>- Financial fraud detection</span>
+<span>- Traffic prediction</span></p>
+</section>
+<section id="Implementation-Considerations">
+
+    <h2>
+    <a href="#Implementation-Considerations"><span>Implementation Considerations</span> </a>
+    </h2>
+<ul>
+<li>
+<strong><strong><span>Batch Size</span></strong></strong><span>: Smaller batches ensure more frequent memory updates but slower training.</span>
+</li>
+<li>
+<strong><strong><span>Memory Dimension</span></strong></strong><span>: Larger memory can capture more complex patterns but requires more computation.</span>
+</li>
+<li>
+<strong><strong><span>Neighbor Sampling</span></strong></strong><span>: Sampling recent neighbors often works better than uniform sampling.</span>
+</li>
+<li>
+<strong><strong><span>Time Encoding</span></strong></strong><span>: Different time encoding strategies can be used based on the temporal patterns in the data.</span>
+</li>
+</ul>
+</section>
+</article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-11-03-temporal-gnn.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\(", right: "\)", display: false },
+              { left: "\[", right: "\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+</body>
+
+</html>

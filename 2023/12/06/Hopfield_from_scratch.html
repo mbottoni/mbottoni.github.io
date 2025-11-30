@@ -1,0 +1,316 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Understanding Cover's Universal Portfolio</title>
+  <meta name="description" content="I always wanted to understandt the concept of a universal portfolio
+from Cover's. This topic always fascinated me since I first heard about it
+on my information theory lectures and you know what they say... The best 
+way to learn is to practice. So here's my attempt ...">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2023/12/06/Hopfield_from_scratch.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/foundations.html">
+          Math, Physics &amp; Foundations
+        </a>
+      </div>
+      <article >
+
+    <h1>
+    <a href="#Understanding-Cover-s-Universal-Portfolio"><span>Understanding Cover</span>&rsquo;<span>s Universal Portfolio</span> <time datetime="2023-12-06">Dec 6, 2023</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/foundations/meme_stock_res.jpg">
+</figure>
+<p><span>I always wanted to understandt the concept of a universal portfolio</span>
+<span>from Cover</span>&rsquo;<span>s. This topic always fascinated me since I first heard about it</span>
+<span>on my information theory lectures and you know what they say</span>&hellip;<span> The best </span>
+<span>way to learn is to practice. So here</span>&rsquo;<span>s my attempt </span>&hellip;</p>
+<p><span>Folowing the words from the original paper from Cover: </span><em><span>We exhibit</span>
+<span>an algorithm that ourperforms the best stock in the market</span></em><span>. For this</span>
+<span>he exhibit as a goal the wealth Sn that will outperform the </span>
+<span>best stock in the market and will depend on differents weights</span>
+<span>alongside different stock options. This will be an online algorithm,</span>
+<span>this means that the portfolio will be constantly be updated</span>
+<span>and captures distributions shifts and drifst of the market. Besides</span>
+<span>that the algorithm is </span>&ldquo;<span>model agnostic</span>&rdquo;<span>, in the sense that does not</span>
+<span>depend on the underlying assumption that you make about the statistics</span>
+<span>of the log returns. That</span>&rsquo;<span>s fantastic and seems almost too good to be true.</span></p>
+<p><span>Here is the link to the original paper: </span><a href="https://web.mit.edu/6.454/www/www_fall_2001/shaas/universal_portfolios.pdf"><span>Paper</span></a><span>.</span>
+<span>I</span>&rsquo;<span>ll not be entering on the math behind the paper but here is my bite-sized summary.</span>
+<span>Cover simply proved that, with enough time, with a LOT of time, the rebalancing effect</span>
+<span>across the curve would end up generating an average return across the curve in excess</span>
+<span>of the return of the better single asset.</span></p>
+<p><span>This is neither a simple </span>&ldquo;<span>mean-reversion</span>&rdquo;<span> nor a </span>&ldquo;<span>momentum</span>&rdquo;<span> effect. Aĺl of your portfolios</span>
+<span>are mean-reverting; but you</span>&rsquo;<span>re running with their momentum.</span></p>
+<p><span>The intuition is the arithmetic vs geometric half-variance drag and rebalancing effect. Whatever the</span>
+<span>two assets</span>&rsquo;<span>s true return, vol, and correlation, the rebalancing portfolios will be biased</span>
+<span>to having a better risk-reward than their naked equivalent all across the</span>
+<span>curve. Cover</span>&rsquo;<span> s insight was proving that letting the winning (rebalancing) portfolios</span>
+<span>run would, in the end, guarantee performance better than the winning</span>
+<span>asset. In the (VERY) long-run.</span></p>
+<p><span>If you don</span>&rsquo;<span>t understand the central anomaly here, ask yourself what is the probability that any</span>
+<span>market will be X% up before being X% down? If you want to teĺl me it</span>&rsquo;<span>s a 50:50, then the</span>
+<span>theoretically optimal bet is to stake a quarter of my wealth it</span>&rsquo;<span>s down :-) Yes, that</span>&rsquo;<span>s crazy; but </span>
+<span>it</span>&rsquo;<span>s not wrong</span>&hellip;<span> market doubles or zeroes every day, buy or sell to hold? The</span>
+<span>same is true to diminished degrees with </span>&ldquo;<span>fair bets</span>&rdquo;<span> in general.</span></p>
+<p><span>Any fair investment, ie zero long-term expected return, therefore has to have</span>
+<span>a (SMALL) positive expected return in the short-term.</span></p>
+<p><span>Cover</span>&rsquo;<span> s </span>&ldquo;<span>Universal Portfolio</span>&rdquo;<span> is simply an algorithm that exploits this</span>
+<span>effect it</span>&rsquo;<span>s </span>&ldquo;<span>proof</span>&rdquo;<span> is simply that , with infinite time, the rebalancing gains</span>
+<span>across the spectrum of weights will end up surpassing the performance differential</span>
+<span>between the sample assets.</span></p>
+<p><span>That</span>&rsquo;<span>s the logic (and proven, assuming traditional assumptions</span>
+<span>with respect to normality hold true).</span>
+<span>and a pseudocode that implements the main idea:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-comment"># Initialize portfolio weights</span></span>
+<span class="line">initialize_portfolio(weights)  <span class="hl-comment"># All weights start with an equal distribution</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Initialize wealth and wealth history</span></span>
+<span class="line">wealth = <span class="hl-number">1.0</span></span>
+<span class="line">wealth_history = []</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Define the set of available assets</span></span>
+<span class="line">assets = [asset1, asset2, ..., assetN]</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Define the number of time steps</span></span>
+<span class="line">T = number_of_time_steps</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Main loop for T time steps</span></span>
+<span class="line"><span class="hl-keyword">for</span> t <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(T):</span>
+<span class="line">    <span class="hl-comment"># Observe returns for all assets at time t</span></span>
+<span class="line">    observe_returns(returns)</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Calculate the total wealth in the portfolio at time t</span></span>
+<span class="line">    total_wealth = <span class="hl-built_in">sum</span>(wealth * weight <span class="hl-keyword">for</span> weight <span class="hl-keyword">in</span> weights)</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Calculate the regret for each asset</span></span>
+<span class="line">    regrets = []</span>
+<span class="line">    <span class="hl-keyword">for</span> asset <span class="hl-keyword">in</span> assets:</span>
+<span class="line">        asset_wealth = wealth * weights[assets.index(asset)]</span>
+<span class="line">        best_asset_wealth = wealth * <span class="hl-built_in">max</span>(weights)</span>
+<span class="line">        regret = best_asset_wealth - asset_wealth</span>
+<span class="line">        regrets.append(regret)</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Update portfolio weights using exponential weights</span></span>
+<span class="line">    total_regret = <span class="hl-built_in">sum</span>(regrets)</span>
+<span class="line">    <span class="hl-keyword">for</span> asset <span class="hl-keyword">in</span> assets:</span>
+<span class="line">        weight = weights[assets.index(asset)]</span>
+<span class="line">        asset_regret = regrets[assets.index(asset)]</span>
+<span class="line">        weight *= (<span class="hl-number">1</span> + asset_regret) / (<span class="hl-number">1</span> + total_regret)</span>
+<span class="line">        weights[assets.index(asset)] = weight</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Normalize portfolio weights to sum up to 1</span></span>
+<span class="line">    total_weight = <span class="hl-built_in">sum</span>(weights)</span>
+<span class="line">    weights = [weight / total_weight <span class="hl-keyword">for</span> weight <span class="hl-keyword">in</span> weights]</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Update the portfolio&#x27;s wealth at time t</span></span>
+<span class="line">    new_wealth = <span class="hl-built_in">sum</span>(wealth * weight * (<span class="hl-number">1</span> + asset_return) <span class="hl-keyword">for</span> weight, asset_return <span class="hl-keyword">in</span> <span class="hl-built_in">zip</span>(weights, returns))</span>
+<span class="line">    wealth = new_wealth</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Append the wealth at time t to the wealth history</span></span>
+<span class="line">    wealth_history.append(wealth)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># After T time steps, you have the final portfolio weights in &#x27;weights&#x27;</span></span></code></pre>
+
+</figure>
+<p><span>Here is the colab where I tested the ideas: </span><a href="https://colab.research.google.com/drive/14i_T9KRUh05b9EaTbksWOap6RvJgB27l?usp=sharing"><span>colab</span></a></p>
+</article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2023-12-06-Hopfield_from_scratch.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\(", right: "\)", display: false },
+              { left: "\[", right: "\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+</body>
+
+</html>

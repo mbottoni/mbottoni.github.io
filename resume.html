@@ -1,0 +1,371 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mbottoni</title>
+  <meta name="description" content="Yet another programming blog by Maruan Bakri Ottoni aka mbottoni.">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/resume">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/resume.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  
+    <h1>
+    <a href="#Resume"><span>Resume</span> </a>
+    </h1>
+<p><span>Welcome to my resume!  </span>
+<span>The resume is available as </span><a><span>.html</span></a><span> and </span><a href="https://mbottoni.github.io/resume.pdf"><span>.pdf</span></a><span>.</span></p>
+<section id="CONTACT">
+
+    <h2>
+    <a href="#CONTACT"><span>CONTACT</span> </a>
+    </h2>
+<ul>
+<li>
+<strong><strong><span>Phone</span></strong></strong><span>: +55 41 99209-2810</span>
+</li>
+<li>
+<strong><strong><span>Email</span></strong></strong><span>: maruanbakriottoni@gmail.com</span>
+</li>
+<li>
+<strong><strong><span>GitHub</span></strong></strong><span>: </span><a href="https://github.com/mbottoni"><span>github.com/mbottoni</span></a><span> </span>
+</li>
+<li>
+<strong><strong><span>Site</span></strong></strong><span>: </span><a href="https://mbottoni.github.io"><span>mbottoni.github.io</span></a>
+</li>
+</ul>
+</section>
+<section id="EDUCATION">
+
+    <h2>
+    <a href="#EDUCATION"><span>EDUCATION</span> </a>
+    </h2>
+<section id="MSc-in-Computer-Science-University-of-S-o-Paulo-USP-Brazil-Ongoing">
+
+    <h3>
+    <a href="#MSc-in-Computer-Science-University-of-S-o-Paulo-USP-Brazil-Ongoing"><span>MSc in Computer Science — University of São Paulo (USP), Brazil</span>
+<strong><span>Ongoing</span></strong><span> </span> </a>
+    </h3>
+<ul>
+<li>
+<span>Research focus on computational neuroscience and random graph modeling for neural and social networks.</span>
+</li>
+<li>
+<span>Coursework: Graph Theory, Statistical Methods, Deep Learning, NLP, Parallel Computing.</span>
+</li>
+</ul>
+</section>
+<section id="BSc-in-Electrical-Engineering-University-of-Campinas-Unicamp-Brazil-2018-2022">
+
+    <h3>
+    <a href="#BSc-in-Electrical-Engineering-University-of-Campinas-Unicamp-Brazil-2018-2022"><span>BSc in Electrical Engineering — University of Campinas (Unicamp), Brazil</span>
+<strong><span>2018 – 2022</span></strong><span> </span> </a>
+    </h3>
+<ul>
+<li>
+<span>MSc/PhD-level coursework: Information Theory, Stochastic Processes, Bayesian Inference, Machine Learning.</span>
+</li>
+<li>
+<span>Research projects: lattice-based cryptography (CNPQ Scholarship 2021–2022) and information geometry for ML (CNPQ Scholarship 2022–2023).</span>
+</li>
+</ul>
+</section>
+</section>
+<section id="PROFESSIONAL-EXPERIENCE">
+
+    <h2>
+    <a href="#PROFESSIONAL-EXPERIENCE"><span>PROFESSIONAL EXPERIENCE</span> </a>
+    </h2>
+<section id="Data-Scientist-CloudWalk-Inc-S-o-Paulo-Brazil-September-2023-Present">
+
+    <h3>
+    <a href="#Data-Scientist-CloudWalk-Inc-S-o-Paulo-Brazil-September-2023-Present"><span>Data Scientist — CloudWalk Inc. (São Paulo, Brazil)</span>
+<strong><span>September 2023 – Present</span></strong><span> </span> </a>
+    </h3>
+<ul>
+<li>
+<span>Designed and shipped monitoring infrastructure that tracks the health of 3 000+ ML features, boosting model reliability.</span>
+</li>
+<li>
+<span>Built diffusion-based generative models for tabular feature synthesis, improving downstream classification metrics by ~1%.</span>
+</li>
+<li>
+<span>Pretrained and finetuned LLM-inspired credit assignment models that unlocked R$100M+ in approved client credit.</span>
+</li>
+<li>
+<span>Led exploratory AI projects spanning self-supervised learning, graph neural networks for fraud, and LLM interpretability.</span>
+</li>
+</ul>
+</section>
+<section id="Quant-Analyst-Summer-Intern-Goldman-Sachs-S-o-Paulo-Brazil-January-2023-March-2023">
+
+    <h3>
+    <a href="#Quant-Analyst-Summer-Intern-Goldman-Sachs-S-o-Paulo-Brazil-January-2023-March-2023"><span>Quant Analyst Summer Intern — Goldman Sachs (São Paulo, Brazil)</span>
+<strong><span>January 2023 – March 2023</span></strong><span> </span> </a>
+    </h3>
+<ul>
+<li>
+<span>Helped develop linear optimization software for asset inventory management across global entities.</span>
+</li>
+<li>
+<span>Engineered reports and analyses that reduced redundant asset movements and improved operational efficiency.</span>
+</li>
+</ul>
+</section>
+<section id="Quant-Analyst-Intern-UHedge-Trading-Solutions-Campinas-Brazil-October-2022-November-2022">
+
+    <h3>
+    <a href="#Quant-Analyst-Intern-UHedge-Trading-Solutions-Campinas-Brazil-October-2022-November-2022"><span>Quant Analyst Intern — UHedge Trading Solutions (Campinas, Brazil)</span>
+<strong><span>October 2022 – November 2022</span></strong><span> </span> </a>
+    </h3>
+<ul>
+<li>
+<span>Produced mathematical analyses of derivatives strategies to evaluate opportunities and risk/return trade-offs.</span>
+</li>
+</ul>
+</section>
+</section>
+<section id="RESEARCH-PROJECTS">
+
+    <h2>
+    <a href="#RESEARCH-PROJECTS"><span>RESEARCH PROJECTS</span> </a>
+    </h2>
+<ul>
+<li>
+<em><span>Introduction to Lattice-based Cryptography</span></em><span> — investigated reliable lattice constructions for secure communications (CNPQ Scholarship 2021–2022).</span>
+</li>
+<li>
+<em><span>Information Geometry for Machine Learning</span></em><span> — studied differential geometry formulations of statistical manifolds and ML loss landscapes (CNPQ Scholarship 2022–2023).</span>
+</li>
+</ul>
+</section>
+<section id="RELEVANT-SIDE-PROJECTS">
+
+    <h2>
+    <a href="#RELEVANT-SIDE-PROJECTS"><span>RELEVANT SIDE PROJECTS</span> </a>
+    </h2>
+<ul>
+<li>
+<strong><strong><span>Logit Graph</span></strong></strong><span>: Library for probabilistic graph generation via logit-based edge processes with benchmarks against state-of-the-art statistical models.</span>
+</li>
+<li>
+<strong><strong><span>Horror Movie Recommendation App</span></strong></strong><span>: FastAPI service that blends semantic retrieval, IMDb priors, reranking, and integrates UI, PostgreSQL, CI/CD, and payments.</span>
+</li>
+<li>
+<strong><strong><span>Auction RAG Assistant</span></strong></strong><span>: LangChain + MongoDB chatbot (Flask UI) that navigates hundreds of auction documents through retrieval-augmented generation.</span>
+</li>
+<li>
+<strong><strong><span>Graph Similarity via Representation Learning</span></strong></strong><span>: Contributed ML architectures and baselines for graph distance estimation problems.</span>
+</li>
+</ul>
+</section>
+<section id="SKILLS-LANGUAGES">
+
+    <h2>
+    <a href="#SKILLS-LANGUAGES"><span>SKILLS &amp; LANGUAGES</span> </a>
+    </h2>
+<ul>
+<li>
+<strong><strong><span>Programming</span></strong></strong><span>: Python, Matlab, C, Java.</span>
+</li>
+<li>
+<strong><strong><span>Tools &amp; Platforms</span></strong></strong><span>: Google Cloud Platform, Docker, Git, Linux, Kubernetes, Spark.</span>
+</li>
+<li>
+<strong><strong><span>ML/AI</span></strong></strong><span>: PyTorch, TensorFlow, Scikit-learn, Hugging Face, FSDP training.</span>
+</li>
+<li>
+<strong><strong><span>Data &amp; Visualization</span></strong></strong><span>: SQL, Matplotlib, Seaborn, Plotly.</span>
+</li>
+<li>
+<strong><strong><span>Languages</span></strong></strong><span>: Portuguese (Native), English (Fluent C2), French (Basic A2).</span>
+</li>
+</ul>
+</section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/resume.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\(", right: "\)", display: false },
+              { left: "\[", right: "\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+</body>
+
+</html>

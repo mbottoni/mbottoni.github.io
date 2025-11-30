@@ -1,0 +1,385 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quantization of LLMs</title>
+  <meta name="description" content="The escalating complexity and 
+scale of large language models (LLMs) have introduced substantial challenges concerning computational 
+demands and resource allocation. These models, often comprising hundreds of billions of parameters, 
+necessitate extensive memory and processing capabilities, making their deployment and real-time inference 
+both costly and impractical for widespread use.">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/09/29/llm-quant.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/frontier.html">
+          Frontier LLMs &amp; Architectures
+        </a>
+      </div>
+      <article >
+
+    <h1>
+    <a href="#Quantization-of-LLMs"><span>Quantization of LLMs</span> <time datetime="2024-09-29">Sep 29, 2024</time></a>
+    </h1>
+<p><span>The escalating complexity and </span>
+<span>scale of large language models (LLMs) have introduced substantial challenges concerning computational </span>
+<span>demands and resource allocation. These models, often comprising hundreds of billions of parameters, </span>
+<span>necessitate extensive memory and processing capabilities, making their deployment and real-time inference </span>
+<span>both costly and impractical for widespread use.</span></p>
+<p><span>Quantization has a solution for this. It is a technique to alleviate these challenges by reducing the numerical precision </span>
+<span>of model parameters and activations. Traditional LLMs utilize 32-bit floating-point representations (FP32) for </span>
+<span>weights and activations, which, while precise, are resource-intensive. Quantization reduces </span>
+<span>this precision to 16-bit (FP16), 8-bit (INT8), or even lower bit-widths, effectively compressing the </span>
+<span>model size and decreasing computational overhead.</span></p>
+<p><span>However, applying quantization to LLMs is non-trivial due to the inherent sensitivity of these models to </span>
+<span>precision loss. Direct quantization can lead to significant degradation in model performance, characterized by a decline </span>
+<span>in accuracy and the introduction of errors in language understanding and generation tasks.</span></p>
+<p><span>To address these issues, several advanced quantization methodologies have been developed:</span></p>
+<p><strong><strong><span>Post-Training Quantization (PTQ):</span></strong></strong><span> This technique involves quantizing a fully trained model without additional retraining. PTQ </span>
+<span>uses calibration datasets to determine optimal scaling factors and zero-points for quantization, aiming to minimize the </span>
+<span>impact on model accuracy. Methods like symmetric and asymmetric quantization, per-channel scaling, and weight </span>
+<span>clustering are employed to enhance performance.</span></p>
+<p><strong><strong><span>Quantization-Aware Training (QAT):</span></strong></strong><span> QAT integrates quantization operations into the training process. By simulating low-precision </span>
+<span>arithmetic during forward and backward passes, the model learns to compensate for quantization errors. This results in weights </span>
+<span>and activations that are more robust to precision loss, thereby preserving accuracy post-quantization.</span></p>
+<p><strong><strong><span>Mixed-Precision Quantization:</span></strong></strong><span> Recognizing that different layers and operations within an LLM have varying sensitivities to </span>
+<span>quantization, mixed-precision strategies assign different bit-widths to different parts of the model. For instance, attention layers </span>
+<span>critical for capturing contextual relationships might use higher precision, while less sensitive layers use lower precision.</span></p>
+<p><strong><strong><span>Adaptive and Dynamic Quantization:</span></strong></strong><span> These approaches adjust quantization parameters on-the-fly based on the input data or </span>
+<span>during runtime, optimizing the trade-off between performance and efficiency dynamically.</span></p>
+<p><span>The implementation of these quantization techniques has yielded quantized LLMs that maintain performance metrics comparable to their full</span>
+<span>-precision counterparts. For example, models like BERT and GPT variants have been successfully quantized to INT8 with </span>
+<span>minimal loss in accuracy, enabling faster inference and reduced memory usage.</span></p>
+<p><span>The benefits of quantization are multifold:</span></p>
+<ul>
+<li>
+<span>Reduced Memory Footprint: Lower-precision representations consume less memory, allowing for larger models to fit into limited hardware resources.</span>
+</li>
+<li>
+<span>Increased Throughput: Integer operations are generally faster than floating-point operations on modern processors, leading to faster inference times.</span>
+</li>
+<li>
+<span>Energy Efficiency: Reduced computational requirements translate to lower energy consumption, which is crucial for battery-powered devices.</span>
+</li>
+</ul>
+<p><span>Some preview code of how to apply quantization to a LLM can be found below:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">quantization_aware_training</span>(<span class="hl-params">model, train_loader, epochs</span>):</span>
+<span class="line">    optimizer = optim.Adam(model.parameters(), lr=<span class="hl-number">0.001</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">for</span> epoch <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(epochs):</span>
+<span class="line">        <span class="hl-keyword">for</span> data, target <span class="hl-keyword">in</span> train_loader:</span>
+<span class="line">            optimizer.zero_grad()</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># Forward pass with fake quantization</span></span>
+<span class="line">            output = model.forward(data)</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># Simulate quantization of weights and activations</span></span>
+<span class="line">            <span class="hl-keyword">for</span> layer <span class="hl-keyword">in</span> model.layers:</span>
+<span class="line">                <span class="hl-comment"># Fake quantize weights</span></span>
+<span class="line">                weight = layer.weight</span>
+<span class="line">                weight_scale = (weight.<span class="hl-built_in">max</span>() - weight.<span class="hl-built_in">min</span>()) / (<span class="hl-number">2</span>**<span class="hl-number">8</span> - <span class="hl-number">1</span>)</span>
+<span class="line">                quantized_weight = torch.<span class="hl-built_in">round</span>(weight / weight_scale) * weight_scale</span>
+<span class="line">                layer.weight = quantized_weight</span>
+<span class="line">                </span>
+<span class="line">                <span class="hl-comment"># Fake quantize activations</span></span>
+<span class="line">                activation = layer.activation</span>
+<span class="line">                activation_scale = (activation.<span class="hl-built_in">max</span>() - activation.<span class="hl-built_in">min</span>()) / (<span class="hl-number">2</span>**<span class="hl-number">8</span> - <span class="hl-number">1</span>)</span>
+<span class="line">                quantized_activation = torch.<span class="hl-built_in">round</span>(activation / activation_scale) * activation_scale</span>
+<span class="line">                layer.activation = quantized_activation</span>
+<span class="line">            </span>
+<span class="line">            loss = loss_function(output, target)</span>
+<span class="line">            loss.backward()</span>
+<span class="line">            optimizer.step()</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> model</span>
+<span class="line">    </span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">post_training_quantize</span>(<span class="hl-params">model, calibration_data</span>):</span>
+<span class="line">    quantized_model = copy.deepcopy(model)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Step 1: Collect statistics on activations</span></span>
+<span class="line">    activation_min = {}</span>
+<span class="line">    activation_max = {}</span>
+<span class="line">    <span class="hl-keyword">for</span> data <span class="hl-keyword">in</span> calibration_data:</span>
+<span class="line">        activations = quantized_model.forward(data)</span>
+<span class="line">        <span class="hl-keyword">for</span> layer_name, activation <span class="hl-keyword">in</span> activations.items():</span>
+<span class="line">            <span class="hl-keyword">if</span> layer_name <span class="hl-keyword">not</span> <span class="hl-keyword">in</span> activation_min:</span>
+<span class="line">                activation_min[layer_name] = activation.<span class="hl-built_in">min</span>()</span>
+<span class="line">                activation_max[layer_name] = activation.<span class="hl-built_in">max</span>()</span>
+<span class="line">            <span class="hl-keyword">else</span>:</span>
+<span class="line">                activation_min[layer_name] = <span class="hl-built_in">min</span>(activation_min[layer_name], activation.<span class="hl-built_in">min</span>())</span>
+<span class="line">                activation_max[layer_name] = <span class="hl-built_in">max</span>(activation_max[layer_name], activation.<span class="hl-built_in">max</span>())</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Step 2: Quantize weights and activations</span></span>
+<span class="line">    <span class="hl-keyword">for</span> layer <span class="hl-keyword">in</span> quantized_model.layers:</span>
+<span class="line">        <span class="hl-comment"># Quantize weights</span></span>
+<span class="line">        weight = layer.weight</span>
+<span class="line">        weight_scale = (weight.<span class="hl-built_in">max</span>() - weight.<span class="hl-built_in">min</span>()) / (<span class="hl-number">2</span>**<span class="hl-number">8</span> - <span class="hl-number">1</span>)  <span class="hl-comment"># For 8-bit quantization</span></span>
+<span class="line">        quantized_weight = ((weight / weight_scale).<span class="hl-built_in">round</span>()).astype(np.int8)</span>
+<span class="line">        layer.weight = quantized_weight</span>
+<span class="line">        layer.weight_scale = weight_scale</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Quantize activations using collected statistics</span></span>
+<span class="line">        act_min = activation_min[layer.name]</span>
+<span class="line">        act_max = activation_max[layer.name]</span>
+<span class="line">        activation_scale = (act_max - act_min) / (<span class="hl-number">2</span>**<span class="hl-number">8</span> - <span class="hl-number">1</span>)</span>
+<span class="line">        layer.activation_scale = activation_scale</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> quantized_model</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">mixed_precision_quantize</span>(<span class="hl-params">model</span>):</span>
+<span class="line">    quantized_model = copy.deepcopy(model)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">for</span> layer <span class="hl-keyword">in</span> quantized_model.layers:</span>
+<span class="line">        <span class="hl-keyword">if</span> layer.<span class="hl-built_in">type</span> == <span class="hl-string">&#x27;Attention&#x27;</span>:</span>
+<span class="line">            <span class="hl-comment"># Use higher precision for sensitive layers</span></span>
+<span class="line">            bit_width = <span class="hl-number">16</span>  <span class="hl-comment"># e.g., 16-bit quantization</span></span>
+<span class="line">        <span class="hl-keyword">else</span>:</span>
+<span class="line">            <span class="hl-comment"># Use lower precision for less sensitive layers</span></span>
+<span class="line">            bit_width = <span class="hl-number">8</span>   <span class="hl-comment"># e.g., 8-bit quantization</span></span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Quantize weights</span></span>
+<span class="line">        weight = layer.weight</span>
+<span class="line">        weight_scale = (weight.<span class="hl-built_in">max</span>() - weight.<span class="hl-built_in">min</span>()) / (<span class="hl-number">2</span>**bit_width - <span class="hl-number">1</span>)</span>
+<span class="line">        quantized_weight = ((weight / weight_scale).<span class="hl-built_in">round</span>()).astype(get_int_type(bit_width))</span>
+<span class="line">        layer.weight = quantized_weight</span>
+<span class="line">        layer.weight_scale = weight_scale</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Similarly quantize activations if needed</span></span>
+<span class="line">        <span class="hl-comment"># ...</span></span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> quantized_model</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">get_int_type</span>(<span class="hl-params">bit_width</span>):</span>
+<span class="line">    <span class="hl-keyword">if</span> bit_width &lt;= <span class="hl-number">8</span>:</span>
+<span class="line">        <span class="hl-keyword">return</span> np.int8</span>
+<span class="line">    <span class="hl-keyword">elif</span> bit_width &lt;= <span class="hl-number">16</span>:</span>
+<span class="line">        <span class="hl-keyword">return</span> np.int16</span>
+<span class="line">    <span class="hl-keyword">else</span>:</span>
+<span class="line">        <span class="hl-keyword">return</span> np.int32</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">adaptive_quantization_inference</span>(<span class="hl-params">model, input_data</span>):</span>
+<span class="line">    <span class="hl-comment"># Adjust quantization scales based on input data</span></span>
+<span class="line">    activation_min = input_data.<span class="hl-built_in">min</span>()</span>
+<span class="line">    activation_max = input_data.<span class="hl-built_in">max</span>()</span>
+<span class="line">    activation_scale = (activation_max - activation_min) / (<span class="hl-number">2</span>**<span class="hl-number">8</span> - <span class="hl-number">1</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Quantize input data</span></span>
+<span class="line">    quantized_input = ((input_data / activation_scale).<span class="hl-built_in">round</span>()).astype(np.int8)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Forward pass with dynamic quantization</span></span>
+<span class="line">    output = quantized_input</span>
+<span class="line">    <span class="hl-keyword">for</span> layer <span class="hl-keyword">in</span> model.layers:</span>
+<span class="line">        <span class="hl-comment"># Dynamic adjustment of scales if needed</span></span>
+<span class="line">        <span class="hl-comment"># Quantize weights and activations on-the-fly</span></span>
+<span class="line">        weight = layer.weight</span>
+<span class="line">        weight_scale = layer.weight_scale  <span class="hl-comment"># May adjust dynamically</span></span>
+<span class="line">        quantized_weight = ((weight / weight_scale).<span class="hl-built_in">round</span>()).astype(np.int8)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Compute output</span></span>
+<span class="line">        output = quantized_convolution(output, quantized_weight)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Dequantize if necessary for further processing</span></span>
+<span class="line">        output = output * activation_scale  <span class="hl-comment"># Convert back to higher precision if needed</span></span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Update activation scale for next layer based on current output</span></span>
+<span class="line">        activation_scale = (output.<span class="hl-built_in">max</span>() - output.<span class="hl-built_in">min</span>()) / (<span class="hl-number">2</span>**<span class="hl-number">8</span> - <span class="hl-number">1</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> output</span></code></pre>
+
+</figure>
+</article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-09-29-llm-quant.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\(", right: "\)", display: false },
+              { left: "\[", right: "\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+</body>
+
+</html>

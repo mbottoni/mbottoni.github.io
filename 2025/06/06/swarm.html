@@ -1,0 +1,459 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Swarm Structure Simulation</title>
+  <meta name="description" content="After reading the book The Rules of the Flock I got inspired to test some 
+ideas of the book. Basically a swarm behavior is defined when individual agents, following 
+a simple set of local rules without a central leader, produce complex and 
+intelligent collective patterns.">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2025/06/06/swarm.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/graph-rl.html">
+          Graphs, Agents &amp; RL
+        </a>
+      </div>
+      <article >
+
+    <h1>
+    <a href="#Swarm-Structure-Simulation"><span>Swarm Structure Simulation</span> <time datetime="2025-06-06">Jun 6, 2025</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/graph_rl/swarm.jpg">
+</figure>
+<p><span>After reading the book The Rules of the Flock I got inspired to test some </span>
+<span>ideas of the book. Basically a swarm behavior is defined when individual agents, following </span>
+<span>a simple set of local rules without a central leader, produce complex and </span>
+<span>intelligent collective patterns.</span></p>
+<p><span>To see these rules in action, I developed the interactive Python simulation </span>
+<span>detailed below. Using Matplotlib, the simulation visualizes a </span>
+<span>flock of </span>&lsquo;<span>boids</span>&rsquo;<span>. You can use the sliders to change the weight of </span>
+<span>each rule in real-time—crank up </span>&lsquo;<span>Cohesion</span>&rsquo;<span> to see the flock tighten, or increase </span>
+&lsquo;<span>Separation</span>&rsquo;<span> to watch them spread out. You can also interact directly </span>
+<span>with the swarm using your mouse, acting as a predator to </span>
+<span>scatter the flock or a point of interest to draw them in. It</span>&rsquo;<span>s a fascinating look </span>
+<span>at how complex, life-like motion can emerge from a few simple, local instructions.</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"></span>
+<span class="line"><span class="hl-keyword">import</span> numpy <span class="hl-keyword">as</span> np</span>
+<span class="line"><span class="hl-keyword">import</span> matplotlib.pyplot <span class="hl-keyword">as</span> plt</span>
+<span class="line"><span class="hl-keyword">import</span> matplotlib.animation <span class="hl-keyword">as</span> animation</span>
+<span class="line"><span class="hl-keyword">from</span> matplotlib.widgets <span class="hl-keyword">import</span> Slider</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># --- Simulation Configuration ---</span></span>
+<span class="line">N_BOIDS = <span class="hl-number">150</span></span>
+<span class="line">WIDTH, HEIGHT = <span class="hl-number">1200</span>, <span class="hl-number">800</span></span>
+<span class="line">PERCEPTION_RADIUS = <span class="hl-number">70</span></span>
+<span class="line">MAX_SPEED = <span class="hl-number">5.0</span></span>
+<span class="line">MIN_SPEED = <span class="hl-number">2.0</span></span>
+<span class="line">MOUSE_INFLUENCE_RADIUS = <span class="hl-number">150.0</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># --- Weights for the rules ---</span></span>
+<span class="line">INITIAL_SEPARATION_WEIGHT = <span class="hl-number">1.5</span></span>
+<span class="line">INITIAL_ALIGNMENT_WEIGHT = <span class="hl-number">1.0</span></span>
+<span class="line">INITIAL_COHESION_WEIGHT = <span class="hl-number">1.0</span></span>
+<span class="line">MOUSE_ATTRACT_WEIGHT = <span class="hl-number">2.5</span></span>
+<span class="line">MOUSE_REPEL_WEIGHT = <span class="hl-number">3.0</span></span>
+<span class="line">INITIAL_COND = <span class="hl-string">&#x27;random&#x27;</span> <span class="hl-comment"># circle, random, grid</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">class</span> <span class="hl-title class_">Boids</span>:</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    A class to manage the state and behavior of a flock of boids.</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">__init__</span>(<span class="hl-params">self, count, width, height, initial_condition=<span class="hl-string">&#x27;random&#x27;</span></span>):</span>
+<span class="line">        self.width = width</span>
+<span class="line">        self.height = height</span>
+<span class="line">        self.count = count</span>
+<span class="line"></span>
+<span class="line">        self.positions, self.velocities = self._initialize_boids(initial_condition)</span>
+<span class="line"></span>
+<span class="line">        self.weights = {</span>
+<span class="line">            <span class="hl-string">&#x27;separation&#x27;</span>: INITIAL_SEPARATION_WEIGHT,</span>
+<span class="line">            <span class="hl-string">&#x27;alignment&#x27;</span>: INITIAL_ALIGNMENT_WEIGHT,</span>
+<span class="line">            <span class="hl-string">&#x27;cohesion&#x27;</span>: INITIAL_COHESION_WEIGHT</span>
+<span class="line">        }</span>
+<span class="line"></span>
+<span class="line">        self.mouse_pos = <span class="hl-literal">None</span></span>
+<span class="line">        self.mouse_mode = <span class="hl-literal">None</span> <span class="hl-comment"># &#x27;attract&#x27; or &#x27;repel&#x27;</span></span>
+<span class="line"></span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">_initialize_boids</span>(<span class="hl-params">self, condition</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;Sets the initial positions and velocities of the boids.&quot;&quot;&quot;</span></span>
+<span class="line">        <span class="hl-keyword">if</span> condition == <span class="hl-string">&#x27;circle&#x27;</span>:</span>
+<span class="line">            center = np.array([self.width / <span class="hl-number">2</span>, self.height / <span class="hl-number">2</span>])</span>
+<span class="line">            radius = <span class="hl-built_in">min</span>(self.width, self.height) / <span class="hl-number">4</span></span>
+<span class="line">            angles = np.linspace(<span class="hl-number">0</span>, <span class="hl-number">2</span> * np.pi, self.count)</span>
+<span class="line">            positions = center + radius * np.c_[np.cos(angles), np.sin(angles)]</span>
+<span class="line">            velocities = (np.c_[-np.sin(angles), np.cos(angles)]) * MIN_SPEED</span>
+<span class="line">        <span class="hl-keyword">elif</span> condition == <span class="hl-string">&#x27;grid&#x27;</span>:</span>
+<span class="line">            grid_size = <span class="hl-built_in">int</span>(np.ceil(np.sqrt(self.count)))</span>
+<span class="line">            x = np.linspace(self.width/<span class="hl-number">4</span>, <span class="hl-number">3</span>*self.width/<span class="hl-number">4</span>, grid_size)</span>
+<span class="line">            y = np.linspace(self.height/<span class="hl-number">4</span>, <span class="hl-number">3</span>*self.height/<span class="hl-number">4</span>, grid_size)</span>
+<span class="line">            xx, yy = np.meshgrid(x, y)</span>
+<span class="line">            positions = np.c_[xx.ravel(), yy.ravel()][:self.count]</span>
+<span class="line">            velocities = np.full((self.count, <span class="hl-number">2</span>), [<span class="hl-number">0</span>, -MIN_SPEED])</span>
+<span class="line">        <span class="hl-keyword">else</span>: <span class="hl-comment"># &#x27;random&#x27;</span></span>
+<span class="line">            positions = np.random.rand(self.count, <span class="hl-number">2</span>) * np.array([self.width, self.height])</span>
+<span class="line">            velocities = (np.random.rand(self.count, <span class="hl-number">2</span>) - <span class="hl-number">0.5</span>) * MAX_SPEED</span>
+<span class="line"></span>
+<span class="line">        <span class="hl-keyword">return</span> positions, velocities</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">_apply_rules</span>(<span class="hl-params">self</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;Applies boid rules to calculate acceleration.&quot;&quot;&quot;</span></span>
+<span class="line">        deltas = self.positions[:, np.newaxis, :] - self.positions[np.newaxis, :, :]</span>
+<span class="line">        distances = np.sqrt(np.<span class="hl-built_in">sum</span>(deltas**<span class="hl-number">2</span>, axis=<span class="hl-number">2</span>))</span>
+<span class="line"></span>
+<span class="line">        separation_vec = np.zeros_like(self.positions)</span>
+<span class="line">        alignment_vec = np.zeros_like(self.positions)</span>
+<span class="line">        cohesion_vec = np.zeros_like(self.positions)</span>
+<span class="line"></span>
+<span class="line">        neighbor_mask = (distances &gt; <span class="hl-number">0</span>) &amp; (distances &lt; PERCEPTION_RADIUS)</span>
+<span class="line"></span>
+<span class="line">        <span class="hl-keyword">for</span> i <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(self.count):</span>
+<span class="line">            neighbors = neighbor_mask[i]</span>
+<span class="line">            <span class="hl-keyword">if</span> <span class="hl-keyword">not</span> np.<span class="hl-built_in">any</span>(neighbors):</span>
+<span class="line">                <span class="hl-keyword">continue</span></span>
+<span class="line"></span>
+<span class="line">            close_mask = (distances[i] &gt; <span class="hl-number">0</span>) &amp; (distances[i] &lt; PERCEPTION_RADIUS / <span class="hl-number">2</span>)</span>
+<span class="line">            <span class="hl-keyword">if</span> np.<span class="hl-built_in">any</span>(close_mask):</span>
+<span class="line">                avg_pos_close = np.mean(self.positions[close_mask], axis=<span class="hl-number">0</span>)</span>
+<span class="line">                separation_vec[i] = self.positions[i] - avg_pos_close</span>
+<span class="line"></span>
+<span class="line">            alignment_vec[i] = np.mean(self.velocities[neighbors], axis=<span class="hl-number">0</span>)</span>
+<span class="line"></span>
+<span class="line">            avg_pos_all = np.mean(self.positions[neighbors], axis=<span class="hl-number">0</span>)</span>
+<span class="line">            cohesion_vec[i] = avg_pos_all - self.positions[i]</span>
+<span class="line"></span>
+<span class="line">        <span class="hl-keyword">for</span> vec <span class="hl-keyword">in</span> [separation_vec, alignment_vec, cohesion_vec]:</span>
+<span class="line">            norm = np.sqrt(np.<span class="hl-built_in">sum</span>(vec**<span class="hl-number">2</span>, axis=<span class="hl-number">1</span>))[:, np.newaxis]</span>
+<span class="line">            non_zero_mask = norm.flatten() &gt; <span class="hl-number">0</span></span>
+<span class="line">            <span class="hl-keyword">if</span> np.<span class="hl-built_in">any</span>(non_zero_mask):</span>
+<span class="line">                vec[non_zero_mask] /= norm[non_zero_mask]</span>
+<span class="line"></span>
+<span class="line">        mouse_steer = np.zeros_like(self.positions)</span>
+<span class="line">        <span class="hl-keyword">if</span> self.mouse_pos <span class="hl-keyword">is</span> <span class="hl-keyword">not</span> <span class="hl-literal">None</span>:</span>
+<span class="line">            mouse_delta = self.mouse_pos - self.positions</span>
+<span class="line">            mouse_dist = np.sqrt(np.<span class="hl-built_in">sum</span>(mouse_delta**<span class="hl-number">2</span>, axis=<span class="hl-number">1</span>))</span>
+<span class="line">            influence_mask = mouse_dist &lt; MOUSE_INFLUENCE_RADIUS</span>
+<span class="line"></span>
+<span class="line">            <span class="hl-keyword">if</span> self.mouse_mode == <span class="hl-string">&#x27;attract&#x27;</span>:</span>
+<span class="line">                mouse_steer[influence_mask] = mouse_delta[influence_mask] * MOUSE_ATTRACT_WEIGHT</span>
+<span class="line">            <span class="hl-keyword">elif</span> self.mouse_mode == <span class="hl-string">&#x27;repel&#x27;</span>:</span>
+<span class="line">                repel_force = (MOUSE_INFLUENCE_RADIUS - mouse_dist[influence_mask, np.newaxis]) / MOUSE_INFLUENCE_RADIUS</span>
+<span class="line">                mouse_steer[influence_mask] = -mouse_delta[influence_mask] * MOUSE_REPEL_WEIGHT * repel_force</span>
+<span class="line"></span>
+<span class="line">        acceleration = (separation_vec * self.weights[<span class="hl-string">&#x27;separation&#x27;</span>] +</span>
+<span class="line">                        alignment_vec * self.weights[<span class="hl-string">&#x27;alignment&#x27;</span>] +</span>
+<span class="line">                        cohesion_vec * self.weights[<span class="hl-string">&#x27;cohesion&#x27;</span>] +</span>
+<span class="line">                        mouse_steer)</span>
+<span class="line">        <span class="hl-keyword">return</span> acceleration</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">update</span>(<span class="hl-params">self</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;Updates the position and velocity of each boid.&quot;&quot;&quot;</span></span>
+<span class="line">        acceleration = self._apply_rules()</span>
+<span class="line">        self.velocities += acceleration</span>
+<span class="line"></span>
+<span class="line">        speeds = np.sqrt(np.<span class="hl-built_in">sum</span>(self.velocities**<span class="hl-number">2</span>, axis=<span class="hl-number">1</span>))</span>
+<span class="line">        speed_mask_max = speeds &gt; MAX_SPEED</span>
+<span class="line">        speed_mask_min = speeds &lt; MIN_SPEED</span>
+<span class="line"></span>
+<span class="line">        <span class="hl-keyword">if</span> np.<span class="hl-built_in">any</span>(speed_mask_max):</span>
+<span class="line">             self.velocities[speed_mask_max] *= (MAX_SPEED / speeds[speed_mask_max, np.newaxis])</span>
+<span class="line">        <span class="hl-keyword">if</span> np.<span class="hl-built_in">any</span>(speed_mask_min):</span>
+<span class="line">             self.velocities[speed_mask_min] *= (MIN_SPEED / speeds[speed_mask_min, np.newaxis])</span>
+<span class="line"></span>
+<span class="line">        self.positions += self.velocities</span>
+<span class="line"></span>
+<span class="line">        self.positions[:, <span class="hl-number">0</span>] = np.mod(self.positions[:, <span class="hl-number">0</span>], self.width)</span>
+<span class="line">        self.positions[:, <span class="hl-number">1</span>] = np.mod(self.positions[:, <span class="hl-number">1</span>], self.height)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># --- Visualization and Interactivity ---</span></span>
+<span class="line"></span>
+<span class="line">boids = Boids(N_BOIDS, WIDTH, HEIGHT, initial_condition=INITIAL_COND)</span>
+<span class="line"></span>
+<span class="line">fig, ax = plt.subplots(figsize=(<span class="hl-number">12</span>, <span class="hl-number">9</span>))</span>
+<span class="line"><span class="hl-comment"># Leave space at the bottom for sliders and description text</span></span>
+<span class="line">plt.subplots_adjust(bottom=<span class="hl-number">0.3</span>, left=<span class="hl-number">0.1</span>)</span>
+<span class="line">ax.set_xlim(<span class="hl-number">0</span>, WIDTH)</span>
+<span class="line">ax.set_ylim(<span class="hl-number">0</span>, HEIGHT)</span>
+<span class="line">ax.set_xticks([])</span>
+<span class="line">ax.set_yticks([])</span>
+<span class="line">ax.set_facecolor(<span class="hl-string">&#x27;k&#x27;</span>)</span>
+<span class="line">fig.set_facecolor(<span class="hl-string">&#x27;k&#x27;</span>)</span>
+<span class="line"></span>
+<span class="line">quiver = ax.quiver(boids.positions[:, <span class="hl-number">0</span>], boids.positions[:, <span class="hl-number">1</span>],</span>
+<span class="line">                   boids.velocities[:, <span class="hl-number">0</span>], boids.velocities[:, <span class="hl-number">1</span>],</span>
+<span class="line">                   color=<span class="hl-string">&#x27;cyan&#x27;</span>, headwidth=<span class="hl-number">2</span>, headlength=<span class="hl-number">3</span>)</span>
+<span class="line"></span>
+<span class="line">mode_text = ax.text(<span class="hl-number">10</span>, HEIGHT - <span class="hl-number">20</span>, <span class="hl-string">&quot;Mode: Normal&quot;</span>, color=<span class="hl-string">&#x27;white&#x27;</span>, fontsize=<span class="hl-number">12</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># --- Mouse Click Event Handler ---</span></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">on_click</span>(<span class="hl-params">event</span>):</span>
+<span class="line">    <span class="hl-keyword">if</span> event.inaxes:</span>
+<span class="line">        boids.mouse_pos = np.array([event.xdata, event.ydata])</span>
+<span class="line">        <span class="hl-keyword">if</span> event.button == <span class="hl-number">1</span>:</span>
+<span class="line">            boids.mouse_mode = <span class="hl-string">&#x27;attract&#x27;</span></span>
+<span class="line">            mode_text.set_text(<span class="hl-string">&quot;Mode: Attract (Left-Click)&quot;</span>)</span>
+<span class="line">        <span class="hl-keyword">elif</span> event.button == <span class="hl-number">3</span>:</span>
+<span class="line">            boids.mouse_mode = <span class="hl-string">&#x27;repel&#x27;</span></span>
+<span class="line">            mode_text.set_text(<span class="hl-string">&quot;Mode: Repel (Right-Click)&quot;</span>)</span>
+<span class="line">        <span class="hl-keyword">elif</span> event.button == <span class="hl-number">2</span>:</span>
+<span class="line">            boids.mouse_mode = <span class="hl-literal">None</span></span>
+<span class="line">            boids.mouse_pos = <span class="hl-literal">None</span></span>
+<span class="line">            mode_text.set_text(<span class="hl-string">&quot;Mode: Normal (Middle-Click)&quot;</span>)</span>
+<span class="line">fig.canvas.mpl_connect(<span class="hl-string">&#x27;button_press_event&#x27;</span>, on_click)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># --- Sliders and Description Text ---</span></span>
+<span class="line">ax_sep = plt.axes([<span class="hl-number">0.25</span>, <span class="hl-number">0.18</span>, <span class="hl-number">0.65</span>, <span class="hl-number">0.03</span>])</span>
+<span class="line">ax_ali = plt.axes([<span class="hl-number">0.25</span>, <span class="hl-number">0.13</span>, <span class="hl-number">0.65</span>, <span class="hl-number">0.03</span>])</span>
+<span class="line">ax_coh = plt.axes([<span class="hl-number">0.25</span>, <span class="hl-number">0.08</span>, <span class="hl-number">0.65</span>, <span class="hl-number">0.03</span>])</span>
+<span class="line"></span>
+<span class="line">slider_sep = Slider(ax_sep, <span class="hl-string">&#x27;Separation&#x27;</span>, <span class="hl-number">0.1</span>, <span class="hl-number">5.0</span>, valinit=INITIAL_SEPARATION_WEIGHT, color=<span class="hl-string">&#x27;c&#x27;</span>)</span>
+<span class="line">slider_ali = Slider(ax_ali, <span class="hl-string">&#x27;Alignment&#x27;</span>, <span class="hl-number">0.1</span>, <span class="hl-number">5.0</span>, valinit=INITIAL_ALIGNMENT_WEIGHT, color=<span class="hl-string">&#x27;c&#x27;</span>)</span>
+<span class="line">slider_coh = Slider(ax_coh, <span class="hl-string">&#x27;Cohesion&#x27;</span>, <span class="hl-number">0.1</span>, <span class="hl-number">5.0</span>, valinit=INITIAL_COHESION_WEIGHT, color=<span class="hl-string">&#x27;c&#x27;</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Add the text area for descriptions</span></span>
+<span class="line">description_text = fig.text(</span>
+<span class="line">    <span class="hl-number">0.5</span>, <span class="hl-number">0.02</span>,</span>
+<span class="line">    <span class="hl-string">&quot;Move a slider to see its description.&quot;</span>,</span>
+<span class="line">    color=<span class="hl-string">&#x27;yellow&#x27;</span>, ha=<span class="hl-string">&#x27;center&#x27;</span>, va=<span class="hl-string">&#x27;bottom&#x27;</span>, fontsize=<span class="hl-number">10</span></span>
+<span class="line">)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Descriptions for each slider</span></span>
+<span class="line">descriptions = {</span>
+<span class="line">    <span class="hl-string">&#x27;separation&#x27;</span>: <span class="hl-string">&quot;Separation: Controls how strongly boids steer to avoid crowding neighbors. Higher values prevent collisions.&quot;</span>,</span>
+<span class="line">    <span class="hl-string">&#x27;alignment&#x27;</span>: <span class="hl-string">&quot;Alignment: Controls how strongly boids steer to match the heading of their neighbors. Higher values create more parallel flight.&quot;</span>,</span>
+<span class="line">    <span class="hl-string">&#x27;cohesion&#x27;</span>: <span class="hl-string">&quot;Cohesion: Controls how strongly boids steer towards the center of their neighbors. Higher values create tighter flocks.&quot;</span></span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Functions to update weights AND the description text</span></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">update_separation</span>(<span class="hl-params">val</span>):</span>
+<span class="line">    boids.weights[<span class="hl-string">&#x27;separation&#x27;</span>] = val</span>
+<span class="line">    description_text.set_text(descriptions[<span class="hl-string">&#x27;separation&#x27;</span>])</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">update_alignment</span>(<span class="hl-params">val</span>):</span>
+<span class="line">    boids.weights[<span class="hl-string">&#x27;alignment&#x27;</span>] = val</span>
+<span class="line">    description_text.set_text(descriptions[<span class="hl-string">&#x27;alignment&#x27;</span>])</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">update_cohesion</span>(<span class="hl-params">val</span>):</span>
+<span class="line">    boids.weights[<span class="hl-string">&#x27;cohesion&#x27;</span>] = val</span>
+<span class="line">    description_text.set_text(descriptions[<span class="hl-string">&#x27;cohesion&#x27;</span>])</span>
+<span class="line"></span>
+<span class="line">slider_sep.on_changed(update_separation)</span>
+<span class="line">slider_ali.on_changed(update_alignment)</span>
+<span class="line">slider_coh.on_changed(update_cohesion)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># --- Animation Loop ---</span></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">animate</span>(<span class="hl-params">frame</span>):</span>
+<span class="line">    boids.update()</span>
+<span class="line"></span>
+<span class="line">    quiver.set_offsets(boids.positions)</span>
+<span class="line">    quiver.set_UVC(boids.velocities[:, <span class="hl-number">0</span>], boids.velocities[:, <span class="hl-number">1</span>])</span>
+<span class="line"></span>
+<span class="line">    ax.set_title(<span class="hl-string">f&quot;Interactive Swarm Simulation&quot;</span>, color=<span class="hl-string">&#x27;white&#x27;</span>)</span>
+<span class="line">    <span class="hl-keyword">return</span> quiver, mode_text, description_text</span>
+<span class="line"></span>
+<span class="line">ani = animation.FuncAnimation(fig, animate, frames=<span class="hl-number">200</span>, interval=<span class="hl-number">30</span>, blit=<span class="hl-literal">False</span>)</span>
+<span class="line"></span>
+<span class="line">plt.show()</span></code></pre>
+
+</figure>
+</article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2025-06-06-swarm.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\(", right: "\)", display: false },
+              { left: "\[", right: "\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+</body>
+
+</html>

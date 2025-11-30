@@ -1,0 +1,304 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A comprehensive list of different types of VAEs</title>
+  <meta name="description" content="VAE (Vanilla VAE): The original VAE architecture consists of an encoder that 
+maps input data to a latent space, and a decoder that reconstructs the 
+input from the latent representation. It uses a variational inference 
+approach to learn the latent space distribution.">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/10/13/vaes.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/generative.html">
+          Diffusion &amp; Generative Modeling
+        </a>
+      </div>
+      <article >
+
+    <h1>
+    <a href="#A-comprehensive-list-of-different-types-of-VAEs"><span>A comprehensive list of different types of VAEs</span> <time datetime="2024-10-13">Oct 13, 2024</time></a>
+    </h1>
+<ol>
+<li>
+<p><strong><strong><span>VAE</span></strong></strong><span> (Vanilla VAE): The original VAE architecture consists of an encoder that </span>
+<span>maps input data to a latent space, and a decoder that reconstructs the </span>
+<span>input from the latent representation. It uses a variational inference </span>
+<span>approach to learn the latent space distribution.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Conditional VAE</span></strong></strong><span>: This VAE variant incorporates additional conditioning </span>
+<span>information into both the encoder and decoder networks. The conditioning </span>
+<span>allows the model to generate samples conditioned on specific attributes or classes.</span></p>
+</li>
+<li>
+<p><strong><strong><span>WAE - MMD</span></strong></strong><span> (with RBF Kernel): Wasserstein Autoencoders use Maximum Mean Discrepancy (MMD) with </span>
+<span>a Radial Basis Function (RBF) kernel to minimize the distance between the encoded </span>
+<span>distribution and a prior distribution, aiming for better-quality reconstructions.</span></p>
+</li>
+<li>
+<p><strong><strong><span>WAE - MMD</span></strong></strong><span> (with IMQ Kernel): Similar to the RBF kernel version, but uses an Inverse MultiQuadric (IMQ) kernel </span>
+<span>for the MMD calculation, which can provide different regularization properties.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Beta-VAE</span></strong></strong><span>: This architecture introduces a hyperparameter β to control the trade-off between </span>
+<span>reconstruction quality and the disentanglement of latent representations, allowing for </span>
+<span>more interpretable latent spaces.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Disentangled Beta-VAE</span></strong></strong><span>: An improved version of Beta-VAE that aims to achieve better disentanglement </span>
+<span>of latent factors by modifying the training objective and architecture slightly.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Beta-TC-VAE</span></strong></strong><span>: This variant decomposes the KL divergence term in the VAE objective into three </span>
+<span>components, with a β parameter applied to the total correlation term to </span>
+<span>encourage disentanglement.</span></p>
+</li>
+<li>
+<p><strong><strong><span>IWAE</span></strong></strong><span> (Importance Weighted Autoencoder): IWAE uses multiple samples </span>
+<span>from the encoder to compute </span>
+<span>a tighter lower bound on the marginal likelihood, potentially leading </span>
+<span>to better generative models.</span></p>
+</li>
+<li>
+<p><strong><strong><span>MIWAE</span></strong></strong><span> (Multiply Importance Weighted Autoencoder): An extension of IWAE that uses multiple </span>
+<span>importance-weighted samples during both training and inference to improve performance.</span></p>
+</li>
+<li>
+<p><strong><strong><span>DFCVAE</span></strong></strong><span> (Deep Feature Consistent VAE): This VAE incorporates perceptual losses based on features from </span>
+<span>pre-trained neural networks to improve the quality and consistency of generated images.</span></p>
+</li>
+<li>
+<p><strong><strong><span>MSSIM VAE</span></strong></strong><span> (Multi-Scale Structural Similarity VAE): This architecture uses a multi-scale </span>
+<span>structural similarity index as part of its loss function </span>
+<span>to improve the perceptual quality of reconstructed images.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Categorical VAE</span></strong></strong><span>: A VAE variant designed to work with </span>
+<span>categorical latent variables, often using the Gumbel-Softmax </span>
+<span>trick for differentiable sampling from discrete distributions.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Joint VAE</span></strong></strong><span>: This model combines continuous and discrete latent variables in </span>
+<span>a single framework, allowing for representation of both continuous </span>
+<span>and categorical factors.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Info VAE</span></strong></strong><span>: InfoVAE modifies the objective function to maximize the mutual information </span>
+<span>between inputs and latent variables, aiming for more informative </span>
+<span>latent representations.</span></p>
+</li>
+<li>
+<p><strong><strong><span>LogCosh VAE</span></strong></strong><span>: This VAE uses the log-cosh loss function </span>
+<span>instead of mean squared error for reconstruction, potentially </span>
+<span>providing robustness to outliers.</span></p>
+</li>
+<li>
+<p><strong><strong><span>SWAE</span></strong></strong><span> (Sliced-Wasserstein Autoencoder): SWAE uses the sliced Wasserstein distance to </span>
+<span>measure the discrepancy between the encoded distribution and the prior, offering </span>
+<span>an alternative to KL divergence.</span></p>
+</li>
+<li>
+<p><strong><strong><span>VQ-VAE</span></strong></strong><span> (Vector Quantized VAE): This architecture uses vector quantization </span>
+<span>in the latent space, mapping continuous encodings to discrete codes from a </span>
+<span>codebook, useful for generating high-quality images and audio.</span></p>
+</li>
+<li>
+<p><strong><strong><span>DIP VAE</span></strong></strong><span> (Disentangled Inferred Prior VAE): DIP-VAE modifies the VAE objective to encourage </span>
+<span>the aggregate posterior to match the prior, aiming for better disentanglement </span>
+<span>of latent factors.</span></p>
+</li>
+</ol>
+</article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-10-13-vaes.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\(", right: "\)", display: false },
+              { left: "\[", right: "\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+</body>
+
+</html>

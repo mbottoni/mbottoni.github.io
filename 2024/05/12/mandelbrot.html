@@ -1,0 +1,452 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Some tests with the Mandelbrot set and parallelization</title>
+  <meta name="description" content="Hello. It has been a while since I lasted programed
+with OpenMP and C. For refreshing my mind and keeping
+the concepts clear I was doing some tests with the
+Mandelbrot Set with OpenMP and with a single thread.
+Here is the code for both cases:">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/05/12/mandelbrot.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/foundations.html">
+          Math, Physics &amp; Foundations
+        </a>
+      </div>
+      <article >
+
+    <h1>
+    <a href="#Some-tests-with-the-Mandelbrot-set-and-parallelization"><span>Some tests with the Mandelbrot set and parallelization</span> <time datetime="2024-05-12">May 12, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/foundations/mandelbrot.png">
+</figure>
+<p><span>Hello. It has been a while since I lasted programed</span>
+<span>with OpenMP and C. For refreshing my mind and keeping</span>
+<span>the concepts clear I was doing some tests with the</span>
+<span>Mandelbrot Set with OpenMP and with a single thread.</span>
+<span>Here is the code for both cases:</span></p>
+<section id="Baseline">
+
+    <h2>
+    <a href="#Baseline"><span>Baseline</span> </a>
+    </h2>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line">#include &lt;stdio.h&gt;</span>
+<span class="line">#include &lt;stdlib.h&gt;</span>
+<span class="line">#include &lt;math.h&gt;</span>
+<span class="line"></span>
+<span class="line">#define WIDTH 1920</span>
+<span class="line">#define HEIGHT 1080</span>
+<span class="line">#define REAL_MIN -2.0</span>
+<span class="line">#define REAL_MAX 1.5</span>
+<span class="line">#define IMAG_MIN -1.0</span>
+<span class="line">#define IMAG_MAX 1.0</span>
+<span class="line">#define MAX_ITERATIONS 8000</span>
+<span class="line"></span>
+<span class="line">typedef unsigned char uchar;</span>
+<span class="line"></span>
+<span class="line">typedef struct {</span>
+<span class="line">    uchar r, g, b;</span>
+<span class="line">} Color;</span>
+<span class="line"></span>
+<span class="line">// Function Prototypes</span>
+<span class="line">Color computeMandelbrotPixel(double x0, double y0, Color* palette);</span>
+<span class="line">Color* generatePalette(int size);</span>
+<span class="line">double linearInterpolate(double start, double end, double t);</span>
+<span class="line"></span>
+<span class="line">int main() {</span>
+<span class="line">    uchar (*image)[WIDTH][3] = malloc(sizeof(uchar[HEIGHT][WIDTH][3]));</span>
+<span class="line">    Color* palette = generatePalette(MAX_ITERATIONS);</span>
+<span class="line"></span>
+<span class="line">    for (int py = 0; py &lt; HEIGHT; py++) {</span>
+<span class="line">        for (int px = 0; px &lt; WIDTH; px++) {</span>
+<span class="line">            double x0 = REAL_MIN + (px / (double) WIDTH) * (REAL_MAX - REAL_MIN);</span>
+<span class="line">            double y0 = IMAG_MIN + (py / (double) HEIGHT) * (IMAG_MAX - IMAG_MIN);</span>
+<span class="line">            Color color = computeMandelbrotPixel(x0, y0, palette);</span>
+<span class="line">            image[py][px][0] = color.r;</span>
+<span class="line">            image[py][px][1] = color.g;</span>
+<span class="line">            image[py][px][2] = color.b;</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    // Output to PPM format</span>
+<span class="line">    FILE* fout = fopen("output/ms.ppm", "w");</span>
+<span class="line">    fprintf(fout, "P6\n%d %d\n255\n", WIDTH, HEIGHT);</span>
+<span class="line">    for (int y = 0; y &lt; HEIGHT; y++) {</span>
+<span class="line">        fwrite(image[y], 1, sizeof(uchar[WIDTH][3]), fout);</span>
+<span class="line">    }</span>
+<span class="line">    fclose(fout);</span>
+<span class="line">    free(image);</span>
+<span class="line">    free(palette);</span>
+<span class="line"></span>
+<span class="line">    printf("Finished calculations and output.\n");</span>
+<span class="line">    return 0;</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">Color computeMandelbrotPixel(double x0, double y0, Color* palette) {</span>
+<span class="line">    double x = 0, y = 0, x2 = 0, y2 = 0;</span>
+<span class="line">    int iteration = 0;</span>
+<span class="line">    while (x2 + y2 &lt;= 4 &amp;&amp; iteration &lt; MAX_ITERATIONS) {</span>
+<span class="line">        y = 2 * x * y + y0;</span>
+<span class="line">        x = x2 - y2 + x0;</span>
+<span class="line">        x2 = x * x;</span>
+<span class="line">        y2 = y * y;</span>
+<span class="line">        iteration++;</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    if (iteration &lt; MAX_ITERATIONS) {</span>
+<span class="line">        double log_zn = log(x2 + y2) / 2.0;</span>
+<span class="line">        double nu = log(log_zn / log(2)) / log(2);</span>
+<span class="line">        iteration += 1 - nu;</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    int idx1 = iteration;</span>
+<span class="line">    int idx2 = idx1 + 1;</span>
+<span class="line">    Color c1 = palette[idx1 &lt; MAX_ITERATIONS ? idx1 : MAX_ITERATIONS];</span>
+<span class="line">    Color c2 = palette[idx2 &lt; MAX_ITERATIONS ? idx2 : MAX_ITERATIONS];</span>
+<span class="line">    double t = iteration - floor(iteration);</span>
+<span class="line"></span>
+<span class="line">    return (Color){</span>
+<span class="line">        .r = (int)linearInterpolate(c1.r, c2.r, t),</span>
+<span class="line">        .g = (int)linearInterpolate(c1.g, c2.g, t),</span>
+<span class="line">        .b = (int)linearInterpolate(c1.b, c2.b, t)</span>
+<span class="line">    };</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">Color* generatePalette(int size) {</span>
+<span class="line">    Color* palette = malloc(sizeof(Color) * (size + 1));</span>
+<span class="line">    for (int i = 0; i &lt;= size; i++) {</span>
+<span class="line">        double intensity = 3.0 * (i == 0 ? 3.0 : log(i) / log(size - 1));</span>
+<span class="line">        if (intensity &lt; 1) {</span>
+<span class="line">            palette[i] = (Color){0, (uchar)(255 * intensity), 0};</span>
+<span class="line">        } else if (intensity &lt; 2) {</span>
+<span class="line">            palette[i] = (Color){(uchar)(255 * (intensity - 1)), 255, 0};</span>
+<span class="line">        } else {</span>
+<span class="line">            palette[i] = (Color){(uchar)(255 * (intensity - 2)), 255, 255};</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line">    return palette;</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">double linearInterpolate(double start, double end, double t) {</span>
+<span class="line">    return (1 - t) * start + t * end;</span>
+<span class="line">}</span></code></pre>
+
+</figure>
+</section>
+<section id="OpenMP">
+
+    <h2>
+    <a href="#OpenMP"><span>OpenMP</span> </a>
+    </h2>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line">#include &lt;math.h&gt;</span>
+<span class="line">#include &lt;stdio.h&gt;</span>
+<span class="line">#include &lt;stdlib.h&gt;</span>
+<span class="line"></span>
+<span class="line">#define WIDTH 1920</span>
+<span class="line">#define HEIGHT 1080</span>
+<span class="line">#define uchar unsigned char</span>
+<span class="line"></span>
+<span class="line">#define REAL_MAX 1.5</span>
+<span class="line">#define REAL_MIN -2</span>
+<span class="line">#define IMAG_MAX 1.0</span>
+<span class="line">#define IMAG_MIN -IMAG_MAX</span>
+<span class="line"></span>
+<span class="line">#define MAX_ITERATIONS 8000</span>
+<span class="line"></span>
+<span class="line">typedef struct {</span>
+<span class="line">    uchar r;</span>
+<span class="line">    uchar g;</span>
+<span class="line">    uchar b;</span>
+<span class="line">} Color;</span>
+<span class="line"></span>
+<span class="line">// Function Prototypes</span>
+<span class="line">double linearInterpolation(double start, double end, double t);</span>
+<span class="line">Color* generateColorPalette(int size);</span>
+<span class="line">Color calculateMandelbrotColor(int px, int py, Color* palette);</span>
+<span class="line"></span>
+<span class="line">int main() {</span>
+<span class="line">    uchar (*image)[WIDTH][3] = malloc(sizeof(uchar[HEIGHT][WIDTH][3]));</span>
+<span class="line">    Color* palette = generateColorPalette(MAX_ITERATIONS);</span>
+<span class="line"></span>
+<span class="line">    #pragma omp parallel for</span>
+<span class="line">    for (int py = 0; py &lt; HEIGHT; py++) {</span>
+<span class="line">        for (int px = 0; px &lt; WIDTH; px++) {</span>
+<span class="line">            Color color = calculateMandelbrotColor(px, py, palette);</span>
+<span class="line">            image[py][px][0] = color.r;</span>
+<span class="line">            image[py][px][1] = color.g;</span>
+<span class="line">            image[py][px][2] = color.b;</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    FILE* fout = fopen("output/mandelbrot.ppm", "w");</span>
+<span class="line">    fprintf(fout, "P6\n%d %d\n255\n", WIDTH, HEIGHT);</span>
+<span class="line">    for (int y = 0; y &lt; HEIGHT; y++) {</span>
+<span class="line">        fwrite(image[y], 1, sizeof(image[y]), fout);</span>
+<span class="line">    }</span>
+<span class="line">    fclose(fout);</span>
+<span class="line"></span>
+<span class="line">    free(palette);</span>
+<span class="line">    free(image);</span>
+<span class="line">    printf("Finished calculations and output.\n");</span>
+<span class="line">    return 0;</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">Color calculateMandelbrotColor(int px, int py, Color* palette) {</span>
+<span class="line">    double x0 = REAL_MIN + px * (REAL_MAX - REAL_MIN) / WIDTH;</span>
+<span class="line">    double y0 = IMAG_MIN + py * (IMAG_MAX - IMAG_MIN) / HEIGHT;</span>
+<span class="line">    double x = 0, y = 0, x2 = 0, y2 = 0;</span>
+<span class="line">    int iter = 0;</span>
+<span class="line"></span>
+<span class="line">    while (x2 + y2 &lt;= 4 &amp;&amp; iter &lt; MAX_ITERATIONS) {</span>
+<span class="line">        y = 2 * x * y + y0;</span>
+<span class="line">        x = x2 - y2 + x0;</span>
+<span class="line">        x2 = x * x;</span>
+<span class="line">        y2 = y * y;</span>
+<span class="line">        iter++;</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    if (iter &lt; MAX_ITERATIONS) {</span>
+<span class="line">        double log_zn = log(x2 + y2) / 2;</span>
+<span class="line">        double nu = log(log_zn / log(2)) / log(2);</span>
+<span class="line">        iter += 1 - nu;</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    int idx1 = iter;</span>
+<span class="line">    int idx2 = (idx1 + 1 &gt; MAX_ITERATIONS) ? idx1 : idx1 + 1;</span>
+<span class="line">    double t = iter - (int)iter;</span>
+<span class="line">    Color c1 = palette[idx1];</span>
+<span class="line">    Color c2 = palette[idx2];</span>
+<span class="line"></span>
+<span class="line">    return (Color){</span>
+<span class="line">        .r = (uchar)linearInterpolation(c1.r, c2.r, t),</span>
+<span class="line">        .g = (uchar)linearInterpolation(c1.g, c2.g, t),</span>
+<span class="line">        .b = (uchar)linearInterpolation(c1.b, c2.b, t)</span>
+<span class="line">    };</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">Color* generateColorPalette(int size) {</span>
+<span class="line">    Color* palette = malloc(sizeof(Color) * (size + 1));</span>
+<span class="line">    for (int i = 0; i &lt;= size; i++) {</span>
+<span class="line">        double ratio = i / (double)size;</span>
+<span class="line">        double angle = 2 * M_PI * ratio;</span>
+<span class="line">        palette[i] = (Color){</span>
+<span class="line">            .r = (uchar)(sin(angle) * 127.5 + 127.5),</span>
+<span class="line">            .g = (uchar)(sin(angle + 2 * M_PI / 3) * 127.5 + 127.5),</span>
+<span class="line">            .b = (uchar)(sin(angle + 4 * M_PI / 3) * 127.5 + 127.5)</span>
+<span class="line">        };</span>
+<span class="line">    }</span>
+<span class="line">    return palette;</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">double linearInterpolation(double start, double end, double t) {</span>
+<span class="line">    return (1 - t) * start + t * end;</span>
+<span class="line">}</span></code></pre>
+
+</figure>
+</section>
+</article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-05-12-mandelbrot.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\(", right: "\)", display: false },
+              { left: "\[", right: "\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+</body>
+
+</html>

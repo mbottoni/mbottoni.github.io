@@ -1,0 +1,294 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diffusion &amp; Generative Modeling — mbottoni</title>
+  <meta name="description" content="Diffusion processes, flows, GAN/CTGAN, CFG tricks, and other approaches to high-dimensional generation.">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/themes/generative.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  
+      <section class="theme-page">
+        <header class="theme-section">
+          <h1>Diffusion &amp; Generative Modeling</h1>
+          <p>Diffusion processes, flows, GAN/CTGAN, CFG tricks, and other approaches to high-dimensional generation.</p>
+        </header>
+        <ul class="post-list">
+          
+      <li class="post-card">
+        <div class="post-card__media">
+          
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-12-15">Dec 15, 2024</time> · <a href="/2024/12/15/cfg.html">Classifier free diffusion guidance</a></h3>
+          <p>One of the key techniques in diffusion models that has significantly improved their performance is 
+classifier-free guidance. In this post, we'll explore what classifier-free 
+guidance is, how it works, and implement it from scratch in PyTorch.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/12/07/timeseries-diffusion.html"><img src="/assets/generative/time-series-diffusion.png" alt="Diffusion models for time series preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-12-07">Dec 7, 2024</time> · <a href="/2024/12/07/timeseries-diffusion.html">Diffusion models for time series</a></h3>
+          <p>On this post I will explore the main findings from the paper UTSD: Unified Time Series Diffusion Model and an explanation 
+of the content. For more details here is the link to the paper Link to paper</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/12/01/flow.html"><img src="/assets/generative/flow.png" alt="Flow Matching, a short overview preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-12-01">Dec 1, 2024</time> · <a href="/2024/12/01/flow.html">Flow Matching, a short overview</a></h3>
+          <p>In summary, flow matching is a generative modeling technique that provides 
+an elegant way to transform data distributions.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-10-13">Oct 13, 2024</time> · <a href="/2024/10/13/vaes.html">A comprehensive list of different types of VAEs</a></h3>
+          <p>VAE (Vanilla VAE): The original VAE architecture consists of an encoder that 
+maps input data to a latent space, and a decoder that reconstructs the 
+input from the latent representation. It uses a variational inference 
+approach to learn the latent space distribution.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/09/09/ddim_ddpm.html"><img src="/assets/generative/ddim.png" alt="DDIM vs DDPM preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-09-09">Sep 9, 2024</time> · <a href="/2024/09/09/ddim_ddpm.html">DDIM vs DDPM</a></h3>
+          <p>Diffusion models have emerged as a powerful class of deep generative models, particularly excelling in image synthesis tasks. This article 
+delves into a comprehensive comparison of two significant variants: Denoising Diffusion Probabilistic Models (DDPM) and Denoising 
+Diffusion Implicit Models (DDIM).</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/09/01/diffusion.html"><img src="/assets/generative/diffusion.webp" alt="Diffusion models or Autoencoders? preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-09-01">Sep 1, 2024</time> · <a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a></h3>
+          <p>Recent advancements in generative AI have brought diffusion models to the forefront, particularly 
+for their impressive performance in image generation. While these models are often seen as 
+distinct from traditional approaches, there's a compelling argument for viewing diffusion models 
+as a form of hierarchical autoencoder.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/08/13/ctgan.html"><img src="/assets/generative/gan.png" alt="Conditional Tabular GAN - CTGAN preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-08-13">Aug 13, 2024</time> · <a href="/2024/08/13/ctgan.html">Conditional Tabular GAN - CTGAN</a></h3>
+          <p>One of the most interesting ideas on the last decades in machine learning is the GAN architecture for generatine model. While GANs have 
+shown remarkable success in generating high-quality images and other continuous data types, tabular data poses unique challenges. Tabular data often contains a 
+mix of discrete and continuous variables, with complex dependencies between them. Traditional GAN architectures struggle to capture these intricacies, leading 
+to poor performance when applied directly to tabular data. CTGAN addresses these challenges by introducing a specialized framework for generating 
+realistic synthetic tabular data.</p>
+        </div>
+      </li>
+    
+        </ul>
+      </section>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/src/templates.ts">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\(", right: "\)", display: false },
+              { left: "\[", right: "\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+</body>
+
+</html>

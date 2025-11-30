@@ -1,0 +1,345 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hopfield Networks for dummies</title>
+  <meta name="description" content="Hopfield Networks, a type of Recurrent Neural Network (RNN), are renowned for their unique ability to
+store and retrieve patterns through associative memory. This means they can recall a complete memory from
+just a partial input. Inspired by the Ising model in physics, which explains magnetic behaviors in
+certain materials, Hopfield Networks use a system of interconnected neurons, each able to be in
+one of two states, akin to magnetic dipoles. These neurons are fully connected, each influencing the other
+based on the strength of their connections. The network dynamically evolves to a stable state where the
+system's energy is minimized, representing a memory. The overall network state thus can represent binary information, like
+an image or a pattern, making Hopfield Networks particularly effective in pattern recognition
+and completion tasks.">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2023/12/04/Hopfield.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/foundations.html">
+          Math, Physics &amp; Foundations
+        </a>
+      </div>
+      <article >
+
+    <h1>
+    <a href="#Hopfield-Networks-for-dummies"><span>Hopfield Networks for dummies</span> <time datetime="2023-12-04">Dec 4, 2023</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/foundations/hopfield.gif">
+</figure>
+<section id="Introduction-to-Hopfield-Networks">
+
+    <h2>
+    <a href="#Introduction-to-Hopfield-Networks"><span>Introduction to Hopfield Networks</span> </a>
+    </h2>
+<p><span>Hopfield Networks, a type of Recurrent Neural Network (RNN), are renowned for their unique ability to</span>
+<span>store and retrieve patterns through associative memory. This means they can recall a complete memory from</span>
+<span>just a partial input. Inspired by the Ising model in physics, which explains magnetic behaviors in</span>
+<span>certain materials, Hopfield Networks use a system of interconnected neurons, each able to be in</span>
+<span>one of two states, akin to magnetic dipoles. These neurons are fully connected, each influencing the other</span>
+<span>based on the strength of their connections. The network dynamically evolves to a stable state where the</span>
+<span>system</span>&rsquo;<span>s </span>&lsquo;<span>energy</span>&rsquo;<span> is minimized, representing a memory. The overall network state thus can represent binary information, like</span>
+<span>an image or a pattern, making Hopfield Networks particularly effective in pattern recognition</span>
+<span>and completion tasks.</span></p>
+</section>
+<section id="Hopfield-Networks-is-all-you-need">
+
+    <h2>
+    <a href="#Hopfield-Networks-is-all-you-need"><span>Hopfield Networks is all you need</span> </a>
+    </h2>
+<p><span>Now with a little bit of more context of Hopfield Networks</span>&rsquo;<span>s we will</span>
+<span>dive into a quick summary of the</span>
+<a href="https://arxiv.org/abs/2008.02217"><span>Paper</span></a><span>. To put it simply the main</span>
+<span>message of the paper is the following: </span><strong><span>By introducing a modern Hopfield</span>
+<span>Network with continuous states we can store exponentially many patterns,</span>
+<span>retrieve them with only one update and the update rule is equivalent to</span>
+<span>the attention mechanism used in transformers</span></strong><span>.</span></p>
+<p><span>Now let</span>&rsquo;<span>s dive little deep into the details. The basic architecture is on</span>
+<img alt="" src="/assets/foundations/modern_hopfield.png"></p>
+<p><span>The evolution of Hopfield Networks towards modern architectures involves a transition from binary to continuous neuron states, allowing for more complex and</span>
+<span>nuanced representations. This advancement closely aligns with the mechanisms used in transformer models in deep learning.</span>
+<span>The modern approach introduces a new energy function to accommodate these continuous states, fundamentally</span>
+<span>changing the network dynamics. The update rule in these modern networks parallels the attention mechanism in</span>
+<span>transformer and BERT models, marking a significant innovation. Modern Hopfield Networks not only enhance</span>
+<span>the capacity for pattern storage and retrieval but also exhibit improved efficiency in these processes. The</span>
+<span>research also presents several theorems to explain the behavior of these networks, including</span>
+<span>their convergence, storage capacity, pattern retrieval efficiency, and error rates. These networks extend beyond</span>
+<span>mimicking transformer attention, offering potential applications in a wide range of deep learning architectures</span>
+<span>and providing new tools for designing advanced neural network systems.</span></p>
+<p><span>The paper introduces 5 theorems to characterize the introduced hopfield network.</span></p>
+<ul>
+<li>
+<p><span>Theorem 1: It states that the update rule for these networks</span>
+<span>converges globally. This means for a given sequence of states, the</span>
+<span>energy will eventually converge to a stable value at a fixed point,</span>
+<span>even as time tends to infinity. The proof involves the</span>
+<span>Concave-Convex Procedure (CCCP) to ensure this global convergence.</span></p>
+</li>
+<li>
+<p><span>Theorem 2: This theorem extends Theorem 1, stating that not only</span>
+<span>does the energy converge, but the sequence of states either</span>
+<span>converges or its limit points form a connected and compact set of</span>
+<span>stationary points. If this set is finite, the sequence will converge</span>
+<span>to a specific stationary point.</span></p>
+</li>
+<li>
+<p><span>Theorem 3: This theorem discusses the storage capacity of the</span>
+<span>network. It defines conditions under which a certain number of</span>
+<span>random patterns can be stored with a high probability. The</span>
+<span>calculations involve complex functions like the Lambert W function</span>
+<span>and take into account the dimensions of the pattern space and a</span>
+<span>failure probability.</span></p>
+</li>
+<li>
+<p><span>Theorem 4: It states that the network is capable of retrieving</span>
+<span>patterns efficiently with just one update, particularly if the</span>
+<span>patterns are well-separated. The theorem quantifies the retrieval</span>
+<span>capability in terms of the separation of patterns.</span></p>
+</li>
+<li>
+<p><span>Theorem 5: This theorem addresses the retrieval error, which is</span>
+<span>found to be exponentially small relative to the pattern separation.</span>
+<span>It provides bounds on this error, demonstrating the effectiveness of</span>
+<span>the network in accurately retrieving patterns.</span></p>
+</li>
+</ul>
+<p><span>Finally it is interesting to note the following.</span></p>
+<ol>
+<li>
+<span>In modern Hopfield networks, the dynamics of pattern convergence are</span>
+<span>characterized by:</span>
+<ul>
+<li>
+<p><span>If patterns xi are not well separated, the iteration</span>
+<span>converges to a global fixed point near the average of all</span>
+<span>vectors.</span></p>
+</li>
+<li>
+<p><span>In cases where some patterns are similar yet distinct from</span>
+<span>others, a metastable state near these patterns is formed.</span>
+<span>Iterations converge to this metastable state.</span></p>
+</li>
+</ul>
+</li>
+<li>
+<span>Hopfield Update Rule as Transformer Attention</span>
+<ul>
+<li>
+<p><span>The Hopfield network update rule parallels the attention</span>
+<span>mechanism in transformer and BERT models.</span></p>
+</li>
+<li>
+<p><span>With stored (key) patterns yi and state (query) patterns</span>
+<span>ri, and using transformations with weight matrices WK,</span>
+<span>WQ, and WV, the update rule resembles transformer</span>
+<span>attention.</span></p>
+</li>
+<li>
+<p><span>The equivalence is shown in the formulation of transformer</span>
+<span>self-attention, where modifications in weight matrices and</span>
+<span>softmax function applications are highlighted.</span></p>
+</li>
+</ul>
+</li>
+<li>
+<span>Applications in Deep Network Architectures Hopfield networks extend</span>
+<span>beyond the attention mechanism, offering additional functionalities</span>
+<span>in deep learning architectures through specific layers.</span>
+</li>
+</ol>
+</section>
+</article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2023-12-04-Hopfield.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\(", right: "\)", display: false },
+              { left: "\[", right: "\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,320 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mbottoni</title>
+  <meta name="description" content="Yet another programming blog by Maruan Bakri Ottoni aka mbottoni.">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/links">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  <p><span>A bunch of things I find myself repeatedly referring to in various discussions!</span></p>
+<dl>
+<dt><span>Goals and priorities for C++</span></dt>
+<dd>
+<p><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2137r0.html" class="url">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2137r0.html</a></p>
+</dd>
+<dt><span>Talks that changed the way I think about programming</span></dt>
+<dd>
+<p><a href="http://www.opowell.com/post/talks-that-changed-the-way-i-think-about-programming/" class="url">http://www.opowell.com/post/talks-that-changed-the-way-i-think-about-programming/</a></p>
+</dd>
+<dt><span>Why rewriting hotspots in a faster language doesn</span>&rsquo;<span>t work</span></dt>
+<dd>
+<p><a href="https://code.visualstudio.com/blogs/2018/03/23/text-buffer-reimplementation" class="url">https://code.visualstudio.com/blogs/2018/03/23/text-buffer-reimplementation</a></p>
+
+<figure class="blockquote">
+<blockquote><p><span>The right tool for the job is often the tool you are already using </span>&mdash;<span> adding new tools has a higher cost than many people appreciate</span></p>
+</blockquote>
+<figcaption><cite><a href="https://twitter.com/id_aa_carmack/status/989951283900514304"><span>John Carmack</span></a></cite></figcaption>
+</figure>
+</dd>
+<dt><span>Build a Mountain</span></dt>
+<dd>
+<p><a href="https://www.youtube.com/watch?v=443UNeGrFoM&amp;t=6949s" class="url">https://www.youtube.com/watch?v=443UNeGrFoM&amp;t=6949s</a></p>
+</dd>
+<dt><span>Precise Profiling via rdpmc</span></dt>
+<dd>
+<p><a href="https://hackmd.io/sH315lO2RuicY-SEt7ynGA?view" class="url">https://hackmd.io/sH315lO2RuicY-SEt7ynGA?view</a></p>
+</dd>
+<dt><span>More links related to computers:</span></dt>
+<dd>
+<ul>
+<li>
+<p><a href="https://lwn.net/Articles/250967/" class="url">https://lwn.net/Articles/250967/</a></p>
+</li>
+<li>
+<p><a href="https://www.vim.org/" class="url">https://www.vim.org/</a></p>
+</li>
+<li>
+<p><a href="https://vimawesome.com/" class="url">https://vimawesome.com/</a></p>
+</li>
+<li>
+<p><a href="https://neomutt.org/" class="url">https://neomutt.org/</a></p>
+</li>
+<li>
+<p><a href="https://www.gnu.org/" class="url">https://www.gnu.org/</a></p>
+</li>
+<li>
+<p><a href="https://www.w3schools.com/" class="url">https://www.w3schools.com/</a></p>
+</li>
+<li>
+<p><a href="https://github.com/xoreaxeaxeax?tab=repositories" class="url">https://github.com/xoreaxeaxeax?tab=repositories</a></p>
+</li>
+<li>
+<p><a href="https://github.com/Optixal/neovim-init.vim" class="url">https://github.com/Optixal/neovim-init.vim</a></p>
+</li>
+<li>
+<p><a href="https://google.github.io/styleguide/htmlcssguide.html" class="url">https://google.github.io/styleguide/htmlcssguide.html</a></p>
+</li>
+<li>
+<p><a href="https://www.codeproject.com/" class="url">https://www.codeproject.com/</a></p>
+</li>
+<li>
+<p><a href="https://letsencrypt.org/" class="url">https://letsencrypt.org/</a></p>
+</li>
+<li>
+<p><a href="https://ieee-dataport.org/" class="url">https://ieee-dataport.org/</a></p>
+</li>
+<li>
+<p><a href="https://www.image-net.org/" class="url">https://www.image-net.org/</a></p>
+</li>
+<li>
+<p><a href="https://www.cryptodatadownload.com/data/" class="url">https://www.cryptodatadownload.com/data/</a></p>
+</li>
+<li>
+<p><a href="https://wiki.installgentoo.com/index.php/GNU/Linux_ricing" class="url">https://wiki.installgentoo.com/index.php/GNU/Linux_ricing</a></p>
+</li>
+</ul>
+</dd>
+<dt><span>Some random math links:</span></dt>
+<dd>
+<ul>
+<li>
+<p><a href="https://terrytao.wordpress.com/" class="url">https://terrytao.wordpress.com/</a></p>
+</li>
+<li>
+<p><a href="https://qchu.wordpress.com/reading-recommendations/" class="url">https://qchu.wordpress.com/reading-recommendations/</a></p>
+</li>
+<li>
+<p><a href="https://www.ime.unicamp.br/~aamoura/Ensino/MM719/2020-2-MA719.html" class="url">https://www.ime.unicamp.br/~aamoura/Ensino/MM719/2020-2-MA719.html</a></p>
+</li>
+<li>
+<p><a href="https://candes.su.domains/teaching/" class="url">https://candes.su.domains/teaching/</a></p>
+</li>
+<li>
+<p><a href="https://complexsystemstheory.net/references-2/" class="url">https://complexsystemstheory.net/references-2/</a></p>
+</li>
+<li>
+<p><a href="http://integratedinformationtheory.org/index.html" class="url">http://integratedinformationtheory.org/index.html</a></p>
+</li>
+<li>
+<p><a href="https://dec41.user.srcf.net/" class="url">https://dec41.user.srcf.net/</a></p>
+</li>
+<li>
+<p><a href="https://mathworld.wolfram.com/" class="url">https://mathworld.wolfram.com/</a></p>
+</li>
+<li>
+<p><a href="https://github.com/dppalomar?tab=repositories" class="url">https://github.com/dppalomar?tab=repositories</a></p>
+</li>
+<li>
+<p><a href="https://www.youtube.com/playlist?list=PLnQX-jgAF5pTZXPiD8ciEARRylD9brJXU" class="url">https://www.youtube.com/playlist?list=PLnQX-jgAF5pTZXPiD8ciEARRylD9brJXU</a></p>
+</li>
+</ul>
+</dd>
+<dt><span>More links:</span></dt>
+<dd>
+<ul>
+<li>
+<a href="https://www.quantamagazine.org/what-is-time-a-history-of-physics-biology-clocks-and-culture-20200504/" class="url">https://www.quantamagazine.org/what-is-time-a-history-of-physics-biology-clocks-and-culture-20200504/</a>
+</li>
+</ul>
+</dd>
+</dl>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/links.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\(", right: "\)", display: false },
+              { left: "\[", right: "\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+</body>
+
+</html>

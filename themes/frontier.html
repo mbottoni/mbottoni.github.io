@@ -1,0 +1,403 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Frontier LLMs &amp; Architectures — mbottoni</title>
+  <meta name="description" content="Transformers, mixture-of-experts, interpretability, retrieval, self-supervision, and training techniques for large models.">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/themes/frontier.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  
+      <section class="theme-page">
+        <header class="theme-section">
+          <h1>Frontier LLMs &amp; Architectures</h1>
+          <p>Transformers, mixture-of-experts, interpretability, retrieval, self-supervision, and training techniques for large models.</p>
+        </header>
+        <ul class="post-list">
+          
+      <li class="post-card">
+        <div class="post-card__media">
+          
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2025-08-04">Aug 4, 2025</time> · <a href="/2025/08/04/moe.html">Mixture of Experts</a></h3>
+          <p>In the pursuit of scaling neural networks to unprecedented parameter counts while 
+maintaining computational tractability, the paradigm of conditional computation 
+has emerged as a cornerstone of modern deep learning architectures. A prominent and 
+highly successful incarnation of this principle is the Mixture of Experts (MoE) layer. At its core, an MoE model eschews 
+the monolithic, dense activation of traditional networks, wherein every parameter is engaged 
+for every input. Instead, it employs a collection of specialized 
+subnetworks, termed experts, and dynamically selects a sparse combination of these 
+experts to process each input token. This approach allows for a dramatic increase in 
+model capacity without a commensurate rise in computational cost (FLOPs), as only 
+a fraction of the network's parameters are utilized for any given forward pass.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2025-07-08">Jul 8, 2025</time> · <a href="/2025/07/08/neural-collapse.html">What is Neural Collapse? A Simpler Look</a></h3>
+          <p>Imagine you're training a very powerful neural network to recognize different classes of images, like 
+cats, dogs, and cars. In the beginning, the network struggles, but eventually, it gets 
+a perfect score on your training data.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2025-04-12">Apr 12, 2025</time> · <a href="/2025/04/12/mech-inter.html">Mechanistic Interpretability - Some concepts</a></h3>
+          <p>Here are some quick notes on concepts in Mechanistic Interpretability. The subject is vast and very recent and 
+try to interpret features for neural networks, specifically transformers and LLM's.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2025/02/06/grpo.html"><img src="/assets/frontier/grpo.webp" alt="Group Relative Policy Optimization (GRPO) preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2025-02-06">Feb 6, 2025</time> · <a href="/2025/02/06/grpo.html">Group Relative Policy Optimization (GRPO)</a></h3>
+          <p>PPO is a reinforcement learning algorithm originally designed to update policies in a stable and reliable way.
+In the context of LLM fine-tuning, the model (the “policy”) is trained using feedback from a reward model that represents human preferences.
+Value Function (Critic): Estimates the “goodness” of a state, used with Generalized Advantage Estimation (GAE) to balance bias and variance.
+Basically it works as follows:</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/12/28/deepseek.html"><img src="/assets/frontier/deekseek.webp" alt="Deepseek, an overview and quick notes preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-12-28">Dec 28, 2024</time> · <a href="/2024/12/28/deepseek.html">Deepseek, an overview and quick notes</a></h3>
+          <p>Some notes of DeepSeek-V3</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/11/25/ssl.html"><img src="/assets/frontier/scarf.png" alt="Scarf: Self Supervised Learning for Tabular Data preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-11-25">Nov 25, 2024</time> · <a href="/2024/11/25/ssl.html">Scarf: Self Supervised Learning for Tabular Data</a></h3>
+          <p>Machine learning often struggles with the scarcity of labeled data. While unlabeled datasets 
+are abundant, obtaining high-quality labeled data remains expensive and time-consuming. SCARF 
+emerges as a breakthrough methodology that transforms how we extract meaningful 
+representations from raw, untagged information.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-11-10">Nov 10, 2024</time> · <a href="/2024/11/10/sae.html">Sparse Autoencoders</a></h3>
+          <p>Sparse autoencoders are neural networks that learn compressed representations of 
+data while enforcing sparsity - a constraint that ensures most neurons 
+remain inactive for any given input. This approach leads to more 
+robust and interpretable features, often capturing meaningful patterns in the data.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-09-29">Sep 29, 2024</time> · <a href="/2024/09/29/llm-quant.html">Quantization of LLMs</a></h3>
+          <p>The escalating complexity and 
+scale of large language models (LLMs) have introduced substantial challenges concerning computational 
+demands and resource allocation. These models, often comprising hundreds of billions of parameters, 
+necessitate extensive memory and processing capabilities, making their deployment and real-time inference 
+both costly and impractical for widespread use.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/09/21/kan.html"><img src="/assets/frontier/kan.png" alt="Kolmogorov-Arnold Networks preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-09-21">Sep 21, 2024</time> · <a href="/2024/09/21/kan.html">Kolmogorov-Arnold Networks</a></h3>
+          <p>I have been playing with some implementations of Kolmogorov-Arnold Networks.
+Here is an easy implementation for anyone who wants to try it out.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/08/27/rag.html"><img src="/assets/frontier/rag.png" alt="Understanding and Implementing RAG (Retrieval-Augmented Generation) preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-08-27">Aug 27, 2024</time> · <a href="/2024/08/27/rag.html">Understanding and Implementing RAG (Retrieval-Augmented Generation)</a></h3>
+          <p>Retrieval-Augmented Generation (RAG) is a powerful technique that combines the strengths of large language 
+models with the ability to retrieve relevant information from external sources. This approach enhances the 
+model's responses by grounding them in specific, up-to-date, or domain-specific knowledge.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/08/18/ssl.html"><img src="/assets/frontier/ssl.webp" alt="Self Supervised Learning preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-08-18">Aug 18, 2024</time> · <a href="/2024/08/18/ssl.html">Self Supervised Learning</a></h3>
+          <p>This post is based on this blog post by meta Link to post.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/07/21/llm-archs.html"><img src="/assets/frontier/llm_tree.jpg" alt="Encoder vs Decoder vs EncoderDecoder Architectures preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-07-21">Jul 21, 2024</time> · <a href="/2024/07/21/llm-archs.html">Encoder vs Decoder vs EncoderDecoder Architectures</a></h3>
+          <p>Language models are a crucial component in natural language processing (NLP). The architecture of these models 
+can be broadly categorized into three types: encoder-only, decoder-only, and encoder-decoder architectures. Each of these 
+architectures has distinct characteristics and applications.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-03-24">Mar 24, 2024</time> · <a href="/2024/03/24/decoding.html">Having fun with decoding and optimization</a></h3>
+          <p>Hey.
+One topic very fascinating for me is coding theory. It can be very challenging
+and it can be pleasing for a more mathematical inclined person or someone like
+me that, likes a lot mathematics but like engineering as well. I think that the
+beginning of coding theory is strong related to
+Shannon work, A mathematical theory of communication but it can be interpreted
+in a very broad sense. What I mean by that is that a lot of natural phenomenum
+can be interpreted as an application of coding theory. For instance, you can 
+consider the language as a coding theory application where what is done by expressing
+ourselfs in words is to find an optimal code for communicating thoughts. Other interesting
+example is what happens in natural evolution. Basically, there you can interpret the changes
+on environment and the DNA of species being on a communication channel where the DNA 
+is coding the optimal way to survive on a given environment.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/01/08/Transformer.html"><img src="/assets/frontier/transformer_arch.png" alt="Implementing the Transformer in Python preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-01-08">Jan 8, 2024</time> · <a href="/2024/01/08/Transformer.html">Implementing the Transformer in Python</a></h3>
+          <p>Hello everyone. 
+Today the I will present a sketch of a transformer implementations. 
+The focus here will be only on the forward pass of the architecture and not
+on learning the weights.</p>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2023/12/03/Bertimbau.html"><img src="/assets/frontier/arch.jpg" alt="BERT and fine tunning preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2023-12-03">Dec 3, 2023</time> · <a href="/2023/12/03/Bertimbau.html">BERT and fine tunning</a></h3>
+          <p>Hey, I this is my first blog post ever =)</p>
+        </div>
+      </li>
+    
+        </ul>
+      </section>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/src/templates.ts">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\(", right: "\)", display: false },
+              { left: "\[", right: "\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+</body>
+
+</html>

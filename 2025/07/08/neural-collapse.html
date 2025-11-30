@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What is Neural Collapse? A Simpler Look</title>
+  <meta name="description" content="Imagine you're training a very powerful neural network to recognize different classes of images, like 
+cats, dogs, and cars. In the beginning, the network struggles, but eventually, it gets 
+a perfect score on your training data.">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2025/07/08/neural-collapse.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/frontier.html">
+          Frontier LLMs &amp; Architectures
+        </a>
+      </div>
+      <article >
+
+    <h1>
+    <a href="#What-is-Neural-Collapse-A-Simpler-Look"><span>What is Neural Collapse? A Simpler Look</span> <time datetime="2025-07-08">Jul 8, 2025</time></a>
+    </h1>
+<p><span>Imagine you</span>&rsquo;<span>re training a very powerful neural network to recognize different classes of images, like </span>
+<span>cats, dogs, and cars. In the beginning, the network struggles, but eventually, it gets </span>
+<span>a perfect score on your training data.</span></p>
+<p><span>You might think that if you keep training it on the same data, it would </span>
+<span>either stop learning or get confused and </span>&ldquo;<span>overthink</span>&rdquo;<span> the problem. But </span>
+<span>something remarkable and unexpected happens instead: the network</span>&rsquo;<span>s internal </span>
+<span>organization becomes incredibly simple and tidy. This process of self-organization </span>
+<span>into a perfect, simple structure is called Neural Collapse.</span></p>
+<p><span>It</span>&rsquo;<span>s driven by the network</span>&rsquo;<span>s hidden preference to find the </span>
+<span>most efficient and straightforward solution possible, even after it has already solved the main problem.</span>
+<span>Neural Collapse can be broken down into four distinct things that happen at the same time during the final stages of training.</span></p>
+<ol>
+<li>
+<span>All Examples of a Class Become One (Variability Collapse)</span>
+</li>
+</ol>
+<p><span>The network learns to ignore the unique details of individual images within the same class.</span></p>
+<p><span>Example: Instead of creating slightly different internal </span>&ldquo;<span>codes</span>&rdquo;<span> for a fluffy Persian cat, a sleek Siamese </span>
+<span>cat, and a tabby cat, the network starts producing the exact same internal code for all of them. It effectively creates a single, perfect, </span>&ldquo;<span>ultimate cat</span>&rdquo;<span> representation and throws away all the variation.</span></p>
+<ol start="2">
+<li>
+<span>Class Codes Spread Out Perfectly (The Symmetrical Shape)</span>
+</li>
+</ol>
+<p><span>Once the network has a single </span>&ldquo;<span>code</span>&rdquo;<span> for each class (like </span>&ldquo;<span>ultimate cat,</span>&rdquo;<span> </span>&ldquo;<span>ultimate dog,</span>&rdquo;<span> and </span>&ldquo;<span>ultimate car</span>&rdquo;<span>), it arranges these codes in the most spread-out way possible.</span></p>
+<p><span>Example: If you have three classes, their codes will form the points of a </span>
+<span>perfect equilateral triangle in the network</span>&rsquo;<span>s internal space. If you have four classes, they form a tetrahedron. This is the most symmetrical and separated arrangement possible, making the classes maximally distinct from one another. This perfect geometric structure is called a Simplex ETF.</span></p>
+<ol start="3">
+<li>
+<span>The Decision-Maker Aligns Perfectly (Self-Duality)</span>
+</li>
+</ol>
+<p><span>The final part of the network that makes the decision (the </span>&ldquo;<span>classifier</span>&rdquo;<span>) also simplifies. The classifier</span>&rsquo;<span>s internal </span>
+<span>template for </span>&ldquo;<span>cat</span>&rdquo;<span> perfectly lines up with the network</span>&rsquo;<span>s </span>&ldquo;<span>ultimate cat</span>&rdquo;<span> code. The decision-maker becomes a perfect mirror of the data</span>&rsquo;<span>s new, simple structure.</span></p>
+<ol start="4">
+<li>
+<span>The Whole System Becomes a Simple </span>&ldquo;<span>Nearest-Neighbor</span>&rdquo;<span> Game</span>
+</li>
+</ol>
+<p><span>Because of the three changes above, the network</span>&rsquo;<span>s complex decision-making process becomes incredibly simple. To classify a new image:</span></p>
+<p><span>Example: The network creates a code for the new image. Then, it just checks which of its </span>&ldquo;<span>ultimate</span>&rdquo;<span> class </span>
+<span>codes (the points of the triangle or tetrahedron) is the closest. If the </span>&ldquo;<span>ultimate cat</span>&rdquo;<span> code is the nearest neighbor, it classifies the image as a cat. The sophisticated deep network ends up behaving like a much simpler classifier.</span></p>
+<p><span>To help people see this, researchers created animations showing the process. Imagine little blue balls (individual images) clustering together into a single </span>
+<span>point for each class. These points (class means) then move to form a perfect symmetrical shape (the green target points), and the </span>
+<span>decision-maker (red lines) aligns with them perfectly. This drive towards simplicity has important consequences.</span></p>
+<ul>
+<li>
+<p><span>The Good: The super-organized structure makes the network very good at its main job and very good at identifying things </span>
+<span>that are completely different from what it was trained on. The neat, tight clusters make it easy to spot an outsider.</span></p>
+</li>
+<li>
+<p><span>The Trade-Off (The Bad): This simplicity comes at a cost. By erasing all the subtle details within a </span>
+<span>class, the network can hurt its ability to learn new, related things later.</span></p>
+</li>
+</ul>
+</article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2025-07-08-neural-collapse.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\(", right: "\)", display: false },
+              { left: "\[", right: "\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,457 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Classifier free diffusion guidance</title>
+  <meta name="description" content="One of the key techniques in diffusion models that has significantly improved their performance is 
+classifier-free guidance. In this post, we'll explore what classifier-free 
+guidance is, how it works, and implement it from scratch in PyTorch.">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/12/15/cfg.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; margin-block-start: 0; margin-block-end: 0; }
+
+  body {
+    max-width: 80ch;
+    padding: 2ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  header { margin-bottom: 2rem; }
+  header > nav { display: flex; column-gap: 2ch; align-items: baseline; flex-wrap: wrap; }
+  header a { font-style: normal; color: rgba(0, 0, 0, .8); text-decoration: none; }
+  header a:hover { color: rgba(0, 0, 0, .8); text-decoration: underline; }
+  header .title { font-size: 1.25em; flex-grow: 2; }
+
+  footer { margin-top: 2rem; }
+  footer > p { display: flex; column-gap: 2ch; justify-content: center; flex-wrap: wrap; }
+  footer a { color: rgba(0, 0, 0, .8); text-decoration: none; white-space: nowrap; }
+  footer i { vertical-align: middle; color: rgba(0, 0, 0, .8) }
+
+  .theme-grid { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .theme-card { border: 1px solid rgba(0,0,0,.12); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+  .theme-card h2 { font-size: 1.35em; }
+  .theme-card h2 a { text-decoration: none; color: #b32f1c; }
+  .theme-card h2 a:hover { text-decoration: underline; }
+  .theme-card p { color: rgba(0,0,0,.75); line-height: 1.5; }
+  .theme-meta { font-size: .85em; color: rgba(0,0,0,.6); }
+
+  .theme-page header h1 { font-size: 2em; margin-bottom: .5rem; }
+  .theme-page header p { color: rgba(0,0,0,.65); line-height: 1.5; }
+  .theme-page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .post-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; padding: 0; }
+  .post-card { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  .post-card__media { display: none; }
+  .post-card__body h3 { font-size: 1.1em; margin-bottom: .35rem; }
+  .post-card__body p { color: rgba(0, 0, 0, .7); }
+  .post-card__media a { display: block; border-radius: .75rem; overflow: hidden; }
+  .post-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (min-width: 720px) {
+    .post-card { grid-template-columns: 260px 1fr; align-items: center; }
+    .post-card__media { display: block; min-height: 160px; }
+    .post-card__media:empty { display: block; }
+  }
+
+  .theme-pill, .theme-banner a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; border: 1px solid rgba(0, 0, 0, .15); border-radius: 999px; padding: .25rem .9rem; text-decoration: none; color: rgba(0, 0, 0, .7); }
+  .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
+  .theme-banner { margin-bottom: 1rem; }
+  .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="title" href="/">mbottoni</a>
+      <a href="/about.html">About</a>
+      <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
+      <a href="/links.html">Links</a>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/generative.html">
+          Diffusion &amp; Generative Modeling
+        </a>
+      </div>
+      <article >
+
+    <h1>
+    <a href="#Classifier-free-diffusion-guidance"><span>Classifier free diffusion guidance</span> <time datetime="2024-12-15">Dec 15, 2024</time></a>
+    </h1>
+<p><span>One of the key techniques in diffusion models that has significantly improved their performance is </span>
+<span>classifier-free guidance. In this post, we</span>&rsquo;<span>ll explore what classifier-free </span>
+<span>guidance is, how it works, and implement it from scratch in PyTorch.</span></p>
+<section id="What-is-Classifier-Free-Guidance">
+
+    <h2>
+    <a href="#What-is-Classifier-Free-Guidance"><span>What is Classifier-Free Guidance?</span> </a>
+    </h2>
+<p><span>At its core, classifier-free guidance is an elegant technique that allows us to </span>
+<span>control the generation process of diffusion models without requiring a </span>
+<span>separate classifier. The key insight is that we can create a more powerful conditional generation </span>
+<span>process by combining both conditional and unconditional generation in a clever way.</span></p>
+<p><span>Think of it like having two artists working together:</span></p>
+<ol>
+<li>
+<span>One artist (conditional model) who follows specific instructions</span>
+</li>
+<li>
+<span>One artist (unconditional model) who creates freely without constraints</span>
+</li>
+</ol>
+<p><span>By combining their perspectives with different weights, we can create results </span>
+<span>that are both high-quality and well-aligned with our desired conditions.</span></p>
+</section>
+<section id="The-Mathematics-Behind-Classifier-Free-Guidance">
+
+    <h2>
+    <a href="#The-Mathematics-Behind-Classifier-Free-Guidance"><span>The Mathematics Behind Classifier-Free Guidance</span> </a>
+    </h2>
+<p><span>The core equation for classifier-free guidance is surprisingly simple:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line">ε̃ = (1 + w) * εθ(zt, c) - w * εθ(zt, ∅)</span></code></pre>
+
+</figure>
+<p><span>Where:</span>
+<span>- ε̃ is the guided noise prediction</span>
+<span>- w is the guidance weight</span>
+<span>- εθ(zt, c) is the conditional model prediction</span>
+<span>- εθ(zt, ∅) is the unconditional model prediction</span></p>
+<p><span>The beauty of this approach is that it doesn</span>&rsquo;<span>t require training </span>
+<span>two separate models. Instead, we train a single model that can </span>
+<span>handle both conditional and unconditional generation.</span></p>
+</section>
+<section id="Implementation-A-Complete-Example">
+
+    <h2>
+    <a href="#Implementation-A-Complete-Example"><span>Implementation: A Complete Example</span> </a>
+    </h2>
+<p><span>Let</span>&rsquo;<span>s implement classifier-free guidance for a diffusion model from </span>
+<span>scratch. We</span>&rsquo;<span>ll build a system that can generate MNIST-like digits conditioned on class labels.</span></p>
+<p><span>First, let</span>&rsquo;<span>s create our improved diffusion model:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">import</span> torch</span>
+<span class="line"><span class="hl-keyword">import</span> torch.nn <span class="hl-keyword">as</span> nn</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">class</span> <span class="hl-title class_">DiffusionModel</span>(nn.Module):</span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">__init__</span>(<span class="hl-params">self, input_dim=<span class="hl-number">784</span>, hidden_dim=<span class="hl-number">256</span>, num_classes=<span class="hl-number">10</span></span>):</span>
+<span class="line">        <span class="hl-built_in">super</span>().__init__()</span>
+<span class="line">        self.input_dim = input_dim</span>
+<span class="line">        self.num_classes = num_classes</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Improved embedding with position encoding</span></span>
+<span class="line">        self.class_embedding = nn.Sequential(</span>
+<span class="line">            nn.Embedding(num_classes + <span class="hl-number">1</span>, hidden_dim),  <span class="hl-comment"># +1 for unconditional</span></span>
+<span class="line">            nn.Linear(hidden_dim, hidden_dim),</span>
+<span class="line">            nn.ReLU()</span>
+<span class="line">        )</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Time embedding</span></span>
+<span class="line">        self.time_embed = nn.Sequential(</span>
+<span class="line">            nn.Linear(<span class="hl-number">1</span>, hidden_dim),</span>
+<span class="line">            nn.ReLU(),</span>
+<span class="line">            nn.Linear(hidden_dim, hidden_dim)</span>
+<span class="line">        )</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Enhanced U-Net architecture</span></span>
+<span class="line">        self.encoder = nn.Sequential(</span>
+<span class="line">            nn.Linear(input_dim + hidden_dim * <span class="hl-number">2</span>, hidden_dim * <span class="hl-number">2</span>),</span>
+<span class="line">            nn.LayerNorm(hidden_dim * <span class="hl-number">2</span>),</span>
+<span class="line">            nn.ReLU(),</span>
+<span class="line">            nn.Linear(hidden_dim * <span class="hl-number">2</span>, hidden_dim),</span>
+<span class="line">            nn.LayerNorm(hidden_dim),</span>
+<span class="line">            nn.ReLU()</span>
+<span class="line">        )</span>
+<span class="line">        </span>
+<span class="line">        self.decoder = nn.Sequential(</span>
+<span class="line">            nn.Linear(hidden_dim, hidden_dim * <span class="hl-number">2</span>),</span>
+<span class="line">            nn.LayerNorm(hidden_dim * <span class="hl-number">2</span>),</span>
+<span class="line">            nn.ReLU(),</span>
+<span class="line">            nn.Linear(hidden_dim * <span class="hl-number">2</span>, input_dim),</span>
+<span class="line">            nn.Tanh()  <span class="hl-comment"># Bounded output</span></span>
+<span class="line">        )</span>
+<span class="line">        </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">forward</span>(<span class="hl-params">self, x, t, c=<span class="hl-literal">None</span></span>):</span>
+<span class="line">        batch_size = x.shape[<span class="hl-number">0</span>]</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Handle conditional vs unconditional</span></span>
+<span class="line">        <span class="hl-keyword">if</span> c <span class="hl-keyword">is</span> <span class="hl-literal">None</span>:</span>
+<span class="line">            c = torch.full((batch_size,), self.num_classes, device=x.device)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Get embeddings</span></span>
+<span class="line">        c_emb = self.class_embedding(c)</span>
+<span class="line">        t_emb = self.time_embed(t.unsqueeze(-<span class="hl-number">1</span>))</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Combine all information</span></span>
+<span class="line">        x_c = torch.cat([x, c_emb, t_emb], dim=-<span class="hl-number">1</span>)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Forward pass</span></span>
+<span class="line">        h = self.encoder(x_c)</span>
+<span class="line">        output = self.decoder(h)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-keyword">return</span> output</span></code></pre>
+
+</figure>
+<p><span>Now, let</span>&rsquo;<span>s implement an improved training loop with classifier-free guidance:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">train_diffusion_model</span>(<span class="hl-params">model, dataloader, num_epochs=<span class="hl-number">100</span>, puncond=<span class="hl-number">0.1</span>, device=<span class="hl-string">&#x27;cuda&#x27;</span></span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Enhanced training loop with classifier-free guidance support</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    optimizer = torch.optim.AdamW(model.parameters(), lr=<span class="hl-number">1e-4</span>, weight_decay=<span class="hl-number">0.01</span>)</span>
+<span class="line">    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, num_epochs)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">for</span> epoch <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(num_epochs):</span>
+<span class="line">        model.train()</span>
+<span class="line">        total_loss = <span class="hl-number">0</span></span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-keyword">for</span> batch, (x, c) <span class="hl-keyword">in</span> <span class="hl-built_in">enumerate</span>(dataloader):</span>
+<span class="line">            batch_size = x.shape[<span class="hl-number">0</span>]</span>
+<span class="line">            x = x.to(device)</span>
+<span class="line">            c = c.to(device)</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># Sample timesteps</span></span>
+<span class="line">            t = torch.rand(batch_size, device=device)</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># Create noise</span></span>
+<span class="line">            epsilon = torch.randn_like(x)</span>
+<span class="line">            z_t = alpha(t).view(-<span class="hl-number">1</span>, <span class="hl-number">1</span>) * x + sigma(t).view(-<span class="hl-number">1</span>, <span class="hl-number">1</span>) * epsilon</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># Sometimes drop conditioning for unconditional training</span></span>
+<span class="line">            mask = torch.rand(batch_size, device=device) &lt; puncond</span>
+<span class="line">            c_in = torch.where(mask, torch.full_like(c, model.num_classes), c)</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># Get model prediction</span></span>
+<span class="line">            epsilon_theta = model(z_t, t, c_in)</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># Compute loss with improved weighting</span></span>
+<span class="line">            loss = torch.nn.functional.mse_loss(epsilon_theta, epsilon, reduction=<span class="hl-string">&#x27;none&#x27;</span>)</span>
+<span class="line">            loss = loss * (<span class="hl-number">1</span> + t.view(-<span class="hl-number">1</span>, <span class="hl-number">1</span>))  <span class="hl-comment"># Weight loss by timestep</span></span>
+<span class="line">            loss = loss.mean()</span>
+<span class="line">            </span>
+<span class="line">            optimizer.zero_grad()</span>
+<span class="line">            loss.backward()</span>
+<span class="line">            torch.nn.utils.clip_grad_norm_(model.parameters(), <span class="hl-number">1.0</span>)</span>
+<span class="line">            optimizer.step()</span>
+<span class="line">            </span>
+<span class="line">            total_loss += loss.item()</span>
+<span class="line">            </span>
+<span class="line">        scheduler.step()</span>
+<span class="line">        avg_loss = total_loss / <span class="hl-built_in">len</span>(dataloader)</span>
+<span class="line">        <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;Epoch <span class="hl-subst">{epoch}</span>: Average Loss = <span class="hl-subst">{avg_loss:<span class="hl-number">.4</span>f}</span>&quot;</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> model</span></code></pre>
+
+</figure>
+<p><span>Finally, let</span>&rsquo;<span>s improve the sampling process with classifier-free guidance:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">sample_with_guidance</span>(<span class="hl-params">model, c, w, steps=<span class="hl-number">50</span>, data_shape=[<span class="hl-number">1</span>, <span class="hl-number">28</span>, <span class="hl-number">28</span>], device=<span class="hl-string">&#x27;cuda&#x27;</span></span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Enhanced sampling with classifier-free guidance</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    model.<span class="hl-built_in">eval</span>()</span>
+<span class="line">    batch_size = <span class="hl-number">1</span></span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Create log-SNR sequence with improved spacing</span></span>
+<span class="line">    lambda_sequence = torch.linspace(<span class="hl-number">0</span>, <span class="hl-number">1</span>, steps)</span>
+<span class="line">    lambda_sequence = torch.sigmoid(<span class="hl-number">10</span> * (lambda_sequence - <span class="hl-number">0.5</span>))  <span class="hl-comment"># Better spacing</span></span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Initialize with noise</span></span>
+<span class="line">    z_t = torch.randn(batch_size, *data_shape, device=device)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Prepare conditioning</span></span>
+<span class="line">    c = torch.tensor([c], device=device)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">with</span> torch.no_grad():</span>
+<span class="line">        <span class="hl-keyword">for</span> i <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(<span class="hl-built_in">len</span>(lambda_sequence) - <span class="hl-number">1</span>):</span>
+<span class="line">            lambda_t = lambda_sequence[i]</span>
+<span class="line">            lambda_next = lambda_sequence[i + <span class="hl-number">1</span>]</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># Get conditional and unconditional score estimates</span></span>
+<span class="line">            epsilon_theta_c = model(z_t, lambda_t, c)</span>
+<span class="line">            epsilon_theta = model(z_t, lambda_t, <span class="hl-literal">None</span>)</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># Apply classifier-free guidance</span></span>
+<span class="line">            epsilon_guided = (<span class="hl-number">1</span> + w) * epsilon_theta_c - w * epsilon_theta</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-comment"># Improved DDIM-like step</span></span>
+<span class="line">            x_pred = (z_t - sigma(lambda_t).view(-<span class="hl-number">1</span>, <span class="hl-number">1</span>, <span class="hl-number">1</span>) * epsilon_guided) / alpha(lambda_t).view(-<span class="hl-number">1</span>, <span class="hl-number">1</span>, <span class="hl-number">1</span>)</span>
+<span class="line">            z_t = alpha(lambda_next).view(-<span class="hl-number">1</span>, <span class="hl-number">1</span>, <span class="hl-number">1</span>) * x_pred + sigma(lambda_next).view(-<span class="hl-number">1</span>, <span class="hl-number">1</span>, <span class="hl-number">1</span>) * epsilon_guided</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> z_t[<span class="hl-number">0</span>]</span></code></pre>
+
+</figure>
+</section>
+<section id="Understanding-the-Improvements">
+
+    <h2>
+    <a href="#Understanding-the-Improvements"><span>Understanding the Improvements</span> </a>
+    </h2>
+<p><span>Our implementation includes several key improvements over the basic version:</span></p>
+<ol>
+<li>
+<p><strong><strong><span>Enhanced Architecture</span></strong></strong><span>:</span>
+<span>- Added time embeddings for better temporal understanding</span>
+<span>- Included layer normalization for stable training</span>
+<span>- Added residual connections in the U-Net structure</span></p>
+</li>
+<li>
+<p><strong><strong><span>Improved Training</span></strong></strong><span>:</span>
+<span>- Using AdamW optimizer with weight decay for better regularization</span>
+<span>- Implemented learning rate scheduling</span>
+<span>- Added gradient clipping to prevent exploding gradients</span>
+<span>- Weighted loss by timestep to focus more on later denoising steps</span></p>
+</li>
+<li>
+<p><strong><strong><span>Better Sampling</span></strong></strong><span>:</span>
+<span>- Improved timestep spacing using sigmoid scaling</span>
+<span>- More stable DDIM-like stepping procedure</span>
+<span>- Better handling of batch dimensions</span></p>
+</li>
+</ol>
+</section>
+</article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-12-15-cfg.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script>
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\(", right: "\)", display: false },
+              { left: "\[", right: "\]", display: true },
+            ],
+            throwOnError: false,
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+</body>
+
+</html>
