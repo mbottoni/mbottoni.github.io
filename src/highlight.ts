@@ -33,6 +33,9 @@ export function highlight(
   language?: string,
   highlight_spec?: string,
 ): HtmlString {
+  if (language === "mermaid") {
+    return html`<div class="mermaid">${source}</div>`;
+  }
   const spec = parse_highlight_spec(highlight_spec);
   let src = source;
   let callouts: Map<number, number[]>;

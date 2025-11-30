@@ -152,6 +152,10 @@ export const base = (
   </footer>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
   <script>
     function unwrapPlainSpans(root) {
       for (const span of root.querySelectorAll("span")) {
@@ -163,8 +167,26 @@ export const base = (
       root.normalize();
     }
 
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       unwrapPlainSpans(document.body);
+      addCopyButtons();
       let attempts = 0;
       const maxAttempts = 40;
       const renderMath = () => {

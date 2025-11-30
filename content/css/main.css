@@ -159,3 +159,28 @@ time { display: block; color: #828282; font-family: "Open Sans", sans-serif; fon
 .hl-subst { color: rgba(0, 0, 0, .9); }
 .hl-attr, .hl-symbol { color: #008080; }
 .hl-line { background-color: #ffc; }
+
+.copy-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  background: #f7f7f7;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+figure.code-block:hover .copy-button {
+  opacity: 1;
+}
+figure.code-block {
+  position: relative;
+}
+
+.mermaid {
+  margin: 1rem auto;
+  text-align: center;
+}
