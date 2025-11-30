@@ -105,6 +105,9 @@ export const base = (
   .theme-pill svg, .theme-banner svg { width: .75em; height: .75em; }
   .theme-banner { margin-bottom: 1rem; }
   .theme-banner span { font-size: .8em; color: rgba(0, 0, 0, .6); margin-right: .5rem; }
+  
+  .katex { font-size: 0.95em !important; color: rgba(0, 0, 0, 0.9); }
+  .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
 
   </style>
 
