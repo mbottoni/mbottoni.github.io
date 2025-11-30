@@ -16,7 +16,7 @@ Some notes of DeepSeek-V3
   - 2664K hours for pre-training
   - 119K hours for context extension 
   - 5K hours for post-training
-  - Total cost approximately $5.576M at $2/GPU hour
+  - Total cost approximately \$5.576M at \$2/GPU hour
 - Outperforms other open-source models across multiple benchmarks
 - Particularly strong in:
   - Math tasks (90.2% on MATH-500)
