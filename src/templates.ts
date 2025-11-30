@@ -122,6 +122,7 @@ export const base = (
       <a class="title" href="/">mbottoni</a>
       <a href="/about.html">About</a>
       <a href="/resume.html">Resume</a>
+      <a href="/repositories.html">Repositories</a>
       <a href="/links.html">Links</a>
     </nav>
   </header>

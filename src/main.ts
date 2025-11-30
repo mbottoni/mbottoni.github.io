@@ -134,7 +134,7 @@ async function build(params: {
     );
   }
 
-  const pages = ["about", "resume", "links", "style"];
+  const pages = ["about", "resume", "links", "style", "repositories"];
   for (const page of pages) {
     const text = await Deno.readTextFile(`content/${page}.dj`);
     const parsed = djot.parse(text);

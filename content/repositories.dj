@@ -1,0 +1,58 @@
+# Repositories
+
+Here are a sample of my open source projects and experiments.
+More projects and details can be found under my GitHub.
+
+::: repo-grid
+
+::: repo-card
+## [terror-reco](https://github.com/mbottoni/terror-reco)
+Recommendation of horror movies based on AI and your mood.
+:::
+
+::: repo-card
+## [logit-graph](https://github.com/mbottoni/logit-graph)
+Experiments with complex networks and random graphs.
+:::
+
+::: repo-card
+## [ml-prod](https://github.com/mbottoni/ml-prod)
+Machine learning in code samples production: Kubernetes, AI workflows, and deployment strategies.
+:::
+
+::: repo-card
+## [flow-match](https://github.com/mbottoni/flow-match)
+Implementation and experiments with Flow Matching generative models.
+:::
+
+::: repo-card
+## [unet-fun](https://github.com/mbottoni/unet-fun)
+Playing around with U-Net architectures and image segmentation tasks.
+:::
+
+::: repo-card
+## [kalman-transformer](https://github.com/mbottoni/kalman-transformer)
+Exploring the intersection of Kalman Filters and Transformer architectures.
+:::
+
+::: repo-card
+## [blur-filter-variations](https://github.com/mbottoni/blur_filter)
+Implementation of various blur filters and image processing algorithms.
+:::
+
+::: repo-card
+## [rl-rubiks-cube](https://github.com/mbottoni/reinforcement-learning-final-project)
+Project exploring RL algorithms with a rubiks cube.
+:::
+
+::: repo-card
+## [bert-trial](https://github.com/mbottoni/ep2-nlp)
+BERT for classification project.
+:::
+
+::: repo-card
+## [graph-corr-embedd](https://github.com/mbottoni/graph-corr-embedd)
+Graph correlation embeddings and network analysis experiments.
+:::
+
+:::

@@ -142,6 +142,14 @@ ${cite}
 </aside>`;
       }
 
+      if (has_class(node, "repo-grid")) {
+        return `<div class="repo-grid">${r.renderChildren(node)}</div>`;
+      }
+
+      if (has_class(node, "repo-card")) {
+        return `<div class="repo-card">${r.renderChildren(node)}</div>`;
+      }
+
       if (has_class(node, "block")) {
         let cap = extract_cap(node);
         if (cap) {
