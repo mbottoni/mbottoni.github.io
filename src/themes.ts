@@ -91,6 +91,7 @@ const themeAssignments: Record<ThemeKey, string[]> = {
     "iit",
     "plato",
     "prob",
+    "epiplexity",
   ],
 };
 

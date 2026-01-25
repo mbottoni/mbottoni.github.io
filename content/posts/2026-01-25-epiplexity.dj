@@ -1,0 +1,105 @@
+
+# From Entropy to Epiplexity
+
+![](/assets/foundations/coin_flip.jpg)
+
+In this paper https://arxiv.org/abs/2601.03220, Finzi et al. argue that classical information theory (Shannon entropy and Kolmogorov complexity) is insufficient for understanding modern 
+AI because it assumes an observer with unlimited computational power. Under classical theory, deterministic transformations cannot create new 
+information, yet empirically, processes like self-play (AlphaZero) and synthetic data generation clearly improve model capabilities.
+
+To resolve this interesting tension, the authors introduce **Epiplexity** (epistemic complexity), a measure of the structural information a 
+*computationally bounded* observer can extract from data.
+
+---
+
+### Theoretical Framework
+
+The authors propose decomposing the total information of a
+dataset into two distinct components relative to a time-bounded observer:
+
+* **Time-Bounded Entropy ($H_T(X)$):** The random, unpredictable content. For a computationally limited observer, even 
+deterministic encryption (like a CSPRNG) appears to have maximal entropy because the pattern cannot be cracked within the time limit.
+
+
+* **Epiplexity ($K_T(X)$):** The structural, learnable content. This is the length of the program a model learns to describe the data's patterns.
+
+
+
+Formally, for a random variable $X$ and a time bound $T$, the authors define these via the Minimum Description Length (MDL) principle:
+
+$$
+-\log P(X) \approx K_T(X) + H_T(X)
+$$
+
+Where:
+
+* $K_T(X)$ is the Epiplexity (program length).
+* $H_T(X)$ is the Time-Bounded Entropy (expected loss).
+
+
+
+---
+
+### Paradoxes of Information
+
+The paper uses Epiplexity to resolve three apparent contradictions between information theory and machine learning practice:
+
+#### Paradox 1: Creation of Information via Computation
+
+* **Classical View:** Deterministic processing cannot increase information (Data Processing Inequality).
+
+
+* **Epiplexity View:** Computation *can* create information. By applying a deterministic rule (like Cellular Automata Rule 54), one can generate data with high Epiplexity. While the "seed" is simple, the resulting structure requires a complex program for a bounded observer to predict.
+
+
+* **Key Finding:** Synthetic data adds value when the generating function is easy to run but hard to invert/predict, forcing the model to learn complex internal structures.
+
+
+
+#### Paradox 2: The Importance of Data Ordering
+
+* **Classical View:** Information is symmetric; $I(X; Y) = I(Y; X)$.
+
+
+* **Epiplexity View:** Factorization order matters. Predicting "Board $\to$ Moves" in chess is computationally harder than "Moves $\to$ Board." The harder ordering forces the model to learn deeper structural rules (higher Epiplexity), whereas the easier ordering relies on surface statistics.
+
+
+* **Result:** Models trained on the high-epiplexity ordering (Reverse) showed significantly better Out-of-Distribution (OOD) generalization.
+
+
+
+#### Paradox 3: Likelihood Modeling vs. Distribution Matching
+
+* **Classical View:** A model only learns to match the data-generating process.
+
+
+* **Epiplexity View:** Computationally bounded models often learn *more* structure than exists in the generator. This is called **Induction** or **Emergence**.
+* **Example:** In "Game of Life" simulations, a bounded model cannot simply simulate the pixel-level physics (which is computationally expensive). Instead, it learns emergent concepts like "gliders" and "collision rules" to shortcut the simulation. The learned model becomes more complex (higher Epiplexity) than the simple rules that generated the data.
+
+
+
+---
+
+### Measuring Epiplexity
+
+Since finding the optimal program $K_T$ is intractable, the authors propose two practical estimation methods using neural networks:
+
+1. **Prequential Coding:** Estimates Epiplexity as the area under the loss curve minus the final loss. If a model's loss drops significantly and accurately over time, it has "absorbed" a large amount of structural information.
+
+
+2. **Requential Coding:** A more rigorous approach that explicitly codes the model weights by tracking the cumulative KL divergence between a "teacher" (generating synthetic data) and a "student" model. This separates the cost of encoding the model from the cost of the data.
+
+
+
+---
+
+### Implications for Generalization and Pre-training
+
+The paper argues that **OOD generalization is driven by Epiplexity, not just low loss.** A model generalizes well when it reuses learned structural sub-programs (circuits) for new tasks.
+
+* **Modality Differences:** Language data was found to have significantly higher Epiplexity than image data (CIFAR-5M), explaining why LLMs generalize better across tasks than vision models.
+
+
+* **Data Selection:** Strategies that prioritize high-epiplexity data (data where the loss drops rapidly, indicating learnable structure) outperform random sampling on downstream tasks.
+
+
