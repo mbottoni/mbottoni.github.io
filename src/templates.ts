@@ -113,7 +113,7 @@ export const base = (
 
   <link rel="stylesheet" href="/css/main.css">
   ${extra_css ? html`<link rel="stylesheet" href="/css/${extra_css}">` : ""}
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
 </head>
 
 <body>
@@ -151,8 +151,8 @@ export const base = (
       </a>
     </p>
   </footer>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
   <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
     mermaid.initialize({ startOnLoad: true });
@@ -192,18 +192,28 @@ export const base = (
       const maxAttempts = 40;
       const renderMath = () => {
         if (typeof renderMathInElement === "function") {
-          renderMathInElement(document.body, {
-            delimiters: [
-              { left: "$$", right: "$$", display: true },
-              { left: "$", right: "$", display: false },
-              { left: "\\(", right: "\\)", display: false },
-              { left: "\\[", right: "\\]", display: true },
-            ],
-            throwOnError: false,
-          });
+          console.log("Rendering math...");
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [],
+            });
+            console.log("Math rendering complete");
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
         } else if (attempts < maxAttempts) {
           attempts += 1;
+          console.log("Waiting for KaTeX, attempt", attempts);
           setTimeout(renderMath, 75);
+        } else {
+          console.error("KaTeX failed to load after", maxAttempts, "attempts");
         }
       };
       renderMath();
