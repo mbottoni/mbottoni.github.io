@@ -202,7 +202,11 @@ export const base = (
                 { left: "\\[", right: "\\]", display: true },
               ],
               throwOnError: false,
-              ignoredTags: [],
+              ignoredTags: [
+                "script", "noscript", "style", "textarea", 
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
             });
             console.log("Math rendering complete");
           } catch (e) {
