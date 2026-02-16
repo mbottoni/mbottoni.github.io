@@ -2,6 +2,8 @@
 # Some common divergences
 [colab]: https://colab.research.google.com/drive/11WsBPSsF00E0w6FsRsU-bT_gm-KjCvGr?usp=sharing
 
+![](/assets/foundations/divergences.png)
+
 Hey. usually on machine learning we have to consider distances between different probability distributions.
 This is in fact a hard problem and there is a misconception that the most common way to do this is using the
 kl divergence. I believe that this is not true. 

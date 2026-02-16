@@ -1,6 +1,8 @@
 
 # Classifier free diffusion guidance
 
+![](/assets/generative/cfg.png)
+
 One of the key techniques in diffusion models that has significantly improved their performance is 
 classifier-free guidance. In this post, we'll explore what classifier-free 
 guidance is, how it works, and implement it from scratch in PyTorch.

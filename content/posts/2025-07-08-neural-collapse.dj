@@ -1,6 +1,8 @@
 
 # What is Neural Collapse? A Simpler Look
 
+![](/assets/frontier/neural_collapse.png)
+
 Imagine you're training a very powerful neural network to recognize different classes of images, like 
 cats, dogs, and cars. In the beginning, the network struggles, but eventually, it gets 
 a perfect score on your training data.

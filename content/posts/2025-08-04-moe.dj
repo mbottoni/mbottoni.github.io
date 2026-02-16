@@ -1,6 +1,8 @@
 
 # Mixture of Experts
 
+![](/assets/frontier/moe.png)
+
 In the pursuit of scaling neural networks to unprecedented parameter counts while 
 maintaining computational tractability, the paradigm of conditional computation 
 has emerged as a cornerstone of modern deep learning architectures. A prominent and 

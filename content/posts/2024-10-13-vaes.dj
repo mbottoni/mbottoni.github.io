@@ -1,6 +1,8 @@
 
 # A comprehensive list of different types of VAEs
 
+![](/assets/generative/vaes.png)
+
 1. **VAE** (Vanilla VAE): The original VAE architecture consists of an encoder that 
 maps input data to a latent space, and a decoder that reconstructs the 
 input from the latent representation. It uses a variational inference 

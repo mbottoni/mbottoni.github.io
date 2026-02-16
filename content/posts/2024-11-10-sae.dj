@@ -1,6 +1,8 @@
 
 # Sparse Autoencoders
 
+![](/assets/frontier/sae.png)
+
 Sparse autoencoders are neural networks that learn compressed representations of 
 data while enforcing sparsity - a constraint that ensures most neurons 
 remain inactive for any given input. This approach leads to more 
