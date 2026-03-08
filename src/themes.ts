@@ -65,6 +65,7 @@ const themeAssignments: Record<ThemeKey, string[]> = {
     "neural-collapse",
     "moe",
     "lottery-ticket",
+    "h-neurons",
   ],
   generative: [
     "ctgan",
