@@ -4,6 +4,9 @@ import * as templates from "./templates.ts";
 import * as djot from "./djot.ts";
 import { HtmlString } from "./templates.ts";
 import { resolveTheme, themes, type ThemeConfig } from "./themes.ts";
+import { projects } from "./projects.ts";
+import { news } from "./news.ts";
+import { resolveTags, tagSlug } from "./tags.ts";
 
 async function main() {
   const params = {
@@ -118,7 +121,7 @@ async function build(params: {
 
   await update_file(
     "out/res/index.html",
-    templates.post_list(themeGroups).value,
+    templates.post_list(themeGroups, posts, news).value,
   );
   for (const group of themeGroups) {
     await update_file(
@@ -127,6 +130,49 @@ async function build(params: {
     );
   }
   await update_file("out/res/feed.xml", templates.feed(posts).value);
+
+  // Projects, news, archive
+  await update_file(
+    "out/res/projects.html",
+    templates.projects_page(projects).value,
+  );
+  await update_file("out/res/news.html", templates.news_page(news).value);
+  await update_file("out/res/archive.html", templates.archive_page(posts).value);
+
+  // Tags: an index plus one page per tag
+  const tagMap = new Map<string, Post[]>();
+  for (const post of posts) {
+    for (const tag of post.tags) {
+      const list = tagMap.get(tag) ?? [];
+      list.push(post);
+      tagMap.set(tag, list);
+    }
+  }
+  const tagCounts = [...tagMap.entries()].map(([tag, ps]) => ({
+    tag,
+    count: ps.length,
+  }));
+  await update_file(
+    "out/res/tags.html",
+    templates.tags_index_page(tagCounts).value,
+  );
+  for (const [tag, ps] of tagMap) {
+    await update_file(
+      `out/res/tags/${tagSlug(tag)}.html`,
+      templates.tag_page(tag, ps).value,
+    );
+  }
+
+  // Client-side search index + page
+  await update_file("out/res/search.html", templates.search_page().value);
+  const search_index = posts.map((post) => ({
+    title: post.title,
+    summary: post.summary,
+    url: post.path,
+    date: post.date.toISOString().slice(0, 10),
+    tags: post.tags,
+  }));
+  await update_file("out/res/search.json", JSON.stringify(search_index));
   for (const post of posts) {
     await update_file(
       `out/res${post.path}`,
@@ -204,6 +250,8 @@ export type Post = {
   content: HtmlString;
   summary: string;
   theme: ThemeConfig;
+  tags: string[];
+  readingTime: number;
   image?: string;
 };
 
@@ -237,6 +285,8 @@ async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
     ctx.render_ms += performance.now() - t;
 
     const hero = extract_first_image(text);
+    const words = text.trim().split(/\s+/).filter(Boolean).length;
+    const readingTime = Math.max(1, Math.round(words / 200));
 
     posts.push({
       year,
@@ -250,6 +300,8 @@ async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
       path: `/${y}/${m}/${d}/${slug}.html`,
       src: `/content/posts/${y}-${m}-${d}-${slug}.dj`,
       theme: resolveTheme(slug),
+      tags: resolveTags(slug),
+      readingTime,
       image: hero,
     });
   }
