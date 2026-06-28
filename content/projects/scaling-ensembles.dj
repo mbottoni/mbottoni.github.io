@@ -28,7 +28,3 @@ The follow-up series digs into the sharper question:
   a cache that can restore artifacts from previous runs.
 - A paper-plot generator and an interactive marimo app.
 - Apple-Silicon (MPS) / CUDA / CPU auto-detection.
-
-## Tech stack
-
-PyTorch · MLflow · marimo · NumPy · pandas.

@@ -29,7 +29,7 @@ export const projects: Project[] = [
     description:
       "Multi-agent AI platform for fundamental stock analysis: an orchestrator runs five agents to turn a ticker into an investment report.",
     url: "https://github.com/mbottoni/fundamental-agents",
-    tags: ["multi-agent", "fastapi", "nextjs"],
+    tags: ["projects"],
     year: 2025,
     gif: "/assets/projects/fundamental-agents.gif",
     gifCaption:
@@ -41,7 +41,7 @@ export const projects: Project[] = [
     description:
       "An empirical study of the Fisher-Rao geodesic distance vs KL divergence in t-SNE and VAEs, with reproducible benchmarks and an arXiv-style report.",
     url: "https://github.com/mbottoni/fisher-rao-ml",
-    tags: ["information-geometry", "vae", "dimensionality-reduction"],
+    tags: ["research"],
     year: 2025,
     gif: "/assets/projects/fisher-rao-ml.gif",
     gifCaption:
@@ -53,7 +53,7 @@ export const projects: Project[] = [
     description:
       "Do independently trained networks converge to the same function as they widen? Width sweeps measuring function-space diversity.",
     url: "https://github.com/mbottoni/scaling-ensembles",
-    tags: ["deep-learning", "ensembles", "loss-landscape"],
+    tags: ["research"],
     year: 2025,
     gif: "/assets/projects/scaling-ensembles.gif",
     gifCaption:
@@ -65,7 +65,7 @@ export const projects: Project[] = [
     description:
       "A modular playground of five VAE variants (Vanilla, β-VAE, Conditional, VQ-VAE, WAE-MMD) with interactive marimo notebooks.",
     url: "https://github.com/mbottoni/vae-playground",
-    tags: ["generative", "vae", "pytorch"],
+    tags: ["research"],
     year: 2025,
     gif: "/assets/projects/vae-playground.gif",
     gifCaption:
@@ -77,7 +77,7 @@ export const projects: Project[] = [
     description:
       "Horror movie recommendations from free-text mood, via semantic search.",
     url: "https://github.com/mbottoni/terror-reco",
-    tags: ["semantic-search", "recsys", "fastapi"],
+    tags: ["projects"],
     year: 2024,
     gif: "/assets/projects/terror-reco.gif",
   },
@@ -87,7 +87,7 @@ export const projects: Project[] = [
     description:
       "Fit, simulate, and compare logit graph models against ER/WS/BA via spectral GIC. On PyPI.",
     url: "https://github.com/mbottoni/logit-graph",
-    tags: ["random-graphs", "network-science", "pypi"],
+    tags: ["research"],
     year: 2025,
     gif: "/assets/projects/logit-graph.gif",
     gifCaption:
@@ -99,7 +99,7 @@ export const projects: Project[] = [
     description:
       "End-to-end ML in production: a model microservice, Docker, Kubernetes, and drift monitoring.",
     url: "https://github.com/mbottoni/ml-prod",
-    tags: ["mlops", "docker", "kubernetes", "flask"],
+    tags: ["projects"],
     year: 2024,
     gif: "/assets/projects/ml-prod.gif",
     gifCaption:
@@ -111,7 +111,7 @@ export const projects: Project[] = [
     description:
       "Flow Matching for generative modeling: a scikit-learn-like FlowMatcher transporting noise to data via learned ODE velocity fields.",
     url: "https://github.com/mbottoni/flow-match",
-    tags: ["generative", "flow-matching", "pytorch"],
+    tags: ["research"],
     year: 2025,
     gif: "/assets/projects/flow-match.gif",
     gifCaption:
@@ -123,7 +123,7 @@ export const projects: Project[] = [
     description:
       "A from-scratch U-Net for binary image segmentation (Carvana car masking) — encoder–decoder with skip connections.",
     url: "https://github.com/mbottoni/unet-fun",
-    tags: ["vision", "segmentation", "unet"],
+    tags: ["projects"],
     year: 2024,
     gif: "/assets/projects/unet-fun.gif",
     gifCaption:
@@ -135,7 +135,7 @@ export const projects: Project[] = [
     description:
       "A Kalman filter and a Transformer as interchangeable expected-return estimators feeding a Markowitz backtest.",
     url: "https://github.com/mbottoni/kalman-transformer",
-    tags: ["kalman-filter", "transformers", "portfolio-optimization"],
+    tags: ["research"],
     year: 2024,
     gif: "/assets/projects/kalman-transformer.gif",
     gifCaption:
@@ -147,7 +147,7 @@ export const projects: Project[] = [
     description:
       "Self-taught Rubik's Cube solver — Autodidactic Iteration (value+policy net, no dataset) solving via beam search.",
     url: "https://github.com/mbottoni/reinforcement-learning-final-project",
-    tags: ["reinforcement-learning", "deep-rl", "pytorch"],
+    tags: ["projects"],
     year: 2023,
     gif: "/assets/projects/rl-rubiks-cube.gif",
     gifCaption:
@@ -159,7 +159,7 @@ export const projects: Project[] = [
     description:
       "Fine-tuning BERTimbau on Portuguese reviews to probe whether its embeddings recover vowel density.",
     url: "https://github.com/mbottoni/ep2-nlp",
-    tags: ["nlp", "bert", "portuguese", "probing"],
+    tags: ["research"],
     year: 2023,
     gif: "/assets/projects/bertimbau-probing.gif",
     gifCaption:
@@ -171,7 +171,7 @@ export const projects: Project[] = [
     description:
       "Measuring correlation between graphs via learned embeddings vs. classical graph-distance measures.",
     url: "https://github.com/dcuoliveira/graph-corr-embedd",
-    tags: ["graphs", "embeddings", "network-science"],
+    tags: ["research"],
     year: 2024,
     gif: "/assets/projects/graph-corr-embedd.gif",
     gifCaption:

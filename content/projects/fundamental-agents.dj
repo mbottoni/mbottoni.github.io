@@ -26,8 +26,3 @@ It is a complete product, not just a script:
 - *Backend* --- FastAPI + SQLAlchemy + Pydantic, PostgreSQL, JWT auth, and Stripe
   checkout/webhooks.
 - *Infrastructure* --- Docker Compose, Caddy reverse proxy, and GitHub Actions.
-
-## Tech stack
-
-Next.js · React · TypeScript · Tailwind · FastAPI · SQLAlchemy · PostgreSQL ·
-NLTK VADER · Stripe · Docker.

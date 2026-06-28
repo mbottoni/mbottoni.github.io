@@ -29,8 +29,3 @@ and the density of just the *last* word of each review.
 Brazilian e-commerce product reviews (title, rating, recommendation, free-text
 review). The experiments sample reviews and split them into train / validation /
 test.
-
-## Tech stack
-
-PyTorch · Hugging Face Transformers · BERTimbau (`bert-base-portuguese-cased`) ·
-scikit-learn · pandas.

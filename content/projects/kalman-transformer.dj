@@ -28,8 +28,3 @@ denoised expectation. The Transformer is the same idea made nonlinear and
 learned --- it maps a window of past returns to a one-step-ahead expectation.
 Both answer *"what return do we expect next?"*, so they slot into the exact same
 place in the pipeline (shown in the animation above).
-
-## Tech stack
-
-PyTorch · NumPy · pandas · yfinance (with a deterministic synthetic fallback so
-the pipeline and tests run offline). Packaged with a CLI, tests, and CI.

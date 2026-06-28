@@ -24,7 +24,3 @@ above):
 The model is trained with binary cross-entropy on the Carvana images and masks,
 with `albumentations` augmentation and accuracy / Dice checks on a validation
 split.
-
-## Tech stack
-
-PyTorch · torchvision · albumentations · NumPy.
