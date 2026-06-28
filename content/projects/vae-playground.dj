@@ -26,7 +26,3 @@ reconstructions, latent spaces, loss curves, samples, and an MSE table.
 
 MNIST, Fashion-MNIST, and CIFAR-10, downloaded automatically via torchvision. The
 trainer auto-detects the best device (Apple Silicon MPS, CUDA, or CPU).
-
-## Tech stack
-
-PyTorch · marimo · Plotly · torchvision · NumPy.

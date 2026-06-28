@@ -31,7 +31,3 @@ advantage in silhouette-based cluster separation. The VAE workflow asks a
 different question --- whether Fisher-Rao's intrinsic geometry changes
 reconstruction, latent usefulness, posterior matching, and corruption robustness
 once each objective gets its own β tuning.
-
-## Tech stack
-
-PyTorch · MLflow · NumPy · pandas · LaTeX.

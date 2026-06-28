@@ -27,7 +27,3 @@ and naive exploration almost never stumbles onto the reward. ADI sidesteps both.
   converges.
 - *Solving* --- a **beam search** uses the policy to propose moves and the value
   to keep only the most promising states, walking a scrambled cube back to solved.
-
-## Tech stack
-
-PyTorch · NumPy. Packaged with a CLI, tests, and pretrained models.

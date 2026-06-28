@@ -275,10 +275,14 @@ export function page(name: string, content: HtmlString) {
   });
 }
 
-function tag_pills(tags: string[]): HtmlString {
+function tag_pills(tags: string[], link = true): HtmlString {
   if (tags.length === 0) return new HtmlString("");
   return html`<div class="tag-row">${
-    tags.map((t) => html`<a class="tag" href="${tagPath(t)}">#${t}</a>`)
+    tags.map((t) =>
+      link
+        ? html`<a class="tag" href="${tagPath(t)}">#${t}</a>`
+        : html`<span class="tag">${t}</span>`
+    )
   }</div>`;
 }
 
@@ -412,7 +416,7 @@ export const projects_page = (
       p.year ? html` <span class="muted">${p.year}</span>` : ""
     }</h3>
           <p>${p.description}</p>
-          ${tag_pills(p.tags)}
+          ${tag_pills(p.tags, false)}
           ${more}
         </div>
       </article>
@@ -453,7 +457,7 @@ export const project_detail_page = (
           <h1>${p.title}${
       p.year ? html` <span class="muted">${p.year}</span>` : ""
     }</h1>
-          ${tag_pills(p.tags)}
+          ${tag_pills(p.tags, false)}
           <p class="project-actions">
             <a class="button" href="${p.url}">
               <svg class="icon"><use href="/assets/icons.svg#github"/></svg>

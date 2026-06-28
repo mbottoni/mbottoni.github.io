@@ -24,7 +24,3 @@ correlation, drawn from canonical random-graph models --- **Erdős–Rényi** an
 **Barabási–Albert**. Sweeping the correlation lets you check how faithfully each
 measure recovers the ground truth, and where the embedding-based approach beats
 the classical distances.
-
-## Tech stack
-
-PyTorch · NetworkX · NumPy · scikit-learn.

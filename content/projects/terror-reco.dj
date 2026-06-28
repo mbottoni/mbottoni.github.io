@@ -29,8 +29,3 @@ applies filters and stochastic sampling so results stay fresh on every search:
 - Stripe "buy me a coffee" checkout with webhooks
 - A dark, responsive horror-themed UI
 - Dockerised with a CI/CD pipeline (lint, type-check, test, build)
-
-## Tech stack
-
-FastAPI · Uvicorn · Jinja2 · sentence-transformers · scikit-learn · SQLAlchemy ·
-OMDb API · Stripe · Docker · GitHub Actions.

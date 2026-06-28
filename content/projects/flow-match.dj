@@ -22,7 +22,3 @@ solvers (Midpoint, RK4) reach the data distribution in fewer steps.
 
 The animation above shows exactly this: a Gaussian cloud transported into a
 two-moons distribution along the flow.
-
-## Tech stack
-
-PyTorch · NumPy · marimo · uv. Installable package with a clean public API.

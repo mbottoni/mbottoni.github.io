@@ -23,7 +23,3 @@ serving predictions reliably, shipping reproducible containers, scaling under
 load, logging and monitoring for drift, and closing the loop by retraining when
 performance degrades. This project walks through each of those stages on a
 concrete example.
-
-## Tech stack
-
-Python · Flask · scikit-learn · pandas · Docker · Kubernetes · pytest.
