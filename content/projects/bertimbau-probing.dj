@@ -1,0 +1,36 @@
+A probing study of **BERTimbau** --- the BERT model pre-trained on Brazilian
+Portuguese (`neuralmind/bert-base-portuguese-cased`) --- fine-tuned on real
+product reviews from the **B2W-Reviews01** dataset. The question: can a
+transformer's contextual embeddings recover a purely *surface* property of the
+text, namely its **vowel density** (the share of letters that are vowels)?
+
+## The probe
+
+Each review is reduced to a single number --- its vowel density --- and the
+model is trained to predict that number from the review text alone, in two
+flavors:
+
+- *Regression* --- predict the continuous vowel density of a review, scored by
+  RMSE and MAE.
+- *Classification* --- bucket density into three bands (low `< 1/3`,
+  mid `1/3–2/3`, high `> 2/3`) and predict the band, in both an **unbalanced**
+  and a **class-balanced** setting.
+
+## Baselines
+
+To see whether the embeddings actually carry the signal --- rather than the task
+being trivially easy --- the fine-tuned model is compared against simple
+heuristics: the *global* average density, the density of just the *first* word,
+and the density of just the *last* word of each review.
+
+## Data
+
+[B2W-Reviews01](https://github.com/americanas-tech/b2w-reviews01) --- a corpus of
+Brazilian e-commerce product reviews (title, rating, recommendation, free-text
+review). The experiments sample reviews and split them into train / validation /
+test.
+
+## Tech stack
+
+PyTorch · Hugging Face Transformers · BERTimbau (`bert-base-portuguese-cased`) ·
+scikit-learn · pandas.
