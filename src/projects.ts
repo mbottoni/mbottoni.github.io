@@ -6,6 +6,7 @@
 //           they link straight to `url`.
 // `gif`   — optional demo animation (path under /assets), shown on the card and
 //           the detail page. Drop the file at content/assets/projects/<slug>.gif.
+// `gifCaption` — optional caption rendered under the GIF on the detail page.
 // `image` — optional static thumbnail; cards with neither gif nor image render a
 //           generated monogram tile.
 
@@ -17,6 +18,7 @@ export type Project = {
   tags: string[];
   year?: number;
   gif?: string;
+  gifCaption?: string;
   image?: string;
 };
 
@@ -39,7 +41,9 @@ export const projects: Project[] = [
     url: "https://github.com/mbottoni/logit-graph",
     tags: ["random-graphs", "network-science", "pypi"],
     year: 2025,
-    image: "/assets/projects/logit-graph.png",
+    gif: "/assets/projects/logit-graph.gif",
+    gifCaption:
+      "Synthetic temporal logit graph: nodes arrive over time and attach preferentially to high-degree nodes, so hubs emerge as the network grows.",
   },
   {
     title: "ml-prod",
