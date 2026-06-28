@@ -1,0 +1,30 @@
+A from-scratch **U-Net** implemented in PyTorch for **image segmentation**,
+applied to the [Carvana](https://www.kaggle.com/c/carvana-image-masking-challenge)
+car-masking task --- predicting a per-pixel mask that separates the car from its
+background.
+
+## The architecture
+
+U-Net is an encoder–decoder with **skip connections** (shown in the animation
+above):
+
+- *Encoder* --- repeated `DoubleConv` blocks (two Conv → BatchNorm → ReLU
+  layers) followed by max-pooling. Spatial resolution halves at each step while
+  the channel count doubles (`64 → 128 → 256 → 512`).
+- *Bottleneck* --- the lowest-resolution, richest-feature representation.
+- *Decoder* --- transposed convolutions upsample back toward the input
+  resolution; at each level the matching encoder feature map is **concatenated**
+  via a skip connection, so fine spatial detail lost during downsampling is
+  restored.
+- *Head* --- a final 1×1 convolution maps to a single channel; a sigmoid turns
+  the logits into a binary foreground mask.
+
+## Training
+
+The model is trained with binary cross-entropy on the Carvana images and masks,
+with `albumentations` augmentation and accuracy / Dice checks on a validation
+split.
+
+## Tech stack
+
+PyTorch · torchvision · albumentations · NumPy.
