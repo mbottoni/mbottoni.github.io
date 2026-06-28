@@ -1,0 +1,30 @@
+How do you measure the *correlation* between two graphs? This research project
+asks whether **learned graph embeddings** can capture graph correlation better
+than the classical graph-distance measures used in network science. It is a
+collaboration led by [Daniel Oliveira](https://github.com/dcuoliveira).
+
+## The idea
+
+Each graph is mapped to a vector representation, and the correlation between two
+graphs is read off from the geometry of their embeddings: correlated graphs
+should land close together in embedding space, uncorrelated ones far apart.
+
+- *Embedding models* --- **SDNE** (Structural Deep Network Embedding, a deep
+  autoencoder over the adjacency matrix), alongside stacked autoencoders, GCN,
+  and graph neural-network variants, trained with reconstruction plus
+  graph-correlation losses.
+- *Classical baselines* --- DeltaCon, the Frobenius matrix norm, Procrustes
+  alignment (at several embedding dimensions), spectral distance, and
+  Weisfeiler–Lehman similarity.
+
+## Experiments
+
+The methods are evaluated on **simulated graph pairs** with a controlled level of
+correlation, drawn from canonical random-graph models --- **Erdős–Rényi** and
+**Barabási–Albert**. Sweeping the correlation lets you check how faithfully each
+measure recovers the ground truth, and where the embedding-based approach beats
+the classical distances.
+
+## Tech stack
+
+PyTorch · NetworkX · NumPy · scikit-learn.
