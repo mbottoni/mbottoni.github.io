@@ -117,9 +117,12 @@ export const projects: Project[] = [
     title: "graph-corr-embedd",
     slug: "graph-corr-embedd",
     description:
-      "Graph correlation embeddings and network analysis experiments.",
-    url: "https://github.com/mbottoni/graph-corr-embedd",
-    tags: ["graphs", "embeddings"],
+      "Measuring correlation between graphs via learned embeddings vs. classical graph-distance measures.",
+    url: "https://github.com/dcuoliveira/graph-corr-embedd",
+    tags: ["graphs", "embeddings", "network-science"],
     year: 2024,
+    gif: "/assets/projects/graph-corr-embedd.gif",
+    gifCaption:
+      "Measuring graph correlation from embeddings: as the correlation ρ drops, graph B's edges fade and its embedding cloud pulls away from A's.",
   },
 ];
