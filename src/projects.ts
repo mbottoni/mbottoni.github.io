@@ -73,10 +73,13 @@ export const projects: Project[] = [
     title: "unet-fun",
     slug: "unet-fun",
     description:
-      "Playing around with U-Net architectures and image segmentation tasks.",
+      "A from-scratch U-Net for binary image segmentation (Carvana car masking) — encoder–decoder with skip connections.",
     url: "https://github.com/mbottoni/unet-fun",
-    tags: ["vision", "segmentation"],
+    tags: ["vision", "segmentation", "unet"],
     year: 2024,
+    gif: "/assets/projects/unet-fun.gif",
+    gifCaption:
+      "U-Net for segmentation: an image flows down the encoder, through the bottleneck, and up the decoder to a mask, with skip connections restoring spatial detail.",
   },
   {
     title: "kalman-transformer",
@@ -89,15 +92,6 @@ export const projects: Project[] = [
     gif: "/assets/projects/kalman-transformer.gif",
     gifCaption:
       "Expected-return estimation as state estimation: a Kalman filter and a Transformer both denoise noisy returns into the expected return that feeds Markowitz.",
-  },
-  {
-    title: "blur-filter-variations",
-    slug: "blur-filter-variations",
-    description:
-      "Implementation of various blur filters and image processing algorithms.",
-    url: "https://github.com/mbottoni/blur_filter",
-    tags: ["vision", "signal-processing"],
-    year: 2023,
   },
   {
     title: "rl-rubiks-cube",
