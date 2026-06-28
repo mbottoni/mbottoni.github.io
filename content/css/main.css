@@ -542,6 +542,23 @@ figure.code-block { position: relative; }
 }
 
 /* ============================================================
+   Arcade
+   ============================================================ */
+.arcade-stage { margin: 1rem 0 0.5rem; }
+#gd-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 760px;
+  margin: 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  touch-action: none;          /* let the game own touch/scroll */
+}
+
+/* ============================================================
    Smartphone refinements — mobile only, desktop (≥601px) untouched
    ============================================================ */
 @media (max-width: 600px) {

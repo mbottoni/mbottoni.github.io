@@ -18,6 +18,7 @@ const socials = [
 const nav_links = [
   { href: "/", label: "Blog" },
   { href: "/projects.html", label: "Projects" },
+  { href: "/arcade.html", label: "Arcade" },
   { href: "/news.html", label: "News" },
   { href: "/archive.html", label: "Archive" },
   { href: "/about.html", label: "About" },
@@ -572,6 +573,31 @@ export const tag_page = (tag: string, posts: Post[]): HtmlString => {
         <ul class="post-list">${items}</ul>
       </section>
     `,
+  });
+};
+
+export const arcade_page = (): HtmlString => {
+  return base({
+    path: "/arcade.html",
+    title: "Arcade — mbottoni",
+    description: "Gradient Descent — a one-button downhill arcade game.",
+    src: "/content/arcade/game.js",
+    content: html`
+      <section class="theme-page arcade">
+        <header>
+          <h1>Arcade</h1>
+          <p><strong>Gradient Descent</strong> — ride the loss landscape downhill.
+          <em>Hold</em> mouse / tap / Space to dive and pick up speed on the slopes;
+          <em>release</em> to launch off the crests and fly. Grab coins, nail
+          perfect landings, and outrun the red wall. How low can you drive the loss?</p>
+        </header>
+        <div class="arcade-stage">
+          <canvas id="gd-canvas" width="760" height="440" aria-label="Gradient Descent game"></canvas>
+        </div>
+        <p class="muted">Click the game, then hold to descend. Best score is saved in your browser.</p>
+      </section>
+    `,
+    body_end: new HtmlString(`<script src="/arcade/game.js"></script>`),
   });
 };
 
