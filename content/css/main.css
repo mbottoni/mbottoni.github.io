@@ -440,6 +440,10 @@ time { color: var(--muted); font-family: "Open Sans", sans-serif; font-size: 1re
   overflow: hidden; background: var(--block-bg);
 }
 .project-figure img { display: block; width: 100%; height: auto; }
+.project-figure figcaption {
+  font-family: "Open Sans", sans-serif; font-size: 0.8rem; color: var(--muted);
+  padding: 0.5rem 0.9rem; border-top: 1px solid var(--border);
+}
 
 /* ============================================================
    Archive

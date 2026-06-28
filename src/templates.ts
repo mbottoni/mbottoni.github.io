@@ -454,7 +454,11 @@ export const project_detail_page = (
         </header>
         ${
       p.gif
-        ? html`<figure class="project-figure"><img src="${p.gif}" alt="${p.title} demo"></figure>`
+        ? html`<figure class="project-figure"><img src="${p.gif}" alt="${p.title} demo">${
+          p.gifCaption
+            ? html`<figcaption>${p.gifCaption}</figcaption>`
+            : ""
+        }</figure>`
         : ""
     }
         ${body}

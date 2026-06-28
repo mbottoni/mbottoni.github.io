@@ -1,0 +1,65 @@
+A Python package to **fit, simulate, and compare logit graph models** against the
+classic random-graph baselines --- Erdős–Rényi (ER), Watts–Strogatz (WS), and
+Barabási–Albert (BA) --- using a spectral Graph Information Criterion (GIC).
+Published on PyPI as [`logit-graph`](https://pypi.org/project/logit-graph/) with a
+scikit-learn-style API and reproducible, seedable comparisons.
+
+```bash
+pip install "logit-graph>=0.1.3"
+```
+
+## What it does
+
+- *Estimate* --- pick the neighborhood depth `d̂` via AIC and the intercept `σ̂`
+  (offset logit) from a real graph.
+- *Generate* --- sample graphs whose normalized-Laplacian spectrum matches the
+  data, via a GIC-guided Gibbs sampler.
+- *Compare* --- rank the logit graph against ER / WS / BA on the same spectral
+  GIC (lower is better).
+
+## Results at a glance
+
+Reproducible comparison on the SNAP Facebook ego network **686**
+(`random_state=0`):
+
+| Model | GIC ↓ | Notes |
+|-------|-------|-------|
+| Logit Graph | ~4.07 | AIC-selected `d̂`, offset-logit `σ̂` |
+| BA | ~4.12 | preferential-attachment grid search |
+| WS | ~4.57 | small-world grid search |
+| ER | ~5.78 | density-matched |
+
+The logit graph wins on this network --- its degree-aware edge model captures
+spectral structure the classic baselines miss.
+
+## A 60-second taste
+
+```python
+from logit_graph import simulate_graph, select_d_ensemble, estimate_sigma_from_graph
+
+adj, meta = simulate_graph(
+    200, 1, sigma=-4.0, n_iter=30_000,
+    feature_mode="incremental", target_density=0.10, seed=42, return_meta=True,
+)
+d_hat, _ = select_d_ensemble([adj], [0, 1, 2, 3], "incremental")
+sigma_hat = estimate_sigma_from_graph(adj, d_hat, "incremental")
+print(f"d_hat={d_hat}, sigma_hat={sigma_hat:.3f}")
+```
+
+## Core API
+
+- `simulate_graph` --- generate a logit graph at `(n, d, σ)`
+- `select_d_ensemble` --- AIC model selection over the depth `d`
+- `estimate_sigma_from_graph` --- offset-logit `σ̂` at fixed `d`
+- `GraphModelComparator` --- logit graph vs baselines, scored by spectral GIC
+- `LogitGraphFitter` --- fixed-`d` spectral fitter
+
+The repo also ships an extensive experiment suite (reproducible `make` targets for
+parameter recovery, ROC power analysis, MCMC convergence diagnostics, and
+real-network GIC comparisons on Facebook, Twitch, arXiv, and animal connectomes),
+plus a newer **temporal** logit graph for growing networks.
+
+## Links
+
+- PyPI: <https://pypi.org/project/logit-graph/>
+- Documentation: <https://logit-graph.readthedocs.io/en/latest/>
