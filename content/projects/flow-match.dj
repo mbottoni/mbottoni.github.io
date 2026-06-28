@@ -1,0 +1,28 @@
+Experiments with the **flow matching** framework for generative modeling. Flow
+matching learns a **velocity field** that transports samples from noise to data
+by integrating an ordinary differential equation (ODE) --- a simpler, simulation-
+free alternative to training diffusion models.
+
+## What's inside
+
+- A scikit-learn-like **`FlowMatcher`** API: `fit`, `sample`, and
+  `sample_trajectory` (which returns the whole path from noise to data).
+- A neural **velocity field** (configurable MLP).
+- Multiple **ODE solvers** --- Euler, Midpoint, and RK4 --- to integrate the flow.
+- Several **2D toy datasets** (moons, and friends) for quick experimentation.
+- Interactive **marimo notebooks** for visualization and intuition.
+
+## How it works
+
+Pair each noise sample `x0` with a data sample `x1` and define the straight-line
+path `x_t = (1 − t)·x0 + t·x1`. The network is trained to predict the constant
+velocity `x1 − x0` along that path; at sampling time you start from noise and
+integrate the learned velocity field with one of the ODE solvers. Higher-order
+solvers (Midpoint, RK4) reach the data distribution in fewer steps.
+
+The animation above shows exactly this: a Gaussian cloud transported into a
+two-moons distribution along the flow.
+
+## Tech stack
+
+PyTorch · NumPy · marimo · uv. Installable package with a clean public API.

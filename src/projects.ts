@@ -61,10 +61,13 @@ export const projects: Project[] = [
     title: "flow-match",
     slug: "flow-match",
     description:
-      "Implementation and experiments with Flow Matching generative models.",
+      "Flow Matching for generative modeling: a scikit-learn-like FlowMatcher transporting noise to data via learned ODE velocity fields.",
     url: "https://github.com/mbottoni/flow-match",
-    tags: ["generative", "flow-matching"],
+    tags: ["generative", "flow-matching", "pytorch"],
     year: 2025,
+    gif: "/assets/projects/flow-match.gif",
+    gifCaption:
+      "Flow matching transports a Gaussian noise cloud into a two-moons distribution along the conditional flow path xₜ = (1−t)·x₀ + t·x₁.",
   },
   {
     title: "unet-fun",
