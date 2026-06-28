@@ -102,12 +102,16 @@ export const projects: Project[] = [
     year: 2023,
   },
   {
-    title: "bert-trial",
-    slug: "bert-trial",
-    description: "BERT for classification project.",
+    title: "bertimbau-probing",
+    slug: "bertimbau-probing",
+    description:
+      "Fine-tuning BERTimbau on Portuguese reviews to probe whether its embeddings recover vowel density.",
     url: "https://github.com/mbottoni/ep2-nlp",
-    tags: ["nlp", "bert"],
+    tags: ["nlp", "bert", "portuguese", "probing"],
     year: 2023,
+    gif: "/assets/projects/bertimbau-probing.gif",
+    gifCaption:
+      "Probing BERTimbau: a scan highlights vowels in each Portuguese review while the gauge shows the vowel density recovered from the embedding.",
   },
   {
     title: "graph-corr-embedd",
