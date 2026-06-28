@@ -1,0 +1,92 @@
+\documentclass[10pt]{resume}
+
+\usepackage{fontawesome} % For icons
+\usepackage{hyperref} % For better link handling
+\usepackage[left=0.4in,top=0.3in,right=0.4in,bottom=0.3in]{geometry} % Slightly reduced margins
+
+\newcommand{\tab}[1]{\hspace{.2667\textwidth}\rlap{#1}}
+\newcommand{\itab}[1]{\hspace{0em}\rlap{#1}}
+\name{Maruan Bakri Ottoni}
+\address{
+    \faMobile\hspace{0.5em}+55 41 99209-2810 \hspace{1em}
+    \faEnvelope\hspace{0.5em}\href{mailto:maruanbakriottoni@gmail.com}{maruanbakriottoni@gmail.com} \hspace{1em}
+    \faGithub\hspace{0.5em}\href{https://github.com/mbottoni/}{Github} \hspace{1em}
+    \faDesktop\hspace{0.5em}\href{https://mbottoni.github.io/}{mbottoni.github.io}
+}
+
+\begin{document}
+\small
+
+\begin{rSection}{Education}
+\textbf{MSc in Computer Science}, University of São Paulo (USP) \hfill \textit{Ongoing} \\
+Research focus on computational neuroscience and random graph modeling of neural connections and social networks\\
+\textit{Coursework}: Graph Theory, Statistical Methods, Deep Learning, NLP, Parallel Computing
+
+\vspace{0.2em}
+\textbf{BSc in Electrical Engineering}, University of Campinas (Unicamp), Brazil \hfill \textit{2018 -- 2022} \\
+\hfill GPA: 8.5/10 \\
+\textit{MSc/PhD level coursework}: Information Theory, Stochastic Processes, Bayesian Inference, Machine Learning \\
+\textit{Research Projects}: Introduction to Lattice-based Cryptography(CNPQ Scholarship 2021-2022), Information Geometry for Machine Learning (CNPQ Scholarship 2022-2023)
+\end{rSection}
+
+\begin{rSection}{Professional Experience}
+\textbf{Data Scientist II} \hfill September 2023 - Present\\
+CloudWalk Inc. \hfill \textit{São Paulo, Brazil} \\
+\itemsep -3pt {}
+As part of an exploration team initiative, my job was to propose new state-of-the-art ideas to improve AI usage across the company. These include:
+\begin{itemize}
+    \item Designed and deployed scalable monitoring tools to track the health of over 3000 ML features in our feature store, improving model reliability and observability.
+    \item Built generative diffusion models for synthetic data generation in the context of tabular features for downstream tasks such as credit scoring and fraud detection, improving classification metrics by approximately $1\%$.
+    \item Pretrained and finetuned foundational models for credit assignment using LLM-inspired architectures, enabling the deployment of credit scoring solutions that led to over R\$ 100 million in increased credit approval for clients.
+    \item Developed predictive models for credit release performance, significantly accelerating the experimental phase and streamlining the deployment of new credit initiatives and models.
+    \item Engineered risk assessment models for the credit portfolio to monitor and mitigate potential financial losses, ensuring the stability and health of the company's credit offerings.
+    \item Led end-to-end development of experimental AI projects involving self-supervised learning, graph-based learning (GNNs) for fraud detection, and mechanistic interpretability for Large Language Models (LLMs).
+\end{itemize}
+\textbf{Quant Analyst Summer Internship} \hfill January 2023 - March 2023\\
+Goldman Sachs \hfill \textit{São Paulo, Brazil} \\
+\itemsep -3pt {}
+As part of a quant team I helped the development of a linear optimization software for asset inventory management across different entities of the bank
+ \begin{itemize}
+    \item Engineered algorithmic solutions that optimized asset allocation and significantly reduced redundant asset movements, improving operational efficiency.
+\end{itemize}
+
+\textbf{Quant Analyst Internship} \hfill October 2022 - November 2022\\
+UHedge Trading Solutions \hfill \textit{Campinas, Brazil}
+\begin{itemize}
+    \itemsep -3pt {}
+    \item Conducted mathematical analysis of derivatives strategies to evaluate
+    trading opportunities and risk-return profiles
+\end{itemize}
+\end{rSection}
+
+\begin{rSection}{Relevant Side Projects}
+
+\textbf{Logit Graph} Developed a library for probabilistic graph generation via a logit-based edge process. Did also iterative benchmarks on current statistical graph models, achieving state of art performance
+for the method developed. \href{https://pypi.org/project/logit-graph/}{Lib}
+
+\textbf{Horror Movie Recommendation} Built a FastAPI app that recommends horror movies
+from OMDb based on user prompts using a unified retrieval
+pipeline: Sentence-Transformers embeddings with
+blended priors (IMDb rating/votes, facet overlap, recency), optional
+cross-encoder reranking. Added UI, PostgreSQL, CI/CD, Payments integrations.
+\href{https://github.com/mbottoni/terror-reco}{Code}
+
+\textbf{RAG Solution for Analyzing Auction Documents} Developed a Retrieval-Augmented Generation (RAG) chatbot using Langchain and MongoDB, with a chat interface built in Flask. The bot enables interaction with potentially hundreds or thousands of documents across multiple auctions, allowing users to efficiently navigate and retrieve relevant information. \href{https://github.com/LLAP-Capital/document-analysis}{Code}
+
+\textbf{Graph Similarity via Representation Learning} Contributed with ML methods for graph distance, implementing SOTA architectures and matching strong baselines. \href{https://github.com/dcuoliveira/graph-corr-embedd}{Code}
+
+\end{rSection}
+
+
+\begin{rSection}{Skills \& Languages}
+\begin{tabular}{ @{} >{\bfseries}l @{\hspace{4ex}} l }
+Programming & Python, Matlab, C, Java \\
+Tools & Google Cloud Platform, Docker, Git, Linux, Kubernetes, Spark, Airflow \\
+ML/AI & PyTorch, TensorFlow, Scikit-learn, FSDP Training, Hugging Face\\
+Data/Viz & SQL, Matplotlib, Seaborn, Plotly \\
+Languages & Portuguese (Native), English (Fluent C2), French (Basic A2) \\
+\end{tabular}
+\vspace{-0.4em}
+\end{rSection}
+
+\end{document}
