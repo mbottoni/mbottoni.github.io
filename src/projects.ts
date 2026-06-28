@@ -34,10 +34,12 @@ export const projects: Project[] = [
   {
     title: "logit-graph",
     slug: "logit-graph",
-    description: "Experiments with complex networks and random graphs.",
+    description:
+      "Fit, simulate, and compare logit graph models against ER/WS/BA via spectral GIC. On PyPI.",
     url: "https://github.com/mbottoni/logit-graph",
-    tags: ["graphs", "networks"],
-    year: 2024,
+    tags: ["random-graphs", "network-science", "pypi"],
+    year: 2025,
+    image: "/assets/projects/logit-graph.png",
   },
   {
     title: "ml-prod",
