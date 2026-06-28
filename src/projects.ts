@@ -36,6 +36,18 @@ export const projects: Project[] = [
       "An orchestrator runs five agents in sequence — data gathering, financial metrics, news sentiment, valuation, synthesis — turning a ticker into an investment report.",
   },
   {
+    title: "fisher-rao-ml",
+    slug: "fisher-rao-ml",
+    description:
+      "An empirical study of the Fisher-Rao geodesic distance vs KL divergence in t-SNE and VAEs, with reproducible benchmarks and an arXiv-style report.",
+    url: "https://github.com/mbottoni/fisher-rao-ml",
+    tags: ["information-geometry", "vae", "dimensionality-reduction"],
+    year: 2025,
+    gif: "/assets/projects/fisher-rao-ml.gif",
+    gifCaption:
+      "On the manifold of distributions, the Fisher-Rao distance is the geodesic arc (symmetric), while KL is flat and asymmetric — KL(A‖B) ≠ KL(B‖A).",
+  },
+  {
     title: "scaling-ensembles",
     slug: "scaling-ensembles",
     description:

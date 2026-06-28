@@ -1,0 +1,37 @@
+A rigorous empirical study of the **Fisher-Rao geodesic distance** as a
+replacement or complement to **KL divergence** in t-SNE-style affinity matching
+and variational autoencoders.
+
+## The geometry
+
+Probability distributions live on a curved manifold. The **Fisher-Rao distance**
+is the *geodesic* (shortest-path) distance on that manifold under the Fisher
+information metric --- it is a true, **symmetric** distance. **KL divergence**, by
+contrast, is a flat, **asymmetric** divergence: `KL(A‖B) ≠ KL(B‖A)`. The
+animation above shows both for Bernoulli distributions, where each distribution
+maps to a point on the unit quarter-circle and Fisher-Rao becomes the arc between
+two points.
+
+## What's inside
+
+- A **differentiable PyTorch** implementation of categorical and
+  diagonal-Gaussian Fisher-Rao distances.
+- t-SNE and VAE training scripts that **toggle between KL and Fisher-Rao**
+  objectives.
+- Multi-seed, multi-dataset **benchmarks** (t-SNE robustness, a VAE β-sweep) plus
+  targeted stress tests for regimes where KL's unbounded asymmetric pressure may
+  be a liability (noisy soft labels, distillation).
+- **Paired statistical aggregation** — Wilcoxon signed-rank tests and Cliff's
+  delta — and an arXiv-style LaTeX report.
+
+## Honest findings
+
+The headline t-SNE result is *negative-leaning*: KL keeps a small but consistent
+advantage in silhouette-based cluster separation. The VAE workflow asks a
+different question --- whether Fisher-Rao's intrinsic geometry changes
+reconstruction, latent usefulness, posterior matching, and corruption robustness
+once each objective gets its own β tuning.
+
+## Tech stack
+
+PyTorch · MLflow · NumPy · pandas · LaTeX.
