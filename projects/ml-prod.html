@@ -1,0 +1,257 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ml-prod — mbottoni</title>
+  <meta name="description" content="End-to-end ML in production: a model microservice, Docker, Kubernetes, and drift monitoring.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ml-prod — mbottoni">
+  <meta property="og:description" content="End-to-end ML in production: a model microservice, Docker, Kubernetes, and drift monitoring.">
+  <meta property="og:url" content="https://mbottoni.github.io/projects/ml-prod.html">
+  <meta property="og:image" content="/assets/projects/ml-prod.gif">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="ml-prod — mbottoni">
+  <meta name="twitter:description" content="End-to-end ML in production: a model microservice, Docker, Kubernetes, and drift monitoring.">
+  <meta name="twitter:image" content="/assets/projects/ml-prod.gif">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/projects/ml-prod.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <article class="project-detail">
+        <p class="back-link"><a href="/projects.html">← All projects</a></p>
+        <header class="project-detail-header">
+          <h1>ml-prod <span class="muted">2024</span></h1>
+          <div class="tag-row"><span class="tag">projects</span></div>
+          <p class="project-actions">
+            <a class="button" href="https://github.com/mbottoni/ml-prod">
+              <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+              View on GitHub
+            </a>
+          </p>
+        </header>
+        <figure class="project-figure"><img src="/assets/projects/ml-prod.gif" alt="ml-prod demo"><figcaption>The ML production lifecycle: data → train → Docker → Kubernetes → monitor, looping back to retrain when the monitor detects drift.</figcaption></figure>
+        <p><span>A hands-on tour of taking a machine-learning model all the way to production </span>&mdash;
+<span>from a trained model to a containerized, orchestrated, monitored service </span>&mdash;
+<span>built around the IBM AI Enterprise Workflow curriculum. The recurring theme is the</span>
+<span>full lifecycle: </span><strong><span>data → train → serve → containerize → orchestrate → monitor →</span>
+<span>retrain</span></strong><span>.</span></p>
+<section id="What-s-inside">
+
+    <h2>
+    <a href="#What-s-inside"><span>What</span>&rsquo;<span>s inside</span> </a>
+    </h2>
+<ul>
+<li>
+<strong><span>Model microservice</span></strong><span> </span>&mdash;<span> a Flask API exposing train and predict endpoints,</span>
+<span>with versioned model artifacts, structured logging, and a monitoring module</span>
+<span>that watches for data drift. Packaged in Docker, with unit tests covering the</span>
+<span>API, the model, and the logger.</span>
+</li>
+<li>
+<strong><span>Kubernetes</span></strong><span> </span>&mdash;<span> deploying and scaling the service on a cluster.</span>
+</li>
+<li>
+<strong><span>AI Workflow capstone</span></strong><span> </span>&mdash;<span> time-series revenue forecasting from raw invoice</span>
+<span>data: a data-ingestion pipeline that reconciles messy JSON, exploratory</span>
+<span>analysis, and a comparison of forecasting models.</span>
+</li>
+<li>
+<strong><span>Deployment solution</span></strong><span> </span>&mdash;<span> tying the pieces together into a deployable workflow.</span>
+</li>
+</ul>
+</section>
+<section id="Why-it-matters">
+
+    <h2>
+    <a href="#Why-it-matters"><span>Why it matters</span> </a>
+    </h2>
+<p><span>Most of the work in an ML system isn</span>&rsquo;<span>t the model </span>&mdash;<span> it</span>&rsquo;<span>s everything around it:</span>
+<span>serving predictions reliably, shipping reproducible containers, scaling under</span>
+<span>load, logging and monitoring for drift, and closing the loop by retraining when</span>
+<span>performance degrades. This project walks through each of those stages on a</span>
+<span>concrete example.</span></p>
+</section>
+
+      </article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/projects/ml-prod.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>

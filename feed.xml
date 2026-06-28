@@ -1,0 +1,1782 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+<link href="https://mbottoni.github.io/feed.xml" rel="self" type="application/atom+xml"/>
+<link href="https://mbottoni.github.io" rel="alternate" type="text/html"/>
+<updated>2026-06-28T23:09:53.862Z</updated>
+<id>https://mbottoni.github.io/feed.xml</id>
+<title type="html">mbottoni</title>
+<subtitle>Notes on machine learning, math, and elegant ideas by Maruan Bakri Ottoni.</subtitle>
+<author><name>Maruan Bakri Ottoni</name></author>
+
+<entry>
+<title type="text">H-Neurons: Hallucination at the Neuron Level</title>
+<link href="https://mbottoni.github.io/2026/01/27/h-neurons.html" rel="alternate" type="text/html" title="H-Neurons: Hallucination at the Neuron Level" />
+<published>2026-01-27T00:00:00+00:00</published>
+<updated>2026-01-27T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2026/01/27/h-neurons</id>
+<author><name>Maruan Bakri Ottoni</name></author>
+<summary type="html"><![CDATA[Gao et al. https://arxiv.org/abs/2512.01797 present a compelling investigation 
+into the microscopic mechanisms of hallucination in LLMs. The central thesis is that 
+hallucinations are not diffuse phenomena spread across millions of parameters, but 
+are instead driven by a remarkably sparse subset of neurons -- fewer than 0.1% of the 
+total -- which the authors term H-Neurons (Hallucination-associated Neurons).]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2026/01/27/h-neurons.html"><![CDATA[
+    <h1>
+    <a href="#H-Neurons-Hallucination-at-the-Neuron-Level"><span>H-Neurons: Hallucination at the Neuron Level</span> <time datetime="2026-01-27">Jan 27, 2026</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/frontier/h_neurons.png">
+</figure>
+<p><span>Gao et al. https://arxiv.org/abs/2512.01797 present a compelling investigation </span>
+<span>into the microscopic mechanisms of hallucination in LLMs. The central thesis is that </span>
+<span>hallucinations are not diffuse phenomena spread across millions of parameters, but </span>
+<span>are instead driven by a remarkably sparse subset of neurons </span>&ndash;<span> fewer than 0.1% of the </span>
+<span>total </span>&ndash;<span> which the authors term </span><strong><strong><span>H-Neurons</span></strong></strong><span> (Hallucination-associated Neurons).</span></p>
+<p><span>The paper addresses three questions: (1) do these neurons exist and can they be </span>
+<span>identified? (2) what is their causal impact on model behavior? and (3) when do they </span>
+<span>originate </span>&ndash;<span> during pre-training or post-training alignment? The answers are </span>
+<span>surprisingly clean: yes, they exist; they drive over-compliance behavior broadly </span>
+<span>(not just factual errors); and they emerge during pre-training, not alignment.</span></p>
+<p><span>This post walks through the methodology, reproduces the key formulations, and offers </span>
+<span>a critical assessment of the claims.</span></p>
+<hr>
+<section id="Quantifying-Neuron-Contributions-The-CETT-Metric">
+
+    <h3>
+    <a href="#Quantifying-Neuron-Contributions-The-CETT-Metric"><span>Quantifying Neuron Contributions: The CETT Metric</span> </a>
+    </h3>
+<p><span>The foundation of the paper is a way to measure how much each individual neuron </span>
+<span>contributes to the model</span>&rsquo;<span>s output at each token position. They adopt the CETT </span>
+<span>(Contribution Estimation via Token-level Tracking) metric from Zhang et al. (2024).</span></p>
+<p><span>Consider a transformer block processing token $t$ with hidden representation </span>
+<span>$x_t \in \mathbb{R}^d$. Inside the FFN (feed-forward network), the input is </span>
+<span>projected into an intermediate activation space:</span></p>
+<p><span>$$z_t = \sigma(W_{\text{gate}} x_t) \odot W_{\text{up}} x_t$$</span></p>
+<p><span>where $\sigma(\cdot)$ is a nonlinear activation (e.g., SiLU), $W_{\text{gate}}, W_{\text{up}} \in \mathbb{R}^{d_m \times d}$ are learned projections, and $\odot$ is element-wise multiplication. Each dimension $z_{j,t}$ is the activation of neuron $j$.</span></p>
+<p><span>The full hidden state is then:</span></p>
+<p><span>$$h_t = W_{\text{down}} z_t$$</span></p>
+<p><span>To isolate neuron $j$</span>&rsquo;<span>s contribution, we mask all other neurons, defining </span>
+<span>$z_t^{(j)} = z_{j,t} e_j$ where $e_j$ is the $j$-th standard basis vector. The </span>
+<span>down-projected vector attributable to neuron $j$ alone is $h_t^{(j)} = W_{\text{down}} z_t^{(j)}$.</span></p>
+<p><span>The CETT score </span>&ndash;<span> the normalized contribution of neuron $j$ at position $t$ </span>&ndash;<span> is:</span></p>
+<p><span>$$\text{CETT}_{j,t} = \frac{\| h_t^{(j)} \|_2}{\| h_t \|_2}$$</span></p>
+<p><span>This ratio captures the fraction of the information flow at token $t$ attributable to neuron $j$. The key insight: raw activation magnitude is insufficient because a neuron might fire strongly yet have negligible impact on the residual stream due to the downstream projection weights.</span></p>
+</section>
+<section id="Pseudocode-Computing-CETT-Scores">
+
+    <h3>
+    <a href="#Pseudocode-Computing-CETT-Scores"><span>Pseudocode: Computing CETT Scores</span> </a>
+    </h3>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">compute_cett_scores</span>(<span class="hl-params">model, input_ids, layer_idx</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;Compute per-neuron CETT contribution scores for a given layer.&quot;&quot;&quot;</span></span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">with</span> torch.no_grad():</span>
+<span class="line">        hidden_states = model.get_hidden_states(input_ids, layer_idx)</span>
+<span class="line">        x_t = hidden_states  <span class="hl-comment"># shape: [seq_len, d_model]</span></span>
+<span class="line">        </span>
+<span class="line">        ffn = model.layers[layer_idx].ffn</span>
+<span class="line">        W_gate = ffn.gate_proj.weight  <span class="hl-comment"># [d_intermediate, d_model]</span></span>
+<span class="line">        W_up = ffn.up_proj.weight      <span class="hl-comment"># [d_intermediate, d_model]</span></span>
+<span class="line">        W_down = ffn.down_proj.weight  <span class="hl-comment"># [d_model, d_intermediate]</span></span>
+<span class="line">        </span>
+<span class="line">        gate_out = torch.nn.functional.silu(x_t @ W_gate.T)</span>
+<span class="line">        up_out = x_t @ W_up.T</span>
+<span class="line">        z_t = gate_out * up_out  <span class="hl-comment"># [seq_len, d_intermediate]</span></span>
+<span class="line">        </span>
+<span class="line">        h_t = z_t @ W_down.T    <span class="hl-comment"># [seq_len, d_model]</span></span>
+<span class="line">        h_t_norm = torch.norm(h_t, dim=-<span class="hl-number">1</span>, keepdim=<span class="hl-literal">True</span>)  <span class="hl-comment"># [seq_len, 1]</span></span>
+<span class="line">        </span>
+<span class="line">        d_intermediate = z_t.shape[-<span class="hl-number">1</span>]</span>
+<span class="line">        cett = torch.zeros(z_t.shape)  <span class="hl-comment"># [seq_len, d_intermediate]</span></span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-keyword">for</span> j <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(d_intermediate):</span>
+<span class="line">            z_j = torch.zeros_like(z_t)</span>
+<span class="line">            z_j[:, j] = z_t[:, j]</span>
+<span class="line">            h_j = z_j @ W_down.T  <span class="hl-comment"># single-neuron projection</span></span>
+<span class="line">            cett[:, j] = torch.norm(h_j, dim=-<span class="hl-number">1</span>) / (h_t_norm.squeeze() + <span class="hl-number">1e-10</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> cett</span></code></pre>
+
+</figure>
+<p><span>In practice, the per-neuron loop would be vectorized. The authors aggregate </span>
+<span>CETT scores over answer tokens and non-answer tokens separately:</span></p>
+<p><span>$$\text{CETT}_{j,\text{answer}} = \frac{1}{|A|} \sum_{t \in A} \text{CETT}_{j,t}, \quad \text{CETT}_{j,\text{other}} = \frac{1}{|T \setminus A|} \sum_{t \in T \setminus A} \text{CETT}_{j,t}$$</span></p>
+<p><span>where $A$ is the set of answer token positions. This separation is critical: </span>
+<span>it forces the downstream classifier to distinguish neurons that are specifically </span>
+<span>active during factual claims from those involved in general language generation.</span></p>
+<hr>
+</section>
+<section id="Identifying-H-Neurons-Sparse-Logistic-Regression">
+
+    <h3>
+    <a href="#Identifying-H-Neurons-Sparse-Logistic-Regression"><span>Identifying H-Neurons: Sparse Logistic Regression</span> </a>
+    </h3>
+<p><span>With contribution profiles computed for 1,000 faithful and 1,000 hallucinatory </span>
+<span>responses (from TriviaQA), the authors frame identification as binary classification. </span>
+<span>The label assignment is deliberately asymmetric:</span></p>
+<ul>
+<li>
+<span>$y = 1$: answer-token features from </span><strong><strong><span>hallucinatory</span></strong></strong><span> responses</span>
+</li>
+<li>
+<span>$y = 0$: answer-token features from faithful responses, AND all non-answer tokens</span>
+</li>
+</ul>
+<p><span>This forces the classifier to find neurons that are specifically active when the </span>
+<span>model generates a </span><strong><strong><span>false factual claim</span></strong></strong><span>, not just any answer.</span></p>
+<p><span>The classifier is $\ell_1$-regularized logistic regression:</span></p>
+<p><span>$$\mathcal{L}(\theta) = -\sum_i \left[ y_i \log \sigma(\theta^\top x_i) + (1 - y_i) \log(1 - \sigma(\theta^\top x_i)) \right] + \lambda \| \theta \|_1$$</span></p>
+<p><span>The $\ell_1$ penalty drives most weights to zero. Neurons with positive </span>
+<span>$\theta_j &gt; 0$ are designated as H-Neurons </span>&ndash;<span> their activation positively </span>
+<span>correlates with hallucination.</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">from</span> sklearn.linear_model <span class="hl-keyword">import</span> LogisticRegression</span>
+<span class="line"><span class="hl-keyword">import</span> numpy <span class="hl-keyword">as</span> np</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">identify_h_neurons</span>(<span class="hl-params">cett_answer_faithful, cett_answer_halluc, </span></span>
+<span class="line"><span class="hl-params">                       cett_other_faithful, cett_other_halluc, C=<span class="hl-number">0.01</span></span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Identify H-Neurons via sparse logistic regression.</span></span>
+<span class="line"><span class="hl-string">    </span></span>
+<span class="line"><span class="hl-string">    Each input is shape [n_samples, n_neurons].</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-comment"># Positive class: answer tokens from hallucinated responses</span></span>
+<span class="line">    X_pos = cett_answer_halluc</span>
+<span class="line">    y_pos = np.ones(<span class="hl-built_in">len</span>(X_pos))</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Negative class: answer tokens from faithful + all non-answer tokens</span></span>
+<span class="line">    X_neg = np.vstack([</span>
+<span class="line">        cett_answer_faithful,</span>
+<span class="line">        cett_other_faithful,</span>
+<span class="line">        cett_other_halluc</span>
+<span class="line">    ])</span>
+<span class="line">    y_neg = np.zeros(<span class="hl-built_in">len</span>(X_neg))</span>
+<span class="line">    </span>
+<span class="line">    X = np.vstack([X_pos, X_neg])</span>
+<span class="line">    y = np.concatenate([y_pos, y_neg])</span>
+<span class="line">    </span>
+<span class="line">    clf = LogisticRegression(</span>
+<span class="line">        penalty=<span class="hl-string">&#x27;l1&#x27;</span>, </span>
+<span class="line">        C=C,            <span class="hl-comment"># inverse regularization; lower = sparser</span></span>
+<span class="line">        solver=<span class="hl-string">&#x27;saga&#x27;</span>,</span>
+<span class="line">        max_iter=<span class="hl-number">5000</span>,</span>
+<span class="line">        class_weight=<span class="hl-string">&#x27;balanced&#x27;</span></span>
+<span class="line">    )</span>
+<span class="line">    clf.fit(X, y)</span>
+<span class="line">    </span>
+<span class="line">    weights = clf.coef_[<span class="hl-number">0</span>]</span>
+<span class="line">    h_neuron_indices = np.where(weights &gt; <span class="hl-number">0</span>)[<span class="hl-number">0</span>]</span>
+<span class="line">    </span>
+<span class="line">    total = <span class="hl-built_in">len</span>(weights)</span>
+<span class="line">    n_h = <span class="hl-built_in">len</span>(h_neuron_indices)</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;Identified <span class="hl-subst">{n_h}</span> H-Neurons out of <span class="hl-subst">{total}</span> (<span class="hl-subst">{n_h/total*<span class="hl-number">100</span>:<span class="hl-number">.3</span>f}</span>%)&quot;</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> h_neuron_indices, weights</span></code></pre>
+
+</figure>
+<p><span>The result is striking: across six models (Mistral-7B, Mistral-Small-24B, </span>
+<span>Gemma-3-4B, Gemma-3-27B, Llama-3.1-8B, Llama-3.3-70B), the identified </span>
+<span>H-Neurons constitute less than 0.1% of total neurons, yet classifiers </span>
+<span>built on them achieve 70-84% accuracy on in-domain TriviaQA and generalize </span>
+<span>to out-of-distribution biomedical QA (BioASQ) and fabricated entity </span>
+<span>detection (NonExist).</span></p>
+<hr>
+</section>
+<section id="Causal-Intervention-Activation-Scaling">
+
+    <h3>
+    <a href="#Causal-Intervention-Activation-Scaling"><span>Causal Intervention: Activation Scaling</span> </a>
+    </h3>
+<p><span>To move from correlation to causation, the authors perturb H-Neurons </span>
+<span>at inference time by scaling their activations:</span></p>
+<p><span>$$z_{j,t} \leftarrow \alpha \cdot z_{j,t}, \quad \alpha \in [0, 3]$$</span></p>
+<p><span>where $\alpha &lt; 1$ suppresses the neuron, $\alpha = 1$ is the baseline, </span>
+<span>and $\alpha &gt; 1$ amplifies it. The authors show that under this perturbation, </span>
+<span>the CETT score scales approximately linearly:</span></p>
+<p><span>$$\text{CETT}_{j,t}(\alpha) = \frac{\| \alpha \cdot h_t^{(j)} \|_2}{\| h_t + (\alpha - 1) h_t^{(j)} \|_2} \approx \alpha \cdot \text{CETT}_{j,t}$$</span></p>
+<p><span>The approximation holds because any single neuron</span>&rsquo;<span>s contribution </span>
+<span>$\| h_t^{(j)} \|_2$ is negligible relative to the full hidden state $\| h_t \|_2$ </span>
+<span>in models with thousands of neurons per layer.</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">intervene_h_neurons</span>(<span class="hl-params">model, h_neuron_indices, alpha=<span class="hl-number">0.0</span></span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;Register forward hooks to scale H-Neuron activations at inference.&quot;&quot;&quot;</span></span>
+<span class="line">    </span>
+<span class="line">    hooks = []</span>
+<span class="line">    <span class="hl-keyword">for</span> layer <span class="hl-keyword">in</span> model.layers:</span>
+<span class="line">        <span class="hl-keyword">def</span> <span class="hl-title function_">make_hook</span>(<span class="hl-params">layer_ffn</span>):</span>
+<span class="line">            <span class="hl-keyword">def</span> <span class="hl-title function_">hook_fn</span>(<span class="hl-params">module, <span class="hl-built_in">input</span>, output</span>):</span>
+<span class="line">                <span class="hl-comment"># output is z_t after gate * up projection</span></span>
+<span class="line">                <span class="hl-comment"># Scale only the H-Neuron dimensions</span></span>
+<span class="line">                output[:, :, h_neuron_indices] *= alpha</span>
+<span class="line">                <span class="hl-keyword">return</span> output</span>
+<span class="line">            <span class="hl-keyword">return</span> hook_fn</span>
+<span class="line">        </span>
+<span class="line">        h = layer.ffn.activation_layer.register_forward_hook(</span>
+<span class="line">            make_hook(layer.ffn)</span>
+<span class="line">        )</span>
+<span class="line">        hooks.append(h)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> hooks</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">evaluate_with_intervention</span>(<span class="hl-params">model, tokenizer, prompts, h_neurons, alpha</span>):</span>
+<span class="line">    hooks = intervene_h_neurons(model, h_neurons, alpha)</span>
+<span class="line">    </span>
+<span class="line">    results = []</span>
+<span class="line">    <span class="hl-keyword">for</span> prompt <span class="hl-keyword">in</span> prompts:</span>
+<span class="line">        inputs = tokenizer(prompt, return_tensors=<span class="hl-string">&quot;pt&quot;</span>)</span>
+<span class="line">        <span class="hl-keyword">with</span> torch.no_grad():</span>
+<span class="line">            output = model.generate(**inputs, max_new_tokens=<span class="hl-number">256</span>)</span>
+<span class="line">        results.append(tokenizer.decode(output[<span class="hl-number">0</span>], skip_special_tokens=<span class="hl-literal">True</span>))</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">for</span> h <span class="hl-keyword">in</span> hooks:</span>
+<span class="line">        h.remove()</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> results</span></code></pre>
+
+</figure>
+
+<figure>
+
+<img alt="" src="/assets/frontier/h_neurons_compliance.png">
+</figure>
+<p><span>The results are the most interesting part of the paper. Amplifying H-Neurons </span>
+<span>($\alpha &gt; 1$) increases compliance rates across </span><strong><strong><span>four distinct dimensions</span></strong></strong><span>: </span>
+<span>accepting invalid premises (FalseQA), following misleading context (FaithEval), </span>
+<span>caving to skeptical pushback (Sycophancy), and complying with harmful </span>
+<span>instructions (Jailbreak). Suppressing them ($\alpha &lt; 1$) reduces all four.</span></p>
+<p><span>This suggests H-Neurons do not merely encode </span>&ldquo;<span>factual incorrectness</span>&rdquo;<span> but </span>
+<span>rather a general </span><strong><strong><span>over-compliance disposition</span></strong></strong><span> </span>&ndash;<span> the model</span>&rsquo;<span>s tendency </span>
+<span>to satisfy the user at the expense of truthfulness, safety, or epistemic integrity.</span></p>
+<hr>
+</section>
+<section id="Origin-Pre-training-Not-Alignment">
+
+    <h3>
+    <a href="#Origin-Pre-training-Not-Alignment"><span>Origin: Pre-training, Not Alignment</span> </a>
+    </h3>
+<p><span>The final contribution traces H-Neurons back to pre-training. The authors </span>
+<span>apply classifiers trained on instruction-tuned models directly to their </span>
+<span>corresponding base models. AUROC scores remain well above chance (exceeding </span>
+<span>86% on TriviaQA for the Mistral family), demonstrating that the neural </span>
+<span>signatures of hallucination exist before any RLHF or SFT.</span></p>
+<p><span>To quantify how much alignment modifies these neurons, they compute the </span>
+<span>cosine distance between base and aligned model weights for each neuron</span>&rsquo;<span>s </span>
+<span>up-projection and down-projection:</span></p>
+<p><span>$$\Delta_j^{\text{up}} = 1 - \cos(W_{\text{up}}^{(j,\text{base})}, W_{\text{up}}^{(j,\text{chat})}), \quad \Delta_j^{\text{down}} = 1 - \cos(W_{\text{down}}^{(j,\text{base})}, W_{\text{down}}^{(j,\text{chat})})$$</span></p>
+<p><span>These are z-scored and averaged. The finding: H-Neurons concentrate in the </span>
+<strong><strong><span>low-drift</span></strong></strong><span> regime, meaning they are among the least modified neurons during </span>
+<span>alignment. Instruction tuning largely preserves these circuits rather than </span>
+<span>constructing them.</span></p>
+<hr>
+</section>
+<section id="Critical-Assessment">
+
+    <h3>
+    <a href="#Critical-Assessment"><span>Critical Assessment</span> </a>
+    </h3>
+<p><span>The paper makes a clean, well-structured argument, but several points </span>
+<span>deserve scrutiny:</span></p>
+<p><strong><strong><span>1. The CETT metric measures magnitude, not direction.</span></strong></strong><span> CETT captures </span>
+<span>$\| h_t^{(j)} \|_2 / \| h_t \|_2$ </span>&ndash;<span> the norm ratio. This tells us </span>
+<strong><span>how much</span></strong><span> a neuron contributes but not </span><strong><span>in which direction</span></strong><span> in the </span>
+<span>residual stream. Two neurons with identical CETT scores could push the </span>
+<span>hidden state in opposite directions. A directional metric (e.g., the </span>
+<span>projection onto the unembedding direction of the correct vs. incorrect </span>
+<span>token) would be more informative for understanding the mechanism.</span></p>
+<p><strong><strong><span>2. Linear probing is correlational by design.</span></strong></strong><span> While the perturbation </span>
+<span>experiments do establish causation, the identification step remains </span>
+<span>correlational. The $\ell_1$ logistic regression identifies neurons whose </span>
+<span>activations </span><strong><span>correlate</span></strong><span> with hallucination, but this does not mean these </span>
+<span>neurons are the </span><strong><span>cause</span></strong><span>. They could be downstream read-outs of an </span>
+<span>earlier computational process. The causal graph is: perturbation changes </span>
+<span>behavior, but we cannot distinguish whether H-Neurons are drivers or </span>
+<span>mediators without more fine-grained ablation at different layers.</span></p>
+<p><strong><strong><span>3. The over-compliance framing is compelling but unfalsifiable as stated.</span></strong></strong><span> </span>
+<span>The paper reframes hallucination as a special case of over-compliance. This </span>
+<span>is a useful conceptual move, but the four benchmarks (FalseQA, FaithEval, </span>
+<span>Sycophancy, Jailbreak) all involve the model generating text in response </span>
+<span>to a prompt. Almost any behavioral change from neuron perturbation would </span>
+<span>show up as a </span>&ldquo;<span>compliance</span>&rdquo;<span> shift on at least some of these benchmarks. A </span>
+<span>stronger test would include a benchmark where suppressing H-Neurons should </span>
+<span>have </span><strong><span>no</span></strong><span> effect </span>&ndash;<span> a negative control.</span></p>
+<p><strong><strong><span>4. The pre-training origin claim needs nuance.</span></strong></strong><span> The backward </span>
+<span>transferability result is strong: classifiers transfer from chat to </span>
+<span>base models. But this proves that the </span><strong><span>pattern</span></strong><span> exists in base models, </span>
+<span>not that alignment doesn</span>&rsquo;<span>t amplify it. The low-drift finding (H-Neurons </span>
+<span>are minimally modified by SFT) is more informative, but SFT with LoRA </span>
+<span>modifies very few parameters anyway </span>&ndash;<span> so most neurons show low drift </span>
+<span>regardless. The relevant comparison would be: is the drift of H-Neurons </span>
+<span>significantly </span><strong><span>lower</span></strong><span> than the average drift of neurons in the same layers?</span></p>
+<p><strong><strong><span>5. Scalability of the identification pipeline.</span></strong></strong><span> The method requires </span>
+<span>generating 10 responses per query (for consistency filtering), running </span>
+<span>GPT-4o for answer span extraction, computing CETT across all neurons </span>
+<span>and layers, and training a sparse classifier. For a 70B parameter model </span>
+<span>with thousands of neurons per layer across 80+ layers, this is a </span>
+<span>non-trivial computational pipeline that may not scale to rapid iteration.</span></p>
+<p><strong><strong><span>6. Missing comparison with SAE-based approaches.</span></strong></strong><span> Sparse autoencoders </span>
+<span>(Lindsey et al., 2025; Ferrando et al., 2025) decompose activations into </span>
+<span>interpretable features rather than raw neurons. The paper acknowledges this </span>
+<span>work but does not compare against it. SAE features are typically more </span>
+<span>monosemantic than individual neurons, so it is plausible that </span>
+&ldquo;<span>hallucination features</span>&rdquo;<span> identified via SAEs would be more interpretable </span>
+<span>and potentially fewer in number than H-Neurons.</span></p>
+<p><span>Despite these caveats, the paper provides a valuable contribution: it </span>
+<span>demonstrates that hallucination is not a distributed, intractable phenomenon </span>
+<span>but is concentrated in an identifiable, sparse, and causally effective </span>
+<span>subset of the network</span>&rsquo;<span>s computational units. This is encouraging for </span>
+<span>anyone working on interpretability-driven alignment.</span></p>
+</section>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">The Lottery Ticket Hypothesis</title>
+<link href="https://mbottoni.github.io/2026/01/26/lottery-ticket.html" rel="alternate" type="text/html" title="The Lottery Ticket Hypothesis" />
+<published>2026-01-26T00:00:00+00:00</published>
+<updated>2026-01-26T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2026/01/26/lottery-ticket</id>
+<author><name>Maruan Bakri Ottoni</name></author>
+<summary type="html"><![CDATA[In 2019, Frankle and Carlin published a paper https://arxiv.org/abs/1803.03635 that 
+challenged a fundamental assumption in deep learning: that large, over-parameterized 
+networks are necessary for achieving good performance. They proposed the Lottery 
+Ticket Hypothesis, which states that dense, randomly initialized networks contain 
+sparse subnetworks (winning tickets) that, when trained in isolation from the 
+same initialization, can match the full network's accuracy.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2026/01/26/lottery-ticket.html"><![CDATA[
+    <h1>
+    <a href="#The-Lottery-Ticket-Hypothesis"><span>The Lottery Ticket Hypothesis</span> <time datetime="2026-01-26">Jan 26, 2026</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/frontier/lottery_ticket.png">
+</figure>
+<p><span>In 2019, Frankle and Carlin published a paper https://arxiv.org/abs/1803.03635 that </span>
+<span>challenged a fundamental assumption in deep learning: that large, over-parameterized </span>
+<span>networks are necessary for achieving good performance. They proposed the </span><strong><strong><span>Lottery </span>
+<span>Ticket Hypothesis</span></strong></strong><span>, which states that dense, randomly initialized networks contain </span>
+<span>sparse subnetworks (</span>&ldquo;<span>winning tickets</span>&rdquo;<span>) that, when trained in isolation from the </span>
+<span>same initialization, can match the full network</span>&rsquo;<span>s accuracy.</span></p>
+<p><span>This is a profound claim. It suggests that most of the parameters in a neural </span>
+<span>network are redundant from the very beginning, and that the real work of training </span>
+<span>is finding which small subset of connections matters. The implications for </span>
+<span>efficiency, compression, and our understanding of optimization are enormous, </span>
+<span>and connect directly to ideas in Mixture of Experts, Sparse Autoencoders, and </span>
+<span>quantization.</span></p>
+<hr>
+<section id="The-Formal-Statement">
+
+    <h3>
+    <a href="#The-Formal-Statement"><span>The Formal Statement</span> </a>
+    </h3>
+<p><span>Let $f(x; \theta)$ be a dense neural network with initial parameters </span>
+<span>$\theta_0 \sim \mathcal{D}_\theta$. Training this network for $T$ iterations </span>
+<span>with SGD yields parameters $\theta_T$ that achieve test accuracy $a$ in </span>
+<span>validation time $t$.</span></p>
+<p><span>The </span><strong><strong><span>Lottery Ticket Hypothesis</span></strong></strong><span> states:</span></p>
+<p><span>There exists a binary mask $m \in \{0, 1\}^{|\theta|}$ such that the </span>
+<span>sparse subnetwork $f(x; m \odot \theta_0)$, when trained for at most $T'$ </span>
+<span>iterations, achieves test accuracy $a' \geq a$ in validation time $t' \leq t$, </span>
+<span>where $\|m\|_0 \ll |\theta|$.</span></p>
+<p><span>Here $\odot$ denotes element-wise multiplication (Hadamard product), </span>
+<span>and $\|m\|_0$ is the number of non-zero entries in the mask. The key </span>
+<span>insight: the </span><strong><strong><span>initial weights</span></strong></strong><span> $\theta_0$ matter. The same mask with </span>
+<span>a different random initialization does not produce a winning ticket.</span></p>
+<hr>
+</section>
+<section id="Iterative-Magnitude-Pruning-IMP">
+
+    <h3>
+    <a href="#Iterative-Magnitude-Pruning-IMP"><span>Iterative Magnitude Pruning (IMP)</span> </a>
+    </h3>
+<p><span>The authors propose </span><strong><strong><span>Iterative Magnitude Pruning</span></strong></strong><span> as the algorithm </span>
+<span>to find winning tickets. The idea is simple: train the network, remove </span>
+<span>the smallest weights, then reset the surviving weights to their original </span>
+<span>initialization and retrain.</span></p>
+<p><span>Given a pruning rate $p$ per round and $n$ rounds of pruning, the final </span>
+<span>sparsity after $n$ rounds is:</span></p>
+<p><span>$$s = 1 - (1 - p)^n$$</span></p>
+<p><span>For example, with $p = 0.2$ (prune 20% each round) and $n = 10$ rounds, </span>
+<span>the final sparsity is $s = 1 - 0.8^{10} \approx 89.3\%$, meaning nearly </span>
+<span>90% of the weights are removed.</span></p>
+<p><span>The pruning criterion at each round selects weights by magnitude:</span></p>
+<p><span>$$m_j = \begin{cases} 1 &amp; \text{if } |\theta_j^{(T)}| &gt; \tau_p \\ 0 &amp; \text{otherwise} \end{cases}$$</span></p>
+<p><span>where $\tau_p$ is the $p$-th percentile of the absolute weight values </span>
+<span>of the surviving weights.</span></p>
+</section>
+<section id="Pseudocode">
+
+    <h3>
+    <a href="#Pseudocode"><span>Pseudocode</span> </a>
+    </h3>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">iterative_magnitude_pruning</span>(<span class="hl-params">model, train_data, prune_rate, num_rounds</span>):</span>
+<span class="line">    <span class="hl-comment"># Step 1: Save the original random initialization</span></span>
+<span class="line">    theta_0 = copy(model.parameters())</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Start with all weights active</span></span>
+<span class="line">    mask = ones_like(theta_0)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">for</span> <span class="hl-built_in">round</span> <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(num_rounds):</span>
+<span class="line">        <span class="hl-comment"># Step 2: Reset surviving weights to their original initialization</span></span>
+<span class="line">        model.parameters = theta_0 * mask</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Step 3: Train the masked network to completion</span></span>
+<span class="line">        <span class="hl-keyword">for</span> epoch <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(num_epochs):</span>
+<span class="line">            <span class="hl-keyword">for</span> batch <span class="hl-keyword">in</span> train_data:</span>
+<span class="line">                output = model.forward(batch.x, mask)</span>
+<span class="line">                loss = cross_entropy(output, batch.y)</span>
+<span class="line">                gradients = backward(loss)</span>
+<span class="line">                <span class="hl-comment"># Only update weights that are not pruned</span></span>
+<span class="line">                model.parameters -= learning_rate * gradients * mask</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Step 4: Prune the smallest weights by magnitude</span></span>
+<span class="line">        surviving_weights = <span class="hl-built_in">abs</span>(model.parameters[mask == <span class="hl-number">1</span>])</span>
+<span class="line">        threshold = percentile(surviving_weights, prune_rate * <span class="hl-number">100</span>)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Zero out weights below the threshold</span></span>
+<span class="line">        new_mask = (<span class="hl-built_in">abs</span>(model.parameters) &gt;= threshold).<span class="hl-built_in">float</span>()</span>
+<span class="line">        mask = mask * new_mask</span>
+<span class="line">        </span>
+<span class="line">        sparsity = <span class="hl-number">1.0</span> - <span class="hl-built_in">sum</span>(mask) / <span class="hl-built_in">len</span>(mask)</span>
+<span class="line">        accuracy = evaluate(model, test_data, mask)</span>
+<span class="line">        <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;Round <span class="hl-subst">{<span class="hl-built_in">round</span>}</span>: sparsity=<span class="hl-subst">{sparsity:<span class="hl-number">.1</span>%}</span>, accuracy=<span class="hl-subst">{accuracy:<span class="hl-number">.2</span>f}</span>&quot;</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> mask, theta_0</span></code></pre>
+
+</figure>
+<hr>
+</section>
+<section id="Why-Initialization-Matters">
+
+    <h3>
+    <a href="#Why-Initialization-Matters"><span>Why Initialization Matters</span> </a>
+    </h3>
+<p><span>The most surprising finding is that the </span><strong><strong><span>initial weights</span></strong></strong><span> are critical. </span>
+<span>Consider three experiments at the same sparsity level:</span></p>
+<ol>
+<li>
+<strong><strong><span>Winning Ticket</span></strong></strong><span> (same mask + original init $\theta_0$): Matches or exceeds </span>
+<span>full network accuracy</span>
+</li>
+<li>
+<strong><strong><span>Same mask + random reinit</span></strong></strong><span> $\theta_0'$: Performance degrades significantly</span>
+</li>
+<li>
+<strong><strong><span>Random mask + original init</span></strong></strong><span>: Poor performance</span>
+</li>
+</ol>
+<p><span>This can be understood through the lens of the loss landscape. The </span>
+<span>initialization $\theta_0$ places the subnetwork in a favorable basin </span>
+<span>of attraction. The mask $m$ selects exactly those weights that, from </span>
+<span>this starting point, can navigate to a good minimum:</span></p>
+<p><span>$$\mathcal{L}(m \odot \theta_0) \xrightarrow{\text{SGD}} \theta^* \quad \text{(low loss minimum)}$$</span></p>
+<p><span>$$\mathcal{L}(m \odot \theta_0') \xrightarrow{\text{SGD}} \theta^{*'} \quad \text{(higher loss minimum)}$$</span></p>
+
+<figure>
+
+<img alt="" src="/assets/frontier/lottery_ticket_chart.png">
+</figure>
+<p><span>The chart above illustrates this effect. The winning ticket (green) maintains </span>
+<span>high accuracy even at extreme sparsity levels (80-90% of weights removed). </span>
+<span>The same pruning mask with a random reinitialization (orange) degrades earlier, </span>
+<span>and random pruning (red) collapses quickly. This confirms the hypothesis: </span>
+<span>it is the combination of structure (mask) and initialization that makes a </span>
+<span>winning ticket.</span></p>
+<hr>
+</section>
+<section id="Connection-to-Magnitude-Pruning-Theory">
+
+    <h3>
+    <a href="#Connection-to-Magnitude-Pruning-Theory"><span>Connection to Magnitude Pruning Theory</span> </a>
+    </h3>
+<p><span>Why does magnitude-based pruning work? One way to think about it is through </span>
+<span>the Taylor expansion of the loss function. When we remove weight $\theta_j$ </span>
+<span>(set it to zero), the change in loss is approximately:</span></p>
+<p><span>$$\Delta \mathcal{L}_j \approx -g_j \theta_j + \frac{1}{2} h_j \theta_j^2$$</span></p>
+<p><span>where $g_j = \frac{\partial \mathcal{L}}{\partial \theta_j}$ is the gradient </span>
+<span>and $h_j = \frac{\partial^2 \mathcal{L}}{\partial \theta_j^2}$ is the Hessian </span>
+<span>diagonal. At a converged minimum, $g_j \approx 0$, so:</span></p>
+<p><span>$$\Delta \mathcal{L}_j \approx \frac{1}{2} h_j \theta_j^2$$</span></p>
+<p><span>If we further assume $h_j$ is roughly constant across weights (a crude but </span>
+<span>useful approximation), then $\Delta \mathcal{L}_j \propto \theta_j^2$. </span>
+<span>This justifies pruning the smallest-magnitude weights: they cause the </span>
+<span>least damage when removed.</span></p>
+<p><span>More sophisticated methods like </span><strong><strong><span>Optimal Brain Surgeon</span></strong></strong><span> use the full </span>
+<span>Hessian $\mathbf{H}$ to compute the optimal weight to remove:</span></p>
+<p><span>$$\text{saliency}_j = \frac{\theta_j^2}{2 [H^{-1}]_{jj}}$$</span></p>
+<p><span>but magnitude pruning remains the practical workhorse due to its simplicity.</span></p>
+<hr>
+</section>
+<section id="A-Complete-Experiment">
+
+    <h3>
+    <a href="#A-Complete-Experiment"><span>A Complete Experiment</span> </a>
+    </h3>
+<p><span>Here is a complete implementation of the Lottery Ticket Hypothesis experiment </span>
+<span>on MNIST with a simple feedforward network:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">import</span> torch</span>
+<span class="line"><span class="hl-keyword">import</span> torch.nn <span class="hl-keyword">as</span> nn</span>
+<span class="line"><span class="hl-keyword">import</span> torch.optim <span class="hl-keyword">as</span> optim</span>
+<span class="line"><span class="hl-keyword">from</span> torchvision <span class="hl-keyword">import</span> datasets, transforms</span>
+<span class="line"><span class="hl-keyword">from</span> copy <span class="hl-keyword">import</span> deepcopy</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">class</span> <span class="hl-title class_">SimpleNet</span>(nn.Module):</span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">__init__</span>(<span class="hl-params">self</span>):</span>
+<span class="line">        <span class="hl-built_in">super</span>().__init__()</span>
+<span class="line">        self.fc1 = nn.Linear(<span class="hl-number">784</span>, <span class="hl-number">300</span>)</span>
+<span class="line">        self.fc2 = nn.Linear(<span class="hl-number">300</span>, <span class="hl-number">100</span>)</span>
+<span class="line">        self.fc3 = nn.Linear(<span class="hl-number">100</span>, <span class="hl-number">10</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">forward</span>(<span class="hl-params">self, x, masks=<span class="hl-literal">None</span></span>):</span>
+<span class="line">        x = x.view(-<span class="hl-number">1</span>, <span class="hl-number">784</span>)</span>
+<span class="line">        <span class="hl-keyword">if</span> masks:</span>
+<span class="line">            x = torch.relu(self.fc1(x) * masks[<span class="hl-number">0</span>])</span>
+<span class="line">            x = torch.relu(self.fc2(x) * masks[<span class="hl-number">1</span>])</span>
+<span class="line">            x = self.fc3(x) * masks[<span class="hl-number">2</span>]</span>
+<span class="line">        <span class="hl-keyword">else</span>:</span>
+<span class="line">            x = torch.relu(self.fc1(x))</span>
+<span class="line">            x = torch.relu(self.fc2(x))</span>
+<span class="line">            x = self.fc3(x)</span>
+<span class="line">        <span class="hl-keyword">return</span> x</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">train</span>(<span class="hl-params">model, loader, masks, epochs=<span class="hl-number">10</span>, lr=<span class="hl-number">0.01</span></span>):</span>
+<span class="line">    optimizer = optim.SGD(model.parameters(), lr=lr)</span>
+<span class="line">    criterion = nn.CrossEntropyLoss()</span>
+<span class="line">    <span class="hl-keyword">for</span> epoch <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(epochs):</span>
+<span class="line">        <span class="hl-keyword">for</span> data, target <span class="hl-keyword">in</span> loader:</span>
+<span class="line">            optimizer.zero_grad()</span>
+<span class="line">            output = model(data, masks)</span>
+<span class="line">            loss = criterion(output, target)</span>
+<span class="line">            loss.backward()</span>
+<span class="line">            <span class="hl-comment"># Zero gradients for pruned weights</span></span>
+<span class="line">            <span class="hl-keyword">if</span> masks:</span>
+<span class="line">                <span class="hl-keyword">for</span> param, mask <span class="hl-keyword">in</span> <span class="hl-built_in">zip</span>(model.parameters(), masks):</span>
+<span class="line">                    <span class="hl-keyword">if</span> param.grad <span class="hl-keyword">is</span> <span class="hl-keyword">not</span> <span class="hl-literal">None</span>:</span>
+<span class="line">                        param.grad *= mask</span>
+<span class="line">            optimizer.step()</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">evaluate</span>(<span class="hl-params">model, loader, masks=<span class="hl-literal">None</span></span>):</span>
+<span class="line">    correct = <span class="hl-number">0</span></span>
+<span class="line">    total = <span class="hl-number">0</span></span>
+<span class="line">    <span class="hl-keyword">with</span> torch.no_grad():</span>
+<span class="line">        <span class="hl-keyword">for</span> data, target <span class="hl-keyword">in</span> loader:</span>
+<span class="line">            output = model(data, masks)</span>
+<span class="line">            pred = output.argmax(dim=<span class="hl-number">1</span>)</span>
+<span class="line">            correct += (pred == target).<span class="hl-built_in">sum</span>().item()</span>
+<span class="line">            total += target.size(<span class="hl-number">0</span>)</span>
+<span class="line">    <span class="hl-keyword">return</span> correct / total</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">prune_by_magnitude</span>(<span class="hl-params">model, masks, prune_rate</span>):</span>
+<span class="line">    new_masks = []</span>
+<span class="line">    <span class="hl-keyword">for</span> param, mask <span class="hl-keyword">in</span> <span class="hl-built_in">zip</span>(model.parameters(), masks):</span>
+<span class="line">        alive = param.data.<span class="hl-built_in">abs</span>()[mask == <span class="hl-number">1</span>]</span>
+<span class="line">        threshold = torch.quantile(alive, prune_rate)</span>
+<span class="line">        new_mask = ((param.data.<span class="hl-built_in">abs</span>() &gt;= threshold) * mask).<span class="hl-built_in">float</span>()</span>
+<span class="line">        new_masks.append(new_mask)</span>
+<span class="line">    <span class="hl-keyword">return</span> new_masks</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">lottery_ticket_experiment</span>(<span class="hl-params">prune_rate=<span class="hl-number">0.2</span>, rounds=<span class="hl-number">5</span></span>):</span>
+<span class="line">    train_loader = torch.utils.data.DataLoader(</span>
+<span class="line">        datasets.MNIST(<span class="hl-string">&#x27;.&#x27;</span>, train=<span class="hl-literal">True</span>, download=<span class="hl-literal">True</span>,</span>
+<span class="line">                       transform=transforms.ToTensor()),</span>
+<span class="line">        batch_size=<span class="hl-number">128</span>, shuffle=<span class="hl-literal">True</span>)</span>
+<span class="line">    test_loader = torch.utils.data.DataLoader(</span>
+<span class="line">        datasets.MNIST(<span class="hl-string">&#x27;.&#x27;</span>, train=<span class="hl-literal">False</span>,</span>
+<span class="line">                       transform=transforms.ToTensor()),</span>
+<span class="line">        batch_size=<span class="hl-number">512</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Initialize model and save original weights</span></span>
+<span class="line">    model = SimpleNet()</span>
+<span class="line">    initial_state = deepcopy(model.state_dict())</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Initialize masks (all ones = no pruning)</span></span>
+<span class="line">    masks = [torch.ones_like(p) <span class="hl-keyword">for</span> p <span class="hl-keyword">in</span> model.parameters()]</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">for</span> r <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(rounds):</span>
+<span class="line">        <span class="hl-comment"># Reset to original initialization with current mask</span></span>
+<span class="line">        model.load_state_dict(initial_state)</span>
+<span class="line">        <span class="hl-keyword">for</span> param, mask <span class="hl-keyword">in</span> <span class="hl-built_in">zip</span>(model.parameters(), masks):</span>
+<span class="line">            param.data *= mask</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Train</span></span>
+<span class="line">        train(model, train_loader, masks)</span>
+<span class="line">        accuracy = evaluate(model, test_loader, masks)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Compute sparsity</span></span>
+<span class="line">        total = <span class="hl-built_in">sum</span>(m.numel() <span class="hl-keyword">for</span> m <span class="hl-keyword">in</span> masks)</span>
+<span class="line">        alive = <span class="hl-built_in">sum</span>(m.<span class="hl-built_in">sum</span>().item() <span class="hl-keyword">for</span> m <span class="hl-keyword">in</span> masks)</span>
+<span class="line">        sparsity = <span class="hl-number">1</span> - alive / total</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;Round <span class="hl-subst">{r}</span>: sparsity=<span class="hl-subst">{sparsity:<span class="hl-number">.1</span>%}</span>, acc=<span class="hl-subst">{accuracy:<span class="hl-number">.4</span>f}</span>&quot;</span>)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Prune</span></span>
+<span class="line">        masks = prune_by_magnitude(model, masks, prune_rate)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> masks, initial_state</span>
+<span class="line"></span>
+<span class="line">lottery_ticket_experiment()</span></code></pre>
+
+</figure>
+<hr>
+</section>
+<section id="Late-Rewinding">
+
+    <h3>
+    <a href="#Late-Rewinding"><span>Late Rewinding</span> </a>
+    </h3>
+<p><span>In follow-up work https://arxiv.org/abs/1903.01611, Frankle et al. found </span>
+<span>that for deeper networks (ResNets, VGGs), resetting to the exact </span>
+<span>initialization $\theta_0$ no longer works reliably. Instead, they </span>
+<span>propose </span><strong><strong><span>late rewinding</span></strong></strong><span>: resetting to weights at iteration $k$ </span>
+<span>early in training, rather than iteration 0:</span></p>
+<p><span>$$\theta_{\text{rewind}} = \theta_k \quad \text{where } k \ll T$$</span></p>
+<p><span>Typically $k$ corresponds to 1-5% of total training. This small </span>
+<span>amount of initial training moves the weights into a better region </span>
+<span>of the loss landscape, after which the mask becomes effective. </span>
+<span>This variant is sometimes called the </span><strong><strong><span>Stabilized Lottery Ticket </span>
+<span>Hypothesis</span></strong></strong><span> and has been shown to scale to ImageNet-level tasks.</span></p>
+<hr>
+</section>
+<section id="Connections-to-Other-Sparsity-Methods">
+
+    <h3>
+    <a href="#Connections-to-Other-Sparsity-Methods"><span>Connections to Other Sparsity Methods</span> </a>
+    </h3>
+<p><span>The Lottery Ticket Hypothesis connects deeply to other sparsity research:</span></p>
+<ul>
+<li>
+<p><strong><strong><span>Mixture of Experts (MoE):</span></strong></strong><span> MoE achieves conditional sparsity at </span>
+<span>inference time by routing tokens to a subset of experts. The lottery ticket </span>
+<span>perspective suggests that MoE might work because each expert is, in a sense, </span>
+<span>a winning ticket for its input distribution. The routing network learns to </span>
+<span>match inputs to their best subnetwork.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Sparse Autoencoders (SAE):</span></strong></strong><span> SAEs enforce sparsity in activations, </span>
+<span>meaning few neurons fire for any given input. Lottery tickets enforce </span>
+<span>sparsity in weights, meaning few connections exist at all. Both converge </span>
+<span>on the idea that neural networks are vastly over-parameterized and that </span>
+<span>most computation is redundant.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Quantization:</span></strong></strong><span> Quantization reduces the bits per weight, while </span>
+<span>pruning reduces the number of weights. They are complementary: a </span>
+<span>winning ticket can be further quantized. Recent work on SparseGPT </span>
+<span>combines unstructured pruning with quantization to achieve 60% </span>
+<span>sparsity + 4-bit weights with minimal accuracy loss on LLMs.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Neural Collapse:</span></strong></strong><span> At the end of training, features collapse to </span>
+<span>class means forming a simplex ETF. The lottery ticket hypothesis </span>
+<span>suggests that only a subset of the network is responsible for </span>
+<span>learning these collapsed representations, raising the question: </span>
+<span>do winning tickets exhibit neural collapse faster?</span></p>
+</li>
+</ul>
+</section>
+<section id="Open-Questions">
+
+    <h3>
+    <a href="#Open-Questions"><span>Open Questions</span> </a>
+    </h3>
+<p><span>Several important questions remain:</span></p>
+<ol>
+<li>
+<p><strong><strong><span>Is there a theory of winning tickets?</span></strong></strong><span> We know they exist </span>
+<span>empirically, but we lack a theory predicting which initializations </span>
+<span>will contain good tickets.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Can we find tickets without training?</span></strong></strong><span> Methods like SNIP </span>
+<span>(Single-shot Network Pruning) and GraSP attempt to identify </span>
+<span>sparse masks at initialization, before any training occurs.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Do LLMs have lottery tickets?</span></strong></strong><span> Recent work suggests yes, </span>
+<span>and that different tasks may activate different subnetworks </span>
+<span>within a large model, echoing the MoE philosophy.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Strong vs. Weak tickets:</span></strong></strong><span> Some tickets not only match but </span>
+<span>exceed the dense network</span>&rsquo;<span>s performance. Understanding when and </span>
+<span>why this happens remains open.</span></p>
+</li>
+</ol>
+</section>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">From Entropy to Epiplexity</title>
+<link href="https://mbottoni.github.io/2026/01/25/epiplexity.html" rel="alternate" type="text/html" title="From Entropy to Epiplexity" />
+<published>2026-01-25T00:00:00+00:00</published>
+<updated>2026-01-25T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2026/01/25/epiplexity</id>
+<author><name>Maruan Bakri Ottoni</name></author>
+<summary type="html"><![CDATA[In this paper https://arxiv.org/abs/2601.03220, Finzi et al. argue that classical information theory (Shannon entropy and Kolmogorov complexity) is insufficient for understanding modern 
+AI because it assumes an observer with unlimited computational power. Under classical theory, deterministic transformations cannot create new 
+information, yet empirically, processes like self-play (AlphaZero) and synthetic data generation clearly improve model capabilities.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2026/01/25/epiplexity.html"><![CDATA[
+    <h1>
+    <a href="#From-Entropy-to-Epiplexity"><span>From Entropy to Epiplexity</span> <time datetime="2026-01-25">Jan 25, 2026</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/foundations/coin_flip.jpg">
+</figure>
+<p><span>In this paper https://arxiv.org/abs/2601.03220, Finzi et al. argue that classical information theory (Shannon entropy and Kolmogorov complexity) is insufficient for understanding modern </span>
+<span>AI because it assumes an observer with unlimited computational power. Under classical theory, deterministic transformations cannot create new </span>
+<span>information, yet empirically, processes like self-play (AlphaZero) and synthetic data generation clearly improve model capabilities.</span></p>
+<p><span>To resolve this interesting tension, the authors introduce </span><strong><strong><span>Epiplexity</span></strong></strong><span> (epistemic complexity), a measure of the structural information a </span>
+<strong><span>computationally bounded</span></strong><span> observer can extract from data.</span></p>
+<hr>
+<section id="Theoretical-Framework">
+
+    <h3>
+    <a href="#Theoretical-Framework"><span>Theoretical Framework</span> </a>
+    </h3>
+<p><span>The authors propose decomposing the total information of a</span>
+<span>dataset into two distinct components relative to a time-bounded observer:</span></p>
+<ul>
+<li>
+<p><strong><strong><span>Time-Bounded Entropy ($H_T(X)$):</span></strong></strong><span> The random, unpredictable content. For a computationally limited observer, even </span>
+<span>deterministic encryption (like a CSPRNG) appears to have maximal entropy because the pattern cannot be cracked within the time limit.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Epiplexity ($K_T(X)$):</span></strong></strong><span> The structural, learnable content. This is the length of the program a model learns to describe the data</span>&rsquo;<span>s patterns.</span></p>
+</li>
+</ul>
+<p><span>Formally, for a random variable $X$ and a time bound $T$, the authors define these via the Minimum Description Length (MDL) principle:</span></p>
+<p><span>$$-\log P(X) \approx K_T(X) + H_T(X)$$</span></p>
+<p><span>Where:</span></p>
+<ul>
+<li>
+<span>$K_T(X)$ is the Epiplexity (program length).</span>
+</li>
+<li>
+<span>$H_T(X)$ is the Time-Bounded Entropy (expected loss).</span>
+</li>
+</ul>
+<hr>
+</section>
+<section id="Paradoxes-of-Information">
+
+    <h3>
+    <a href="#Paradoxes-of-Information"><span>Paradoxes of Information</span> </a>
+    </h3>
+<p><span>The paper uses Epiplexity to resolve three apparent contradictions between information theory and machine learning practice:</span></p>
+<section id="Paradox-1-Creation-of-Information-via-Computation">
+
+    <h4>
+    <a href="#Paradox-1-Creation-of-Information-via-Computation"><span>Paradox 1: Creation of Information via Computation</span> </a>
+    </h4>
+<ul>
+<li>
+<p><strong><strong><span>Classical View:</span></strong></strong><span> Deterministic processing cannot increase information (Data Processing Inequality).</span></p>
+</li>
+<li>
+<p><strong><strong><span>Epiplexity View:</span></strong></strong><span> Computation </span><strong><span>can</span></strong><span> create information. By applying a deterministic rule (like Cellular Automata Rule 54), one can generate data with high Epiplexity. While the </span>&ldquo;<span>seed</span>&rdquo;<span> is simple, the resulting structure requires a complex program for a bounded observer to predict.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Key Finding:</span></strong></strong><span> Synthetic data adds value when the generating function is easy to run but hard to invert/predict, forcing the model to learn complex internal structures.</span></p>
+</li>
+</ul>
+</section>
+<section id="Paradox-2-The-Importance-of-Data-Ordering">
+
+    <h4>
+    <a href="#Paradox-2-The-Importance-of-Data-Ordering"><span>Paradox 2: The Importance of Data Ordering</span> </a>
+    </h4>
+<ul>
+<li>
+<p><strong><strong><span>Classical View:</span></strong></strong><span> Information is symmetric; $I(X; Y) = I(Y; X)$.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Epiplexity View:</span></strong></strong><span> Factorization order matters. Predicting </span>&ldquo;<span>Board $\to$ Moves</span>&rdquo;<span> in chess is computationally harder than </span>&ldquo;<span>Moves $\to$ Board.</span>&rdquo;<span> The harder ordering forces the model to learn deeper structural rules (higher Epiplexity), whereas the easier ordering relies on surface statistics.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Result:</span></strong></strong><span> Models trained on the high-epiplexity ordering (Reverse) showed significantly better Out-of-Distribution (OOD) generalization.</span></p>
+</li>
+</ul>
+</section>
+<section id="Paradox-3-Likelihood-Modeling-vs-Distribution-Matching">
+
+    <h4>
+    <a href="#Paradox-3-Likelihood-Modeling-vs-Distribution-Matching"><span>Paradox 3: Likelihood Modeling vs. Distribution Matching</span> </a>
+    </h4>
+<ul>
+<li>
+<p><strong><strong><span>Classical View:</span></strong></strong><span> A model only learns to match the data-generating process.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Epiplexity View:</span></strong></strong><span> Computationally bounded models often learn </span><strong><span>more</span></strong><span> structure than exists in the generator. This is called </span><strong><strong><span>Induction</span></strong></strong><span> or </span><strong><strong><span>Emergence</span></strong></strong><span>.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Example:</span></strong></strong><span> In </span>&ldquo;<span>Game of Life</span>&rdquo;<span> simulations, a bounded model cannot simply simulate the pixel-level physics (which is computationally expensive). Instead, it learns emergent concepts like </span>&ldquo;<span>gliders</span>&rdquo;<span> and </span>&ldquo;<span>collision rules</span>&rdquo;<span> to shortcut the simulation. The learned model becomes more complex (higher Epiplexity) than the simple rules that generated the data.</span></p>
+</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="Measuring-Epiplexity">
+
+    <h3>
+    <a href="#Measuring-Epiplexity"><span>Measuring Epiplexity</span> </a>
+    </h3>
+<p><span>Since finding the optimal program $K_T$ is intractable, the authors propose two practical estimation methods using neural networks:</span></p>
+<ol>
+<li>
+<p><strong><strong><span>Prequential Coding:</span></strong></strong><span> Estimates Epiplexity as the area under the loss curve minus the final loss. If a model</span>&rsquo;<span>s loss drops significantly and accurately over time, it has </span>&ldquo;<span>absorbed</span>&rdquo;<span> a large amount of structural information.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Requential Coding:</span></strong></strong><span> A more rigorous approach that explicitly codes the model weights by tracking the cumulative KL divergence between a </span>&ldquo;<span>teacher</span>&rdquo;<span> (generating synthetic data) and a </span>&ldquo;<span>student</span>&rdquo;<span> model. This separates the cost of encoding the model from the cost of the data.</span></p>
+</li>
+</ol>
+<hr>
+</section>
+<section id="Implications-for-Generalization-and-Pre-training">
+
+    <h3>
+    <a href="#Implications-for-Generalization-and-Pre-training"><span>Implications for Generalization and Pre-training</span> </a>
+    </h3>
+<p><span>The paper argues that </span><strong><strong><span>OOD generalization is driven by Epiplexity, not just low loss.</span></strong></strong><span> A model generalizes well when it reuses learned structural sub-programs (circuits) for new tasks.</span></p>
+<ul>
+<li>
+<p><strong><strong><span>Modality Differences:</span></strong></strong><span> Language data was found to have significantly higher Epiplexity than image data (CIFAR-5M), explaining why LLMs generalize better across tasks than vision models.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Data Selection:</span></strong></strong><span> Strategies that prioritize high-epiplexity data (data where the loss drops rapidly, indicating learnable structure) outperform random sampling on downstream tasks.</span></p>
+</li>
+</ul>
+</section>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Mixture of Experts</title>
+<link href="https://mbottoni.github.io/2025/08/04/moe.html" rel="alternate" type="text/html" title="Mixture of Experts" />
+<published>2025-08-04T00:00:00+00:00</published>
+<updated>2025-08-04T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2025/08/04/moe</id>
+<author><name>Maruan Bakri Ottoni</name></author>
+<summary type="html"><![CDATA[In the pursuit of scaling neural networks to unprecedented parameter counts while 
+maintaining computational tractability, the paradigm of conditional computation 
+has emerged as a cornerstone of modern deep learning architectures. A prominent and 
+highly successful incarnation of this principle is the Mixture of Experts (MoE) layer. At its core, an MoE model eschews 
+the monolithic, dense activation of traditional networks, wherein every parameter is engaged 
+for every input. Instead, it employs a collection of specialized 
+subnetworks, termed experts, and dynamically selects a sparse combination of these 
+experts to process each input token. This approach allows for a dramatic increase in 
+model capacity without a commensurate rise in computational cost (FLOPs), as only 
+a fraction of the network's parameters are utilized for any given forward pass.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2025/08/04/moe.html"><![CDATA[
+    <h1>
+    <a href="#Mixture-of-Experts"><span>Mixture of Experts</span> <time datetime="2025-08-04">Aug 4, 2025</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/frontier/moe.png">
+</figure>
+<p><span>In the pursuit of scaling neural networks to unprecedented parameter counts while </span>
+<span>maintaining computational tractability, the paradigm of conditional computation </span>
+<span>has emerged as a cornerstone of modern deep learning architectures. A prominent and </span>
+<span>highly successful incarnation of this principle is the Mixture of Experts (MoE) layer. At its core, an MoE model eschews </span>
+<span>the monolithic, dense activation of traditional networks, wherein every parameter is engaged </span>
+<span>for every input. Instead, it employs a collection of specialized </span>
+<span>subnetworks, termed </span>&ldquo;<span>experts,</span>&rdquo;<span> and dynamically selects a sparse combination of these </span>
+<span>experts to process each input token. This approach allows for a dramatic increase in </span>
+<span>model capacity without a commensurate rise in computational cost (FLOPs), as only </span>
+<span>a fraction of the network</span>&rsquo;<span>s parameters are utilized for any given forward pass.</span></p>
+<p><span>The architecture is orchestrated by two primary components: a set of N expert </span>
+<span>networks, E</span><em><span>1, E</span></em><span>2, </span>&hellip;<span>, E_N, and a trainable gating network, G. The expert </span>
+<span>networks are typically homogenous in their architecture (e.g., small feed-forward networks) but learn </span>
+<span>distinct functions over the course of training. The gating network, often a simple linear layer </span>
+<span>followed by a softmax function, serves as a dynamic router. For a given input vector x, the gating network produces a </span>
+<span>normalized distribution of weights over the N experts, effectively learning to predict which experts </span>
+<span>are most suitable for processing that specific input.</span></p>
+<p><span>The final output of the MoE layer, $y$, is not the output of a single chosen expert but </span>
+<span>rather a weighted sum of the outputs from all experts. The weights for this </span>
+<span>summation are precisely the probabilities generated by the gating network. The output is thus computed as:</span></p>
+<p><span>$$y = \sum_{i=1}^{N} g_i(x) \, E_i(x)$$</span></p>
+<p><span>where $E_i(x)$ is the output of the i-th expert for the input $x$, and $g(x)$ is the vector of gating weights produced by the gating </span>
+<span>network G. The weights are typically computed via a softmax over the logits.</span></p>
+<p><span>In practice, to enforce sparsity and reduce computation, a variant known as </span>
+<span>the Sparse Mixture of Experts is commonly deployed. In this formulation, only the </span>
+<span>experts with the highest gating weights—the </span>&ldquo;<span>top-k</span>&rdquo;<span> experts, where $k$ is a small </span>
+<span>integer (e.g., 1 or 2)—are activated. The gating weights are re-normalized over </span>
+<span>this small subset of selected experts. This ensures that the computational cost is independent </span>
+<span>of the total number of experts, N, and dependent only on k. This sparse, conditional activation is the key to the MoE</span>&rsquo;<span>s efficiency.</span></p>
+<section id="Pseudocode-Top-k-Mixture-of-Experts-Forward-Pass">
+
+    <h3>
+    <a href="#Pseudocode-Top-k-Mixture-of-Experts-Forward-Pass"><span>Pseudocode: Top-k Mixture of Experts Forward Pass</span> </a>
+    </h3>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-comment"># Let x be the input token representation</span></span>
+<span class="line"><span class="hl-comment"># Let E be the set of N expert networks {E_1, ..., E_N}</span></span>
+<span class="line"><span class="hl-comment"># Let G be the gating network</span></span>
+<span class="line"><span class="hl-comment"># Let k be the number of experts to select</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 1. Compute gating logits for the input token x.</span></span>
+<span class="line"><span class="hl-comment"># W_g is the weight matrix of the gating network.</span></span>
+<span class="line">logits = G(x)  <span class="hl-comment"># Shape: [N]</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 2. Select the top k experts.</span></span>
+<span class="line"><span class="hl-comment"># Get the k largest logit values and their corresponding indices.</span></span>
+<span class="line">top_k_logits, top_k_indices = TopK(logits, k)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 3. Compute the normalized routing weights for the selected experts.</span></span>
+<span class="line"><span class="hl-comment"># Apply softmax only to the selected logits to get sparse weights.</span></span>
+<span class="line">routing_weights = Softmax(top_k_logits) <span class="hl-comment"># Shape: [k]</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 4. Initialize the final output vector.</span></span>
+<span class="line"><span class="hl-comment"># The output has the same dimension as the expert outputs.</span></span>
+<span class="line">final_output = <span class="hl-number">0</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 5. Compute the weighted sum of the selected expert outputs.</span></span>
+<span class="line"><span class="hl-comment"># Iterate through the chosen experts and their corresponding weights.</span></span>
+<span class="line"><span class="hl-keyword">for</span> i <span class="hl-keyword">in</span> <span class="hl-number">1.</span>.k:</span>
+<span class="line">    <span class="hl-comment"># Get the index of the i-th expert in the top-k set.</span></span>
+<span class="line">    expert_index = top_k_indices[i]</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Get the routing weight for this expert.</span></span>
+<span class="line">    weight = routing_weights[i]</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Retrieve the corresponding expert network.</span></span>
+<span class="line">    selected_expert = E[expert_index]</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Process the input token with the selected expert.</span></span>
+<span class="line">    expert_output = selected_expert(x)</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Accumulate the weighted expert output.</span></span>
+<span class="line">    final_output += weight * expert_output</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 6. Return the combined output.</span></span>
+<span class="line"><span class="hl-comment"># This output is then passed to the next layer in the network.</span></span>
+<span class="line"><span class="hl-keyword">return</span> final_output</span></code></pre>
+
+</figure>
+</section>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">What is Neural Collapse? A Simpler Look</title>
+<link href="https://mbottoni.github.io/2025/07/08/neural-collapse.html" rel="alternate" type="text/html" title="What is Neural Collapse? A Simpler Look" />
+<published>2025-07-08T00:00:00+00:00</published>
+<updated>2025-07-08T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2025/07/08/neural-collapse</id>
+<author><name>Maruan Bakri Ottoni</name></author>
+<summary type="html"><![CDATA[Imagine you're training a very powerful neural network to recognize different classes of images, like 
+cats, dogs, and cars. In the beginning, the network struggles, but eventually, it gets 
+a perfect score on your training data.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2025/07/08/neural-collapse.html"><![CDATA[
+    <h1>
+    <a href="#What-is-Neural-Collapse-A-Simpler-Look"><span>What is Neural Collapse? A Simpler Look</span> <time datetime="2025-07-08">Jul 8, 2025</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/frontier/neural_collapse.png">
+</figure>
+<p><span>Imagine you</span>&rsquo;<span>re training a very powerful neural network to recognize different classes of images, like </span>
+<span>cats, dogs, and cars. In the beginning, the network struggles, but eventually, it gets </span>
+<span>a perfect score on your training data.</span></p>
+<p><span>You might think that if you keep training it on the same data, it would </span>
+<span>either stop learning or get confused and </span>&ldquo;<span>overthink</span>&rdquo;<span> the problem. But </span>
+<span>something remarkable and unexpected happens instead: the network</span>&rsquo;<span>s internal </span>
+<span>organization becomes incredibly simple and tidy. This process of self-organization </span>
+<span>into a perfect, simple structure is called Neural Collapse.</span></p>
+<p><span>It</span>&rsquo;<span>s driven by the network</span>&rsquo;<span>s hidden preference to find the </span>
+<span>most efficient and straightforward solution possible, even after it has already solved the main problem.</span>
+<span>Neural Collapse can be broken down into four distinct things that happen at the same time during the final stages of training.</span></p>
+<ol>
+<li>
+<span>All Examples of a Class Become One (Variability Collapse)</span>
+</li>
+</ol>
+<p><span>The network learns to ignore the unique details of individual images within the same class.</span></p>
+<p><span>Example: Instead of creating slightly different internal </span>&ldquo;<span>codes</span>&rdquo;<span> for a fluffy Persian cat, a sleek Siamese </span>
+<span>cat, and a tabby cat, the network starts producing the exact same internal code for all of them. It effectively creates a single, perfect, </span>&ldquo;<span>ultimate cat</span>&rdquo;<span> representation and throws away all the variation.</span></p>
+<ol start="2">
+<li>
+<span>Class Codes Spread Out Perfectly (The Symmetrical Shape)</span>
+</li>
+</ol>
+<p><span>Once the network has a single </span>&ldquo;<span>code</span>&rdquo;<span> for each class (like </span>&ldquo;<span>ultimate cat,</span>&rdquo;<span> </span>&ldquo;<span>ultimate dog,</span>&rdquo;<span> and </span>&ldquo;<span>ultimate car</span>&rdquo;<span>), it arranges these codes in the most spread-out way possible.</span></p>
+<p><span>Example: If you have three classes, their codes will form the points of a </span>
+<span>perfect equilateral triangle in the network</span>&rsquo;<span>s internal space. If you have four classes, they form a tetrahedron. This is the most symmetrical and separated arrangement possible, making the classes maximally distinct from one another. This perfect geometric structure is called a Simplex ETF.</span></p>
+<ol start="3">
+<li>
+<span>The Decision-Maker Aligns Perfectly (Self-Duality)</span>
+</li>
+</ol>
+<p><span>The final part of the network that makes the decision (the </span>&ldquo;<span>classifier</span>&rdquo;<span>) also simplifies. The classifier</span>&rsquo;<span>s internal </span>
+<span>template for </span>&ldquo;<span>cat</span>&rdquo;<span> perfectly lines up with the network</span>&rsquo;<span>s </span>&ldquo;<span>ultimate cat</span>&rdquo;<span> code. The decision-maker becomes a perfect mirror of the data</span>&rsquo;<span>s new, simple structure.</span></p>
+<ol start="4">
+<li>
+<span>The Whole System Becomes a Simple </span>&ldquo;<span>Nearest-Neighbor</span>&rdquo;<span> Game</span>
+</li>
+</ol>
+<p><span>Because of the three changes above, the network</span>&rsquo;<span>s complex decision-making process becomes incredibly simple. To classify a new image:</span></p>
+<p><span>Example: The network creates a code for the new image. Then, it just checks which of its </span>&ldquo;<span>ultimate</span>&rdquo;<span> class </span>
+<span>codes (the points of the triangle or tetrahedron) is the closest. If the </span>&ldquo;<span>ultimate cat</span>&rdquo;<span> code is the nearest neighbor, it classifies the image as a cat. The sophisticated deep network ends up behaving like a much simpler classifier.</span></p>
+<p><span>To help people see this, researchers created animations showing the process. Imagine little blue balls (individual images) clustering together into a single </span>
+<span>point for each class. These points (class means) then move to form a perfect symmetrical shape (the green target points), and the </span>
+<span>decision-maker (red lines) aligns with them perfectly. This drive towards simplicity has important consequences.</span></p>
+<ul>
+<li>
+<p><span>The Good: The super-organized structure makes the network very good at its main job and very good at identifying things </span>
+<span>that are completely different from what it was trained on. The neat, tight clusters make it easy to spot an outsider.</span></p>
+</li>
+<li>
+<p><span>The Trade-Off (The Bad): This simplicity comes at a cost. By erasing all the subtle details within a </span>
+<span>class, the network can hurt its ability to learn new, related things later.</span></p>
+</li>
+</ul>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Swarm Structure Simulation</title>
+<link href="https://mbottoni.github.io/2025/06/06/swarm.html" rel="alternate" type="text/html" title="Swarm Structure Simulation" />
+<published>2025-06-06T00:00:00+00:00</published>
+<updated>2025-06-06T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2025/06/06/swarm</id>
+<author><name>Maruan Bakri Ottoni</name></author>
+<summary type="html"><![CDATA[After reading the book The Rules of the Flock I got inspired to test some 
+ideas of the book. Basically a swarm behavior is defined when individual agents, following 
+a simple set of local rules without a central leader, produce complex and 
+intelligent collective patterns.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2025/06/06/swarm.html"><![CDATA[
+    <h1>
+    <a href="#Swarm-Structure-Simulation"><span>Swarm Structure Simulation</span> <time datetime="2025-06-06">Jun 6, 2025</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/graph_rl/swarm.jpg">
+</figure>
+<p><span>After reading the book The Rules of the Flock I got inspired to test some </span>
+<span>ideas of the book. Basically a swarm behavior is defined when individual agents, following </span>
+<span>a simple set of local rules without a central leader, produce complex and </span>
+<span>intelligent collective patterns.</span></p>
+<p><span>To see these rules in action, I developed the interactive Python simulation </span>
+<span>detailed below. Using Matplotlib, the simulation visualizes a </span>
+<span>flock of </span>&lsquo;<span>boids</span>&rsquo;<span>. You can use the sliders to change the weight of </span>
+<span>each rule in real-time—crank up </span>&lsquo;<span>Cohesion</span>&rsquo;<span> to see the flock tighten, or increase </span>
+&lsquo;<span>Separation</span>&rsquo;<span> to watch them spread out. You can also interact directly </span>
+<span>with the swarm using your mouse, acting as a predator to </span>
+<span>scatter the flock or a point of interest to draw them in. It</span>&rsquo;<span>s a fascinating look </span>
+<span>at how complex, life-like motion can emerge from a few simple, local instructions.</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"></span>
+<span class="line"><span class="hl-keyword">import</span> numpy <span class="hl-keyword">as</span> np</span>
+<span class="line"><span class="hl-keyword">import</span> matplotlib.pyplot <span class="hl-keyword">as</span> plt</span>
+<span class="line"><span class="hl-keyword">import</span> matplotlib.animation <span class="hl-keyword">as</span> animation</span>
+<span class="line"><span class="hl-keyword">from</span> matplotlib.widgets <span class="hl-keyword">import</span> Slider</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># --- Simulation Configuration ---</span></span>
+<span class="line">N_BOIDS = <span class="hl-number">150</span></span>
+<span class="line">WIDTH, HEIGHT = <span class="hl-number">1200</span>, <span class="hl-number">800</span></span>
+<span class="line">PERCEPTION_RADIUS = <span class="hl-number">70</span></span>
+<span class="line">MAX_SPEED = <span class="hl-number">5.0</span></span>
+<span class="line">MIN_SPEED = <span class="hl-number">2.0</span></span>
+<span class="line">MOUSE_INFLUENCE_RADIUS = <span class="hl-number">150.0</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># --- Weights for the rules ---</span></span>
+<span class="line">INITIAL_SEPARATION_WEIGHT = <span class="hl-number">1.5</span></span>
+<span class="line">INITIAL_ALIGNMENT_WEIGHT = <span class="hl-number">1.0</span></span>
+<span class="line">INITIAL_COHESION_WEIGHT = <span class="hl-number">1.0</span></span>
+<span class="line">MOUSE_ATTRACT_WEIGHT = <span class="hl-number">2.5</span></span>
+<span class="line">MOUSE_REPEL_WEIGHT = <span class="hl-number">3.0</span></span>
+<span class="line">INITIAL_COND = <span class="hl-string">&#x27;random&#x27;</span> <span class="hl-comment"># circle, random, grid</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">class</span> <span class="hl-title class_">Boids</span>:</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    A class to manage the state and behavior of a flock of boids.</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">__init__</span>(<span class="hl-params">self, count, width, height, initial_condition=<span class="hl-string">&#x27;random&#x27;</span></span>):</span>
+<span class="line">        self.width = width</span>
+<span class="line">        self.height = height</span>
+<span class="line">        self.count = count</span>
+<span class="line"></span>
+<span class="line">        self.positions, self.velocities = self._initialize_boids(initial_condition)</span>
+<span class="line"></span>
+<span class="line">        self.weights = {</span>
+<span class="line">            <span class="hl-string">&#x27;separation&#x27;</span>: INITIAL_SEPARATION_WEIGHT,</span>
+<span class="line">            <span class="hl-string">&#x27;alignment&#x27;</span>: INITIAL_ALIGNMENT_WEIGHT,</span>
+<span class="line">            <span class="hl-string">&#x27;cohesion&#x27;</span>: INITIAL_COHESION_WEIGHT</span>
+<span class="line">        }</span>
+<span class="line"></span>
+<span class="line">        self.mouse_pos = <span class="hl-literal">None</span></span>
+<span class="line">        self.mouse_mode = <span class="hl-literal">None</span> <span class="hl-comment"># &#x27;attract&#x27; or &#x27;repel&#x27;</span></span>
+<span class="line"></span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">_initialize_boids</span>(<span class="hl-params">self, condition</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;Sets the initial positions and velocities of the boids.&quot;&quot;&quot;</span></span>
+<span class="line">        <span class="hl-keyword">if</span> condition == <span class="hl-string">&#x27;circle&#x27;</span>:</span>
+<span class="line">            center = np.array([self.width / <span class="hl-number">2</span>, self.height / <span class="hl-number">2</span>])</span>
+<span class="line">            radius = <span class="hl-built_in">min</span>(self.width, self.height) / <span class="hl-number">4</span></span>
+<span class="line">            angles = np.linspace(<span class="hl-number">0</span>, <span class="hl-number">2</span> * np.pi, self.count)</span>
+<span class="line">            positions = center + radius * np.c_[np.cos(angles), np.sin(angles)]</span>
+<span class="line">            velocities = (np.c_[-np.sin(angles), np.cos(angles)]) * MIN_SPEED</span>
+<span class="line">        <span class="hl-keyword">elif</span> condition == <span class="hl-string">&#x27;grid&#x27;</span>:</span>
+<span class="line">            grid_size = <span class="hl-built_in">int</span>(np.ceil(np.sqrt(self.count)))</span>
+<span class="line">            x = np.linspace(self.width/<span class="hl-number">4</span>, <span class="hl-number">3</span>*self.width/<span class="hl-number">4</span>, grid_size)</span>
+<span class="line">            y = np.linspace(self.height/<span class="hl-number">4</span>, <span class="hl-number">3</span>*self.height/<span class="hl-number">4</span>, grid_size)</span>
+<span class="line">            xx, yy = np.meshgrid(x, y)</span>
+<span class="line">            positions = np.c_[xx.ravel(), yy.ravel()][:self.count]</span>
+<span class="line">            velocities = np.full((self.count, <span class="hl-number">2</span>), [<span class="hl-number">0</span>, -MIN_SPEED])</span>
+<span class="line">        <span class="hl-keyword">else</span>: <span class="hl-comment"># &#x27;random&#x27;</span></span>
+<span class="line">            positions = np.random.rand(self.count, <span class="hl-number">2</span>) * np.array([self.width, self.height])</span>
+<span class="line">            velocities = (np.random.rand(self.count, <span class="hl-number">2</span>) - <span class="hl-number">0.5</span>) * MAX_SPEED</span>
+<span class="line"></span>
+<span class="line">        <span class="hl-keyword">return</span> positions, velocities</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">_apply_rules</span>(<span class="hl-params">self</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;Applies boid rules to calculate acceleration.&quot;&quot;&quot;</span></span>
+<span class="line">        deltas = self.positions[:, np.newaxis, :] - self.positions[np.newaxis, :, :]</span>
+<span class="line">        distances = np.sqrt(np.<span class="hl-built_in">sum</span>(deltas**<span class="hl-number">2</span>, axis=<span class="hl-number">2</span>))</span>
+<span class="line"></span>
+<span class="line">        separation_vec = np.zeros_like(self.positions)</span>
+<span class="line">        alignment_vec = np.zeros_like(self.positions)</span>
+<span class="line">        cohesion_vec = np.zeros_like(self.positions)</span>
+<span class="line"></span>
+<span class="line">        neighbor_mask = (distances &gt; <span class="hl-number">0</span>) &amp; (distances &lt; PERCEPTION_RADIUS)</span>
+<span class="line"></span>
+<span class="line">        <span class="hl-keyword">for</span> i <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(self.count):</span>
+<span class="line">            neighbors = neighbor_mask[i]</span>
+<span class="line">            <span class="hl-keyword">if</span> <span class="hl-keyword">not</span> np.<span class="hl-built_in">any</span>(neighbors):</span>
+<span class="line">                <span class="hl-keyword">continue</span></span>
+<span class="line"></span>
+<span class="line">            close_mask = (distances[i] &gt; <span class="hl-number">0</span>) &amp; (distances[i] &lt; PERCEPTION_RADIUS / <span class="hl-number">2</span>)</span>
+<span class="line">            <span class="hl-keyword">if</span> np.<span class="hl-built_in">any</span>(close_mask):</span>
+<span class="line">                avg_pos_close = np.mean(self.positions[close_mask], axis=<span class="hl-number">0</span>)</span>
+<span class="line">                separation_vec[i] = self.positions[i] - avg_pos_close</span>
+<span class="line"></span>
+<span class="line">            alignment_vec[i] = np.mean(self.velocities[neighbors], axis=<span class="hl-number">0</span>)</span>
+<span class="line"></span>
+<span class="line">            avg_pos_all = np.mean(self.positions[neighbors], axis=<span class="hl-number">0</span>)</span>
+<span class="line">            cohesion_vec[i] = avg_pos_all - self.positions[i]</span>
+<span class="line"></span>
+<span class="line">        <span class="hl-keyword">for</span> vec <span class="hl-keyword">in</span> [separation_vec, alignment_vec, cohesion_vec]:</span>
+<span class="line">            norm = np.sqrt(np.<span class="hl-built_in">sum</span>(vec**<span class="hl-number">2</span>, axis=<span class="hl-number">1</span>))[:, np.newaxis]</span>
+<span class="line">            non_zero_mask = norm.flatten() &gt; <span class="hl-number">0</span></span>
+<span class="line">            <span class="hl-keyword">if</span> np.<span class="hl-built_in">any</span>(non_zero_mask):</span>
+<span class="line">                vec[non_zero_mask] /= norm[non_zero_mask]</span>
+<span class="line"></span>
+<span class="line">        mouse_steer = np.zeros_like(self.positions)</span>
+<span class="line">        <span class="hl-keyword">if</span> self.mouse_pos <span class="hl-keyword">is</span> <span class="hl-keyword">not</span> <span class="hl-literal">None</span>:</span>
+<span class="line">            mouse_delta = self.mouse_pos - self.positions</span>
+<span class="line">            mouse_dist = np.sqrt(np.<span class="hl-built_in">sum</span>(mouse_delta**<span class="hl-number">2</span>, axis=<span class="hl-number">1</span>))</span>
+<span class="line">            influence_mask = mouse_dist &lt; MOUSE_INFLUENCE_RADIUS</span>
+<span class="line"></span>
+<span class="line">            <span class="hl-keyword">if</span> self.mouse_mode == <span class="hl-string">&#x27;attract&#x27;</span>:</span>
+<span class="line">                mouse_steer[influence_mask] = mouse_delta[influence_mask] * MOUSE_ATTRACT_WEIGHT</span>
+<span class="line">            <span class="hl-keyword">elif</span> self.mouse_mode == <span class="hl-string">&#x27;repel&#x27;</span>:</span>
+<span class="line">                repel_force = (MOUSE_INFLUENCE_RADIUS - mouse_dist[influence_mask, np.newaxis]) / MOUSE_INFLUENCE_RADIUS</span>
+<span class="line">                mouse_steer[influence_mask] = -mouse_delta[influence_mask] * MOUSE_REPEL_WEIGHT * repel_force</span>
+<span class="line"></span>
+<span class="line">        acceleration = (separation_vec * self.weights[<span class="hl-string">&#x27;separation&#x27;</span>] +</span>
+<span class="line">                        alignment_vec * self.weights[<span class="hl-string">&#x27;alignment&#x27;</span>] +</span>
+<span class="line">                        cohesion_vec * self.weights[<span class="hl-string">&#x27;cohesion&#x27;</span>] +</span>
+<span class="line">                        mouse_steer)</span>
+<span class="line">        <span class="hl-keyword">return</span> acceleration</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">update</span>(<span class="hl-params">self</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;Updates the position and velocity of each boid.&quot;&quot;&quot;</span></span>
+<span class="line">        acceleration = self._apply_rules()</span>
+<span class="line">        self.velocities += acceleration</span>
+<span class="line"></span>
+<span class="line">        speeds = np.sqrt(np.<span class="hl-built_in">sum</span>(self.velocities**<span class="hl-number">2</span>, axis=<span class="hl-number">1</span>))</span>
+<span class="line">        speed_mask_max = speeds &gt; MAX_SPEED</span>
+<span class="line">        speed_mask_min = speeds &lt; MIN_SPEED</span>
+<span class="line"></span>
+<span class="line">        <span class="hl-keyword">if</span> np.<span class="hl-built_in">any</span>(speed_mask_max):</span>
+<span class="line">             self.velocities[speed_mask_max] *= (MAX_SPEED / speeds[speed_mask_max, np.newaxis])</span>
+<span class="line">        <span class="hl-keyword">if</span> np.<span class="hl-built_in">any</span>(speed_mask_min):</span>
+<span class="line">             self.velocities[speed_mask_min] *= (MIN_SPEED / speeds[speed_mask_min, np.newaxis])</span>
+<span class="line"></span>
+<span class="line">        self.positions += self.velocities</span>
+<span class="line"></span>
+<span class="line">        self.positions[:, <span class="hl-number">0</span>] = np.mod(self.positions[:, <span class="hl-number">0</span>], self.width)</span>
+<span class="line">        self.positions[:, <span class="hl-number">1</span>] = np.mod(self.positions[:, <span class="hl-number">1</span>], self.height)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># --- Visualization and Interactivity ---</span></span>
+<span class="line"></span>
+<span class="line">boids = Boids(N_BOIDS, WIDTH, HEIGHT, initial_condition=INITIAL_COND)</span>
+<span class="line"></span>
+<span class="line">fig, ax = plt.subplots(figsize=(<span class="hl-number">12</span>, <span class="hl-number">9</span>))</span>
+<span class="line"><span class="hl-comment"># Leave space at the bottom for sliders and description text</span></span>
+<span class="line">plt.subplots_adjust(bottom=<span class="hl-number">0.3</span>, left=<span class="hl-number">0.1</span>)</span>
+<span class="line">ax.set_xlim(<span class="hl-number">0</span>, WIDTH)</span>
+<span class="line">ax.set_ylim(<span class="hl-number">0</span>, HEIGHT)</span>
+<span class="line">ax.set_xticks([])</span>
+<span class="line">ax.set_yticks([])</span>
+<span class="line">ax.set_facecolor(<span class="hl-string">&#x27;k&#x27;</span>)</span>
+<span class="line">fig.set_facecolor(<span class="hl-string">&#x27;k&#x27;</span>)</span>
+<span class="line"></span>
+<span class="line">quiver = ax.quiver(boids.positions[:, <span class="hl-number">0</span>], boids.positions[:, <span class="hl-number">1</span>],</span>
+<span class="line">                   boids.velocities[:, <span class="hl-number">0</span>], boids.velocities[:, <span class="hl-number">1</span>],</span>
+<span class="line">                   color=<span class="hl-string">&#x27;cyan&#x27;</span>, headwidth=<span class="hl-number">2</span>, headlength=<span class="hl-number">3</span>)</span>
+<span class="line"></span>
+<span class="line">mode_text = ax.text(<span class="hl-number">10</span>, HEIGHT - <span class="hl-number">20</span>, <span class="hl-string">&quot;Mode: Normal&quot;</span>, color=<span class="hl-string">&#x27;white&#x27;</span>, fontsize=<span class="hl-number">12</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># --- Mouse Click Event Handler ---</span></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">on_click</span>(<span class="hl-params">event</span>):</span>
+<span class="line">    <span class="hl-keyword">if</span> event.inaxes:</span>
+<span class="line">        boids.mouse_pos = np.array([event.xdata, event.ydata])</span>
+<span class="line">        <span class="hl-keyword">if</span> event.button == <span class="hl-number">1</span>:</span>
+<span class="line">            boids.mouse_mode = <span class="hl-string">&#x27;attract&#x27;</span></span>
+<span class="line">            mode_text.set_text(<span class="hl-string">&quot;Mode: Attract (Left-Click)&quot;</span>)</span>
+<span class="line">        <span class="hl-keyword">elif</span> event.button == <span class="hl-number">3</span>:</span>
+<span class="line">            boids.mouse_mode = <span class="hl-string">&#x27;repel&#x27;</span></span>
+<span class="line">            mode_text.set_text(<span class="hl-string">&quot;Mode: Repel (Right-Click)&quot;</span>)</span>
+<span class="line">        <span class="hl-keyword">elif</span> event.button == <span class="hl-number">2</span>:</span>
+<span class="line">            boids.mouse_mode = <span class="hl-literal">None</span></span>
+<span class="line">            boids.mouse_pos = <span class="hl-literal">None</span></span>
+<span class="line">            mode_text.set_text(<span class="hl-string">&quot;Mode: Normal (Middle-Click)&quot;</span>)</span>
+<span class="line">fig.canvas.mpl_connect(<span class="hl-string">&#x27;button_press_event&#x27;</span>, on_click)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># --- Sliders and Description Text ---</span></span>
+<span class="line">ax_sep = plt.axes([<span class="hl-number">0.25</span>, <span class="hl-number">0.18</span>, <span class="hl-number">0.65</span>, <span class="hl-number">0.03</span>])</span>
+<span class="line">ax_ali = plt.axes([<span class="hl-number">0.25</span>, <span class="hl-number">0.13</span>, <span class="hl-number">0.65</span>, <span class="hl-number">0.03</span>])</span>
+<span class="line">ax_coh = plt.axes([<span class="hl-number">0.25</span>, <span class="hl-number">0.08</span>, <span class="hl-number">0.65</span>, <span class="hl-number">0.03</span>])</span>
+<span class="line"></span>
+<span class="line">slider_sep = Slider(ax_sep, <span class="hl-string">&#x27;Separation&#x27;</span>, <span class="hl-number">0.1</span>, <span class="hl-number">5.0</span>, valinit=INITIAL_SEPARATION_WEIGHT, color=<span class="hl-string">&#x27;c&#x27;</span>)</span>
+<span class="line">slider_ali = Slider(ax_ali, <span class="hl-string">&#x27;Alignment&#x27;</span>, <span class="hl-number">0.1</span>, <span class="hl-number">5.0</span>, valinit=INITIAL_ALIGNMENT_WEIGHT, color=<span class="hl-string">&#x27;c&#x27;</span>)</span>
+<span class="line">slider_coh = Slider(ax_coh, <span class="hl-string">&#x27;Cohesion&#x27;</span>, <span class="hl-number">0.1</span>, <span class="hl-number">5.0</span>, valinit=INITIAL_COHESION_WEIGHT, color=<span class="hl-string">&#x27;c&#x27;</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Add the text area for descriptions</span></span>
+<span class="line">description_text = fig.text(</span>
+<span class="line">    <span class="hl-number">0.5</span>, <span class="hl-number">0.02</span>,</span>
+<span class="line">    <span class="hl-string">&quot;Move a slider to see its description.&quot;</span>,</span>
+<span class="line">    color=<span class="hl-string">&#x27;yellow&#x27;</span>, ha=<span class="hl-string">&#x27;center&#x27;</span>, va=<span class="hl-string">&#x27;bottom&#x27;</span>, fontsize=<span class="hl-number">10</span></span>
+<span class="line">)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Descriptions for each slider</span></span>
+<span class="line">descriptions = {</span>
+<span class="line">    <span class="hl-string">&#x27;separation&#x27;</span>: <span class="hl-string">&quot;Separation: Controls how strongly boids steer to avoid crowding neighbors. Higher values prevent collisions.&quot;</span>,</span>
+<span class="line">    <span class="hl-string">&#x27;alignment&#x27;</span>: <span class="hl-string">&quot;Alignment: Controls how strongly boids steer to match the heading of their neighbors. Higher values create more parallel flight.&quot;</span>,</span>
+<span class="line">    <span class="hl-string">&#x27;cohesion&#x27;</span>: <span class="hl-string">&quot;Cohesion: Controls how strongly boids steer towards the center of their neighbors. Higher values create tighter flocks.&quot;</span></span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Functions to update weights AND the description text</span></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">update_separation</span>(<span class="hl-params">val</span>):</span>
+<span class="line">    boids.weights[<span class="hl-string">&#x27;separation&#x27;</span>] = val</span>
+<span class="line">    description_text.set_text(descriptions[<span class="hl-string">&#x27;separation&#x27;</span>])</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">update_alignment</span>(<span class="hl-params">val</span>):</span>
+<span class="line">    boids.weights[<span class="hl-string">&#x27;alignment&#x27;</span>] = val</span>
+<span class="line">    description_text.set_text(descriptions[<span class="hl-string">&#x27;alignment&#x27;</span>])</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">update_cohesion</span>(<span class="hl-params">val</span>):</span>
+<span class="line">    boids.weights[<span class="hl-string">&#x27;cohesion&#x27;</span>] = val</span>
+<span class="line">    description_text.set_text(descriptions[<span class="hl-string">&#x27;cohesion&#x27;</span>])</span>
+<span class="line"></span>
+<span class="line">slider_sep.on_changed(update_separation)</span>
+<span class="line">slider_ali.on_changed(update_alignment)</span>
+<span class="line">slider_coh.on_changed(update_cohesion)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># --- Animation Loop ---</span></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">animate</span>(<span class="hl-params">frame</span>):</span>
+<span class="line">    boids.update()</span>
+<span class="line"></span>
+<span class="line">    quiver.set_offsets(boids.positions)</span>
+<span class="line">    quiver.set_UVC(boids.velocities[:, <span class="hl-number">0</span>], boids.velocities[:, <span class="hl-number">1</span>])</span>
+<span class="line"></span>
+<span class="line">    ax.set_title(<span class="hl-string">f&quot;Interactive Swarm Simulation&quot;</span>, color=<span class="hl-string">&#x27;white&#x27;</span>)</span>
+<span class="line">    <span class="hl-keyword">return</span> quiver, mode_text, description_text</span>
+<span class="line"></span>
+<span class="line">ani = animation.FuncAnimation(fig, animate, frames=<span class="hl-number">200</span>, interval=<span class="hl-number">30</span>, blit=<span class="hl-literal">False</span>)</span>
+<span class="line"></span>
+<span class="line">plt.show()</span></code></pre>
+
+</figure>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Mechanistic Interpretability - Some concepts</title>
+<link href="https://mbottoni.github.io/2025/04/12/mech-inter.html" rel="alternate" type="text/html" title="Mechanistic Interpretability - Some concepts" />
+<published>2025-04-12T00:00:00+00:00</published>
+<updated>2025-04-12T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2025/04/12/mech-inter</id>
+<author><name>Maruan Bakri Ottoni</name></author>
+<summary type="html"><![CDATA[Here are some quick notes on concepts in Mechanistic Interpretability. The subject is vast and very recent and 
+try to interpret features for neural networks, specifically transformers and LLM's.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2025/04/12/mech-inter.html"><![CDATA[
+    <h1>
+    <a href="#Mechanistic-Interpretability-Some-concepts"><span>Mechanistic Interpretability - Some concepts</span> <time datetime="2025-04-12">Apr 12, 2025</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/frontier/mech_inter.png">
+</figure>
+<p><span>Here are some quick notes on concepts in Mechanistic Interpretability. The subject is vast and very recent and </span>
+<span>try to interpret features for neural networks, specifically transformers and LLM</span>&rsquo;<span>s.</span></p>
+<p><span>This was based on my studies and mainly on this blog post </span><a href="https://www.neelnanda.io/mechanistic-interpretability/glossary"><span>Link to blog</span></a><span>. On the future when I advanced</span>
+<span>my studies on this subject I will update this post.</span></p>
+<ul>
+<li>
+<p><span>Interpretability: The broader AI subfield focused on understanding why AI systems behave as they do and translating this into human-understandable explanations.</span></p>
+</li>
+<li>
+<p><span>Feature: A property of the model</span>&rsquo;<span>s input or a part of it. Features are fundamental; the model</span>&rsquo;<span>s internal activations represent them, and computations (weights, non-linearities) transform earlier features into later ones.</span></p>
+</li>
+<li>
+<p><span>Circuit: A specific part of the model that performs an understandable computation, transforming interpretable input features into interpretable output features.</span></p>
+</li>
+<li>
+<p><span>Intervening on or editing an activation: The process of running the model up to a certain point, modifying a specific activation value, and then letting the model continue its computation with the changed value.</span></p>
+</li>
+<li>
+<p><span>Pruning a neuron: A specific intervention where a neuron</span>&rsquo;<span>s activation is set to zero, preventing subsequent layers from using its output.</span></p>
+</li>
+<li>
+<p><span>Equivariance / Neuron families: Groups of neurons or features that are distinct but operate analogously. Understanding one member of the family helps understand the others.</span></p>
+</li>
+<li>
+<p><span>Neuron splitting: When a single feature represented in a smaller model gets broken down into multiple distinct features in a larger model.</span></p>
+</li>
+<li>
+<p><span>Universality: The hypothesis that the same functional circuits will emerge and be discoverable across different models trained independently.</span></p>
+</li>
+<li>
+<p><span>Motif: An abstract computational pattern or structure that recurs across different circuits or features in various models or contexts.</span></p>
+</li>
+<li>
+<p><span>Localised/sparse model behaviour: When a model</span>&rsquo;<span>s specific behavior is determined by only a small number of its components.</span></p>
+</li>
+<li>
+<p><span>Microscope AI: The idea that by reverse engineering a highly capable (potentially superhuman) AI, we could learn the novel knowledge and understanding of the world that the AI has acquired.</span></p>
+</li>
+<li>
+<p><span>The curse of dimensionality: A concept highlighting the counter-intuitive properties and complexities that arise when dealing with high-dimensional spaces, like the activation spaces within neural networks.</span></p>
+</li>
+<li>
+<p><span>Features as directions: A key hypothesis in MI suggesting that features within a model are represented as specific directions within the high-dimensional activation vector space.</span></p>
+</li>
+<li>
+<p><span>Few-shot learning: A capability where a generative model learns to perform a new task based on just a few examples provided within its input prompt.</span></p>
+</li>
+<li>
+<p><span>In-Context Learning: The ability of a model to use information from much earlier in its input sequence (context) to make predictions about the next token.</span></p>
+</li>
+<li>
+<p><span>Indirect Object Identification (IOI): A specific linguistic task used to test language models, requiring the model to identify the indirect object in sentences like </span>&ldquo;<span>When John and Mary went to the store, John gave the bag to [Mary]</span>&rdquo;<span>.</span></p>
+</li>
+<li>
+<p><span>IOI Circuit: The specific network of components identified within the GPT-2 Small model that is responsible for correctly performing the IOI task.</span></p>
+</li>
+</ul>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Group Relative Policy Optimization (GRPO)</title>
+<link href="https://mbottoni.github.io/2025/02/06/grpo.html" rel="alternate" type="text/html" title="Group Relative Policy Optimization (GRPO)" />
+<published>2025-02-06T00:00:00+00:00</published>
+<updated>2025-02-06T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2025/02/06/grpo</id>
+<author><name>Maruan Bakri Ottoni</name></author>
+<summary type="html"><![CDATA[PPO is a reinforcement learning algorithm originally designed to update policies in a stable and reliable way.
+In the context of LLM fine-tuning, the model (the “policy”) is trained using feedback from a reward model that represents human preferences.
+Value Function (Critic): Estimates the “goodness” of a state, used with Generalized Advantage Estimation (GAE) to balance bias and variance.
+Basically it works as follows:]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2025/02/06/grpo.html"><![CDATA[
+    <h1>
+    <a href="#GRPO-on-DeepSeek-r1"><span>GRPO on DeepSeek-r1</span> <time datetime="2025-02-06">Feb 6, 2025</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/frontier/grpo.webp">
+</figure>
+
+    <h1>
+    <a href="#Proximal-Policy-Optimization-PPO"><span>Proximal Policy Optimization (PPO)</span> <time datetime="2025-02-06">Feb 6, 2025</time></a>
+    </h1>
+<p><span>PPO is a reinforcement learning algorithm originally designed to update policies in a stable and reliable way.</span>
+<span>In the context of LLM fine-tuning, the model (the “policy”) is trained using feedback from a reward model that represents human preferences.</span>
+<span>Value Function (Critic): Estimates the “goodness” of a state, used with Generalized Advantage Estimation (GAE) to balance bias and variance.</span>
+<span>Basically it works as follows:</span></p>
+<ol>
+<li>
+<span>Generate Rollouts: The LLM produces a set of text responses (rollouts) for a given prompt.</span>
+</li>
+<li>
+<span>Score with the Reward Model: Each response is scored.</span>
+</li>
+<li>
+<span>Compute Advantages: Using GAE, the algorithm computes how much better (or worse) each action (e.g., token choice) was compared to a baseline.</span>
+</li>
+<li>
+<span>Update the Policy: A PPO objective is used with a clipped surrogate loss to ensure updates are not too drastic. Additional terms (like a KL penalty and entropy bonus) help maintain stability and encourage exploration.</span>
+</li>
+</ol>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">ppo_loss_with_gae_entropy</span>(<span class="hl-params">old_policy_logprobs, new_policy_logprobs, advantages,</span></span>
+<span class="line"><span class="hl-params">                              kl_penalty_coef, clip_epsilon, entropy_bonus_coef</span>):</span>
+<span class="line">    <span class="hl-comment"># Compute probability ratio between new and old policy actions</span></span>
+<span class="line">    ratio = np.exp(new_policy_logprobs - old_policy_logprobs)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Clipped surrogate objective prevents large policy updates</span></span>
+<span class="line">    surrogate_objective = np.minimum(ratio * advantages,</span>
+<span class="line">                                     np.clip(ratio, <span class="hl-number">1</span> - clip_epsilon, <span class="hl-number">1</span> + clip_epsilon) * advantages)</span>
+<span class="line">    policy_loss = -np.mean(surrogate_objective)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># KL divergence penalty to keep new policy close to the old one</span></span>
+<span class="line">    kl_divergence = np.mean(new_policy_logprobs - old_policy_logprobs)</span>
+<span class="line">    kl_penalty = kl_penalty_coef * kl_divergence</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Entropy bonus encourages exploration (i.e., less certainty)</span></span>
+<span class="line">    entropy = -np.mean(new_policy_logprobs)</span>
+<span class="line">    entropy_bonus = entropy_bonus_coef * entropy</span>
+<span class="line">    </span>
+<span class="line">    total_loss = policy_loss + kl_penalty - entropy_bonus</span>
+<span class="line">    <span class="hl-keyword">return</span> total_loss</span></code></pre>
+
+</figure>
+
+    <h1>
+    <a href="#Direct-Preference-Optimization-DPO"><span>Direct Preference Optimization (DPO)</span> <time datetime="2025-02-06">Feb 6, 2025</time></a>
+    </h1>
+<p><span>DPO simplifies the training loop by skipping the reinforcement learning (RL) loop entirely.</span>
+<span>Rather than estimating rewards and advantages, DPO directly uses human preference data (pairs of preferred vs. dispreferred responses) to adjust the model.</span>
+<span>It compares the raw model outputs (logits) between a current model and a reference model (often an earlier, supervised-fine-tuned version) using a loss function similar to binary cross-entropy.</span>
+<span>So basically it works as follows:</span></p>
+<ol>
+<li>
+<span>Collect Preference Data: Gather pairs of responses where human judges indicate which response they prefer.</span>
+</li>
+<li>
+<span>Evaluate with Two Models: Compute the logits for both the preferred and dispreferred responses using the current model and a reference model.</span>
+</li>
+<li>
+<span>Compute Log Ratios: Determine the relative “strength” (log probabilities) of preferred versus dispreferred responses.</span>
+</li>
+<li>
+<span>Optimize Directly: Use a loss function that, in effect, makes the current model more likely to generate preferred responses and less likely to generate dispreferred ones—all while staying close to the reference model.</span>
+</li>
+</ol>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">dpo_loss</span>(<span class="hl-params">policy_logits_preferred, policy_logits_dispreferred,</span></span>
+<span class="line"><span class="hl-params">             ref_logits_preferred, ref_logits_dispreferred, beta_kl</span>):</span>
+<span class="line">    <span class="hl-comment"># Convert logits to log probabilities (details abstracted)</span></span>
+<span class="line">    policy_logprob_preferred = F.log_softmax(policy_logits_preferred, dim=-<span class="hl-number">1</span>).gather(...)</span>
+<span class="line">    policy_logprob_dispreferred = F.log_softmax(policy_logits_dispreferred, dim=-<span class="hl-number">1</span>).gather(...)</span>
+<span class="line">    ref_policy_logprob_preferred = F.log_softmax(ref_logits_preferred, dim=-<span class="hl-number">1</span>).gather(...)</span>
+<span class="line">    ref_policy_logprob_dispreferred = F.log_softmax(ref_logits_dispreferred, dim=-<span class="hl-number">1</span>).gather(...)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Calculate the log ratio comparing current model differences to reference differences</span></span>
+<span class="line">    log_ratio = (policy_logprob_preferred - policy_logprob_dispreferred -</span>
+<span class="line">                 (ref_policy_logprob_preferred - ref_policy_logprob_dispreferred))</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Convert log ratio into a probability using a logistic function (Bradley-Terry model)</span></span>
+<span class="line">    preference_prob = <span class="hl-number">1</span> / (<span class="hl-number">1</span> + np.exp(-beta_kl * log_ratio))</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Compute loss as binary cross-entropy (minimizing negative log probability of preferred response)</span></span>
+<span class="line">    loss = -np.log(preference_prob + <span class="hl-number">1e-8</span>)</span>
+<span class="line">    <span class="hl-keyword">return</span> loss</span></code></pre>
+
+</figure>
+
+    <h1>
+    <a href="#Group-Relative-Policy-Optimization-GRPO"><span>Group Relative Policy Optimization (GRPO)</span> <time datetime="2025-02-06">Feb 6, 2025</time></a>
+    </h1>
+<p><span>GRPO is a twist on PPO that is designed to be leaner and faster—especially for complex reasoning tasks.</span>
+<span>Instead of relying on a separate value function (critic) to estimate advantages, GRPO uses a group-based approach:</span>
+<span>For a given prompt, a group of responses is generated. These responses are scored using the reward model.</span>
+<span>So basically it works as follows:</span>
+<span>1. Generate a Group of Responses: For each prompt, sample several responses.</span>
+<span>2. Score the Responses: Use a reward model to assign a reward to each response.</span>
+<span>3. Compute Group Relative Advantages: Calculate advantages by comparing each response’s reward to the group mean (and optionally normalizing by the standard deviation).</span>
+<span>4. Update the Policy: Use a PPO-like objective function that takes these group relative advantages into account.</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">grae_advantages</span>(<span class="hl-params">rewards</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute Group Relative Advantages by normalizing rewards within a group.</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    mean_reward = np.mean(rewards)</span>
+<span class="line">    std_reward = np.std(rewards)</span>
+<span class="line">    normalized_rewards = (rewards - mean_reward) / (std_reward + <span class="hl-number">1e-8</span>)</span>
+<span class="line">    advantages = normalized_rewards  <span class="hl-comment"># Here, advantage = normalized reward</span></span>
+<span class="line">    <span class="hl-keyword">return</span> advantages</span></code></pre>
+
+</figure>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">grpo_loss</span>(<span class="hl-params">old_policy_logprobs_group, new_policy_logprobs_group,</span></span>
+<span class="line"><span class="hl-params">              group_advantages, kl_penalty_coef, clip_epsilon</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the GRPO loss over a group of responses.</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    group_loss = <span class="hl-number">0</span></span>
+<span class="line">    <span class="hl-comment"># Loop over each response in the group</span></span>
+<span class="line">    <span class="hl-keyword">for</span> i <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(<span class="hl-built_in">len</span>(group_advantages)):</span>
+<span class="line">        advantage = group_advantages[i]</span>
+<span class="line">        new_policy_logprob = new_policy_logprobs_group[i]</span>
+<span class="line">        old_policy_logprob = old_policy_logprobs_group[i]</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Compute the probability ratio for the policy update</span></span>
+<span class="line">        ratio = np.exp(new_policy_logprob - old_policy_logprob)</span>
+<span class="line">        clipped_ratio = np.clip(ratio, <span class="hl-number">1</span> - clip_epsilon, <span class="hl-number">1</span> + clip_epsilon)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Surrogate objective with clipping, similar to PPO</span></span>
+<span class="line">        surrogate_objective = np.minimum(ratio * advantage, clipped_ratio * advantage)</span>
+<span class="line">        policy_loss = -surrogate_objective</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># KL divergence penalty to restrict too-large updates</span></span>
+<span class="line">        kl_divergence = new_policy_logprob - old_policy_logprob</span>
+<span class="line">        kl_penalty = kl_penalty_coef * kl_divergence</span>
+<span class="line">        </span>
+<span class="line">        group_loss += (policy_loss + kl_penalty)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Average the loss over the group of responses</span></span>
+<span class="line">    <span class="hl-keyword">return</span> group_loss / <span class="hl-built_in">len</span>(group_advantages)</span></code></pre>
+
+</figure>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Deepseek, an overview and quick notes</title>
+<link href="https://mbottoni.github.io/2024/12/28/deepseek.html" rel="alternate" type="text/html" title="Deepseek, an overview and quick notes" />
+<published>2024-12-28T00:00:00+00:00</published>
+<updated>2024-12-28T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2024/12/28/deepseek</id>
+<author><name>Maruan Bakri Ottoni</name></author>
+<summary type="html"><![CDATA[Some notes of DeepSeek-V3]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2024/12/28/deepseek.html"><![CDATA[
+    <h1>
+    <a href="#Deepseek-an-overview-and-quick-notes"><span>Deepseek, an overview and quick notes</span> <time datetime="2024-12-28">Dec 28, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/frontier/deekseek.webp">
+</figure>
+<p><span>Some notes of DeepSeek-V3</span></p>
+<ul>
+<li>
+<span>DeepSeek-V3 is a Mixture-of-Experts (MoE) language model with 671B total parameters, of which 37B are activated for each token</span>
+</li>
+<li>
+<span>Uses Multi-head Latent Attention (MLA) for efficient inference and DeepSeekMoE for cost-effective training</span>
+</li>
+<li>
+<span>Introduces an auxiliary-loss-free strategy for load balancing to minimize performance degradation while maintaining balanced expert utilization</span>
+</li>
+<li>
+<span>Implements a multi-token prediction training objective to enhance model performance</span>
+</li>
+<li>
+<span>Trained on 14.8T diverse tokens</span>
+</li>
+<li>
+<span>Uses FP8 mixed precision training with fine-grained quantization strategy</span>
+</li>
+<li>
+<span>Employs DualPipe algorithm for efficient pipeline parallelism with minimal communication overhead</span>
+</li>
+<li>
+<span>Achieves cost-effective training, requiring only 2.788M H800 GPU hours total:</span>
+<span>- 2664K hours for pre-training</span>
+<span>- 119K hours for context extension </span>
+<span>- 5K hours for post-training</span>
+<span>- Total cost approximately $5.576M at $2/GPU hour</span>
+</li>
+<li>
+<span>Outperforms other open-source models across multiple benchmarks</span>
+</li>
+<li>
+<span>Particularly strong in:</span>
+<span>- Math tasks (90.2% on MATH-500)</span>
+<span>- Code tasks (51.6% on Codeforces percentile)</span>
+<span>- Knowledge tasks (75.9% on MMLU-Pro)</span>
+</li>
+<li>
+<span>Demonstrates competitive performance against closed-source models like GPT-4 and Claude-3.5-Sonnet</span>
+</li>
+<li>
+<span>Supports context lengths up to 128K tokens through two-stage extension training</span>
+</li>
+<li>
+<span>Auxiliary-loss-free load balancing strategy that improves expert utilization without compromising performance</span>
+</li>
+<li>
+<span>Multi-token prediction training objective that enhances model capabilities while enabling speculative decoding</span>
+</li>
+<li>
+<span>FP8 training framework with tile-wise and block-wise quantization strategies</span>
+</li>
+<li>
+<span>DualPipe algorithm that achieves efficient pipeline parallelism with minimal communication overhead</span>
+</li>
+</ul>
+]]></content>
+</entry>
+
+<entry>
+<title type="text">Probability Paradigms</title>
+<link href="https://mbottoni.github.io/2024/12/23/prob.html" rel="alternate" type="text/html" title="Probability Paradigms" />
+<published>2024-12-23T00:00:00+00:00</published>
+<updated>2024-12-23T00:00:00+00:00</updated>
+<id>https://mbottoni.github.io/2024/12/23/prob</id>
+<author><name>Maruan Bakri Ottoni</name></author>
+<summary type="html"><![CDATA[When we think about probability, there are three 
+main philosophical approaches: frequentist, Bayesian, and propensity. Each offers 
+a different lens for understanding uncertainty and probability.]]></summary>
+<content type="html" xml:base="https://mbottoni.github.io/2024/12/23/prob.html"><![CDATA[
+    <h1>
+    <a href="#Probability-Paradigms"><span>Probability Paradigms</span> <time datetime="2024-12-23">Dec 23, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/foundations/prob.png">
+</figure>
+<p><span>When we think about probability, there are three </span>
+<span>main philosophical approaches: frequentist, Bayesian, and propensity. Each offers </span>
+<span>a different lens for understanding uncertainty and probability.</span></p>
+<section id="The-Scenario">
+
+    <h2>
+    <a href="#The-Scenario"><span>The Scenario</span> </a>
+    </h2>
+<p><span>Imagine we</span>&rsquo;<span>re dealing with a new diagnostic test for a rare genetic condition that affects 1 in 1000 people. The test has the following characteristics:</span></p>
+<ul>
+<li>
+<span>If someone has the condition, the test will be positive 99% of the time (sensitivity)</span>
+</li>
+<li>
+<span>If someone doesn</span>&rsquo;<span>t have the condition, the test will be negative 95% of the time (specificity)</span>
+</li>
+</ul>
+<p><span>Now, let</span>&rsquo;<span>s say Sarah gets tested and receives a positive result. What</span>&rsquo;<span>s the probability that she </span>
+<span>actually has the condition? Each probability paradigm approaches this question differently.</span></p>
+</section>
+<section id="The-Frequentist-Approach">
+
+    <h2>
+    <a href="#The-Frequentist-Approach"><span>The Frequentist Approach</span> </a>
+    </h2>
+<p><span>The frequentist views probability as the long-run frequency of events in repeated trials. They might say:</span></p>
+<p>&ldquo;<span>If we were to run this test on a very large number of people, and look only at </span>
+<span>the positive test results, what proportion of those people would actually have the condition?</span>&rdquo;</p>
+<p><span>The frequentist would focus on the sampling distribution and confidence intervals. They might </span>
+<span>resist making a direct probability statement about Sarah</span>&rsquo;<span>s individual case, arguing that she </span>
+<span>either has the condition or doesn</span>&rsquo;<span>t – there</span>&rsquo;<span>s no probability about it. Instead, they </span>
+<span>would frame their analysis in terms of error rates and long-term frequencies.</span></p>
+<p><span>In this case, they would calculate the false positive and true positive rates across a hypothetical population:</span></p>
+<ul>
+<li>
+<span>In 1000 people, 1 person would have the condition</span>
+</li>
+<li>
+<span>That 1 person would test positive 99% of the time = 0.99 true positives</span>
+</li>
+<li>
+<span>The 999 people without the condition would test positive 5% of the time = 49.95 false positives</span>
+</li>
+<li>
+<span>Total positive tests = 50.94</span>
+</li>
+<li>
+<span>Proportion of positive tests that are true positives ≈ 1.94%</span>
+</li>
+</ul>
+</section>
+<section id="The-Bayesian-Approach">
+
+    <h2>
+    <a href="#The-Bayesian-Approach"><span>The Bayesian Approach</span> </a>
+    </h2>
+<p><span>The Bayesian sees probability as a degree of belief that gets updated with </span>
+<span>new evidence. They would start with a prior probability (the base </span>
+<span>rate of 1/1000) and update it with the new </span>
+<span>evidence (the positive test result) using Bayes</span>&rsquo;<span> Theorem.</span></p>
+<p><span>The Bayesian would say: </span>&ldquo;<span>Before the test, we believed Sarah had a 0.1% chance </span>
+<span>of having the condition. The positive test result gives us new information </span>
+<span>to update this belief.</span>&rdquo;</p>
+<p><span>Using Bayes</span>&rsquo;<span> Theorem:</span>
+<span>P(Condition|Positive) = P(Positive|Condition) × P(Condition) / P(Positive)</span>
+<span>= 0.99 × 0.001 / (0.99 × 0.001 + 0.05 × 0.999)</span>
+<span>≈ 0.0194 or about 1.94%</span></p>
+<p><span>The Bayesian is comfortable making a direct probability statement about Sarah</span>
+&lsquo;<span>s specific case, saying there</span>&rsquo;<span>s a 1.94% chance she has the condition.</span></p>
+</section>
+<section id="The-Propensity-Approach">
+
+    <h2>
+    <a href="#The-Propensity-Approach"><span>The Propensity Approach</span> </a>
+    </h2>
+<p><span>The propensity theorist views probability as an objective </span>
+<span>physical property – a tendency or disposition of a </span>
+<span>system to produce certain outcomes. They might say:</span></p>
+<p>&ldquo;<span>The test result reflects the physical properties of Sarah</span>&rsquo;<span>s </span>
+<span>genes and the testing mechanism. The probability emerges from </span>
+<span>the actual physical setup of the situation.</span>&rdquo;</p>
+<p><span>They would focus on the causal mechanisms involved: the biological </span>
+<span>factors that cause the condition, the chemical reactions in the test, and how </span>
+<span>these physical properties interact to produce results. They might analyze the </span>
+<span>molecular basis of the test</span>&rsquo;<span>s accuracy and how it interacts with the genetic markers it</span>&rsquo;<span>s designed to detect.</span></p>
+<p><span>These different approaches can lead to different practical recommendations:</span></p>
+<ul>
+<li>
+<p><span>A frequentist might emphasize the need for additional testing, pointing out that in a large population, most positive results are false positives.</span></p>
+</li>
+<li>
+<p><span>A Bayesian might focus on gathering more prior information about Sarah (family history, symptoms, etc.) to refine the probability estimate.</span></p>
+</li>
+<li>
+<p><span>A propensity theorist might advocate for understanding the biological mechanism better, perhaps recommending a different type of test that targets the condition</span>&rsquo;<span>s physical manifestations more directly.</span></p>
+</li>
+</ul>
+</section>
+]]></content>
+</entry>
+
+</feed>

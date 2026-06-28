@@ -1,0 +1,288 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Implementing the Kalman Filter in Python</title>
+  <meta name="description" content="Hello. I'm trying to experiment with some recent articles that tries to 
+connect transformers and kalman filter. I remember that I saw in my undergrad
+this concept on the control lecture but to be honest I didn't quite understand
+the concept at the time. To help my understanding i tried to implement
+using only some basic python libraries the Kalman Filter in python.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Implementing the Kalman Filter in Python">
+  <meta property="og:description" content="Hello. I'm trying to experiment with some recent articles that tries to 
+connect transformers and kalman filter. I remember that I saw in my undergrad
+this concept on the control lecture but to be honest I didn't quite understand
+the concept at the time. To help my understanding i tried to implement
+using only some basic python libraries the Kalman Filter in python.">
+  <meta property="og:url" content="https://mbottoni.github.io/2023/12/19/Kalman.html">
+  <meta property="og:image" content="/assets/foundations/kalman1.jpg">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Implementing the Kalman Filter in Python">
+  <meta name="twitter:description" content="Hello. I'm trying to experiment with some recent articles that tries to 
+connect transformers and kalman filter. I remember that I saw in my undergrad
+this concept on the control lecture but to be honest I didn't quite understand
+the concept at the time. To help my understanding i tried to implement
+using only some basic python libraries the Kalman Filter in python.">
+  <meta name="twitter:image" content="/assets/foundations/kalman1.jpg">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2023/12/19/Kalman.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/foundations.html">
+          Math, Physics &amp; Foundations
+        </a>
+        <span class="post-meta"><time datetime="2023-12-19">Dec 19, 2023</time> · 2 min read</span>
+      </div>
+      
+      <article >
+
+    <h1>
+    <a href="#Implementing-the-Kalman-Filter-in-Python"><span>Implementing the Kalman Filter in Python</span> <time datetime="2023-12-19">Dec 19, 2023</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/foundations/kalman1.jpg">
+</figure>
+<p><span>Hello. I</span>&rsquo;<span>m trying to experiment with some recent articles that tries to </span>
+<span>connect transformers and kalman filter. I remember that I saw in my undergrad</span>
+<span>this concept on the control lecture but to be honest I didn</span>&rsquo;<span>t quite understand</span>
+<span>the concept at the time. To help my understanding i tried to implement</span>
+<span>using only some basic python libraries the Kalman Filter in python.</span></p>
+<p><span>Before the notebook with the implementation here is a quick summary of what is </span>
+<span>this filter provided by GPT ( =P ):</span></p>
+<p><span>A Kalman filter is a powerful algorithm used for making estimates or predictions in systems </span>
+<span>that are subject to various uncertainties. It</span>&rsquo;<span>s widely used in fields like robotics, aerospace,</span>
+<span>finance, and even weather forecasting. Here</span>&rsquo;<span>s a simplified explanation suitable for a blog post:</span></p>
+<ul>
+<li>
+<p><span>Understanding the Kalman Filter: A Simple Guide</span>
+<span>Imagine you</span>&rsquo;<span>re trying to predict the position of a moving car using a GPS system. The GPS provides </span>
+<span>you with location data, but this data isn</span>&rsquo;<span>t perfect—it has some level of inaccuracy or </span>&lsquo;<span>noise</span>&rsquo;<span>. How do you </span>
+<span>make the best possible estimate of the car</span>&rsquo;<span>s true position?</span></p>
+</li>
+<li>
+<p><span>Enter the Kalman filter. Developed by Rudolf E. Kalman in the 1960s, this algorithm is a set of mathematical equations </span>
+<span>that provides an efficient computational (recursive) solution to the problem of estimating the state of a process—in our case, the position and speed of the car.</span></p>
+</li>
+<li>
+<p><span>How Does It Work?</span>
+<span>The Kalman filter works in two fundamental</span>
+<span>steps: Prediction and Update.</span></p>
+</li>
+<li>
+<p><span>Prediction: This step involves predicting the current state </span>
+<span>of the process (like the position and velocity of the car) based on the</span>
+<span>previous state. It</span>&rsquo;<span>s like saying, </span>&ldquo;<span>Given where the car was and </span>
+<span>how fast it was moving, here</span>&rsquo;<span>s where I think it is now.</span>&rdquo;</p>
+</li>
+<li>
+<p><span>Update: In this step, the Kalman filter takes new measurements (e.g., from the GPS) and</span>
+<span>refines the prediction. It essentially asks, </span>&ldquo;<span>Now that I have new data, how should I</span>
+<span>adjust my prediction to be more accurate?</span>&rdquo;</p>
+</li>
+</ul>
+<p><span>The beauty of the Kalman filter lies in its ability to deal with uncertainty. It</span>&rsquo;<span>s designed to weigh both the</span>
+<span>predicted state and the new measurements, considering the uncertainties in</span>
+<span>both. If the measurements are very accurate, it gives them more weight. If the predictions are believed to be more reliable, it leans more on them.</span></p>
+<ul>
+<li>
+<span>Real-World Applications</span>
+<span>While the GPS example is straightforward, the Kalman filter is used in much more complex</span>
+<span>situations. It</span>&rsquo;<span>s vital in the operation of satellites and spacecraft, where precise navigation is crucial. In the financial world, it</span>
+<span>helps in predicting market trends and in robotics, it</span>&rsquo;<span>s used for navigation and tracking movements.</span>
+</li>
+</ul>
+
+<figure>
+
+<img alt="" src="/assets/foundations/kalman2.svg">
+</figure>
+<p><span>Finally here is the notebook : </span><a href="https://colab.research.google.com/drive/1g0BNY3ov6DiauAGLEfB-Ka-7836NZMo1?usp=sharing"><span>Colab</span></a></p>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/kalman-filter.html">#kalman-filter</a><a class="tag" href="/tags/bayesian.html">#bayesian</a><a class="tag" href="/tags/time-series.html">#time-series</a></div>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2023-12-19-Kalman.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>

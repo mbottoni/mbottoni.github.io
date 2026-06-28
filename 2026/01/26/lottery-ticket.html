@@ -1,0 +1,601 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Lottery Ticket Hypothesis</title>
+  <meta name="description" content="In 2019, Frankle and Carlin published a paper https://arxiv.org/abs/1803.03635 that 
+challenged a fundamental assumption in deep learning: that large, over-parameterized 
+networks are necessary for achieving good performance. They proposed the Lottery 
+Ticket Hypothesis, which states that dense, randomly initialized networks contain 
+sparse subnetworks (winning tickets) that, when trained in isolation from the 
+same initialization, can match the full network's accuracy.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="The Lottery Ticket Hypothesis">
+  <meta property="og:description" content="In 2019, Frankle and Carlin published a paper https://arxiv.org/abs/1803.03635 that 
+challenged a fundamental assumption in deep learning: that large, over-parameterized 
+networks are necessary for achieving good performance. They proposed the Lottery 
+Ticket Hypothesis, which states that dense, randomly initialized networks contain 
+sparse subnetworks (winning tickets) that, when trained in isolation from the 
+same initialization, can match the full network's accuracy.">
+  <meta property="og:url" content="https://mbottoni.github.io/2026/01/26/lottery-ticket.html">
+  <meta property="og:image" content="/assets/frontier/lottery_ticket.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="The Lottery Ticket Hypothesis">
+  <meta name="twitter:description" content="In 2019, Frankle and Carlin published a paper https://arxiv.org/abs/1803.03635 that 
+challenged a fundamental assumption in deep learning: that large, over-parameterized 
+networks are necessary for achieving good performance. They proposed the Lottery 
+Ticket Hypothesis, which states that dense, randomly initialized networks contain 
+sparse subnetworks (winning tickets) that, when trained in isolation from the 
+same initialization, can match the full network's accuracy.">
+  <meta name="twitter:image" content="/assets/frontier/lottery_ticket.png">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2026/01/26/lottery-ticket.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/frontier.html">
+          Frontier LLMs &amp; Architectures
+        </a>
+        <span class="post-meta"><time datetime="2026-01-26">Jan 26, 2026</time> · 8 min read</span>
+      </div>
+      
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <ul><li class="toc-l3"><a href="#The-Formal-Statement">The Formal Statement</a></li><li class="toc-l3"><a href="#Iterative-Magnitude-Pruning-IMP">Iterative Magnitude Pruning (IMP)</a></li><li class="toc-l3"><a href="#Pseudocode">Pseudocode</a></li><li class="toc-l3"><a href="#Why-Initialization-Matters">Why Initialization Matters</a></li><li class="toc-l3"><a href="#Connection-to-Magnitude-Pruning-Theory">Connection to Magnitude Pruning Theory</a></li><li class="toc-l3"><a href="#A-Complete-Experiment">A Complete Experiment</a></li><li class="toc-l3"><a href="#Late-Rewinding">Late Rewinding</a></li><li class="toc-l3"><a href="#Connections-to-Other-Sparsity-Methods">Connections to Other Sparsity Methods</a></li><li class="toc-l3"><a href="#Open-Questions">Open Questions</a></li></ul>
+    </details>
+  
+      <article >
+
+    <h1>
+    <a href="#The-Lottery-Ticket-Hypothesis"><span>The Lottery Ticket Hypothesis</span> <time datetime="2026-01-26">Jan 26, 2026</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/frontier/lottery_ticket.png">
+</figure>
+<p><span>In 2019, Frankle and Carlin published a paper https://arxiv.org/abs/1803.03635 that </span>
+<span>challenged a fundamental assumption in deep learning: that large, over-parameterized </span>
+<span>networks are necessary for achieving good performance. They proposed the </span><strong><strong><span>Lottery </span>
+<span>Ticket Hypothesis</span></strong></strong><span>, which states that dense, randomly initialized networks contain </span>
+<span>sparse subnetworks (</span>&ldquo;<span>winning tickets</span>&rdquo;<span>) that, when trained in isolation from the </span>
+<span>same initialization, can match the full network</span>&rsquo;<span>s accuracy.</span></p>
+<p><span>This is a profound claim. It suggests that most of the parameters in a neural </span>
+<span>network are redundant from the very beginning, and that the real work of training </span>
+<span>is finding which small subset of connections matters. The implications for </span>
+<span>efficiency, compression, and our understanding of optimization are enormous, </span>
+<span>and connect directly to ideas in Mixture of Experts, Sparse Autoencoders, and </span>
+<span>quantization.</span></p>
+<hr>
+<section id="The-Formal-Statement">
+
+    <h3>
+    <a href="#The-Formal-Statement"><span>The Formal Statement</span> </a>
+    </h3>
+<p><span>Let $f(x; \theta)$ be a dense neural network with initial parameters </span>
+<span>$\theta_0 \sim \mathcal{D}_\theta$. Training this network for $T$ iterations </span>
+<span>with SGD yields parameters $\theta_T$ that achieve test accuracy $a$ in </span>
+<span>validation time $t$.</span></p>
+<p><span>The </span><strong><strong><span>Lottery Ticket Hypothesis</span></strong></strong><span> states:</span></p>
+<p><span>There exists a binary mask $m \in \{0, 1\}^{|\theta|}$ such that the </span>
+<span>sparse subnetwork $f(x; m \odot \theta_0)$, when trained for at most $T'$ </span>
+<span>iterations, achieves test accuracy $a' \geq a$ in validation time $t' \leq t$, </span>
+<span>where $\|m\|_0 \ll |\theta|$.</span></p>
+<p><span>Here $\odot$ denotes element-wise multiplication (Hadamard product), </span>
+<span>and $\|m\|_0$ is the number of non-zero entries in the mask. The key </span>
+<span>insight: the </span><strong><strong><span>initial weights</span></strong></strong><span> $\theta_0$ matter. The same mask with </span>
+<span>a different random initialization does not produce a winning ticket.</span></p>
+<hr>
+</section>
+<section id="Iterative-Magnitude-Pruning-IMP">
+
+    <h3>
+    <a href="#Iterative-Magnitude-Pruning-IMP"><span>Iterative Magnitude Pruning (IMP)</span> </a>
+    </h3>
+<p><span>The authors propose </span><strong><strong><span>Iterative Magnitude Pruning</span></strong></strong><span> as the algorithm </span>
+<span>to find winning tickets. The idea is simple: train the network, remove </span>
+<span>the smallest weights, then reset the surviving weights to their original </span>
+<span>initialization and retrain.</span></p>
+<p><span>Given a pruning rate $p$ per round and $n$ rounds of pruning, the final </span>
+<span>sparsity after $n$ rounds is:</span></p>
+<p><span>$$s = 1 - (1 - p)^n$$</span></p>
+<p><span>For example, with $p = 0.2$ (prune 20% each round) and $n = 10$ rounds, </span>
+<span>the final sparsity is $s = 1 - 0.8^{10} \approx 89.3\%$, meaning nearly </span>
+<span>90% of the weights are removed.</span></p>
+<p><span>The pruning criterion at each round selects weights by magnitude:</span></p>
+<p><span>$$m_j = \begin{cases} 1 &amp; \text{if } |\theta_j^{(T)}| &gt; \tau_p \\ 0 &amp; \text{otherwise} \end{cases}$$</span></p>
+<p><span>where $\tau_p$ is the $p$-th percentile of the absolute weight values </span>
+<span>of the surviving weights.</span></p>
+</section>
+<section id="Pseudocode">
+
+    <h3>
+    <a href="#Pseudocode"><span>Pseudocode</span> </a>
+    </h3>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">iterative_magnitude_pruning</span>(<span class="hl-params">model, train_data, prune_rate, num_rounds</span>):</span>
+<span class="line">    <span class="hl-comment"># Step 1: Save the original random initialization</span></span>
+<span class="line">    theta_0 = copy(model.parameters())</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Start with all weights active</span></span>
+<span class="line">    mask = ones_like(theta_0)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">for</span> <span class="hl-built_in">round</span> <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(num_rounds):</span>
+<span class="line">        <span class="hl-comment"># Step 2: Reset surviving weights to their original initialization</span></span>
+<span class="line">        model.parameters = theta_0 * mask</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Step 3: Train the masked network to completion</span></span>
+<span class="line">        <span class="hl-keyword">for</span> epoch <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(num_epochs):</span>
+<span class="line">            <span class="hl-keyword">for</span> batch <span class="hl-keyword">in</span> train_data:</span>
+<span class="line">                output = model.forward(batch.x, mask)</span>
+<span class="line">                loss = cross_entropy(output, batch.y)</span>
+<span class="line">                gradients = backward(loss)</span>
+<span class="line">                <span class="hl-comment"># Only update weights that are not pruned</span></span>
+<span class="line">                model.parameters -= learning_rate * gradients * mask</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Step 4: Prune the smallest weights by magnitude</span></span>
+<span class="line">        surviving_weights = <span class="hl-built_in">abs</span>(model.parameters[mask == <span class="hl-number">1</span>])</span>
+<span class="line">        threshold = percentile(surviving_weights, prune_rate * <span class="hl-number">100</span>)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Zero out weights below the threshold</span></span>
+<span class="line">        new_mask = (<span class="hl-built_in">abs</span>(model.parameters) &gt;= threshold).<span class="hl-built_in">float</span>()</span>
+<span class="line">        mask = mask * new_mask</span>
+<span class="line">        </span>
+<span class="line">        sparsity = <span class="hl-number">1.0</span> - <span class="hl-built_in">sum</span>(mask) / <span class="hl-built_in">len</span>(mask)</span>
+<span class="line">        accuracy = evaluate(model, test_data, mask)</span>
+<span class="line">        <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;Round <span class="hl-subst">{<span class="hl-built_in">round</span>}</span>: sparsity=<span class="hl-subst">{sparsity:<span class="hl-number">.1</span>%}</span>, accuracy=<span class="hl-subst">{accuracy:<span class="hl-number">.2</span>f}</span>&quot;</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> mask, theta_0</span></code></pre>
+
+</figure>
+<hr>
+</section>
+<section id="Why-Initialization-Matters">
+
+    <h3>
+    <a href="#Why-Initialization-Matters"><span>Why Initialization Matters</span> </a>
+    </h3>
+<p><span>The most surprising finding is that the </span><strong><strong><span>initial weights</span></strong></strong><span> are critical. </span>
+<span>Consider three experiments at the same sparsity level:</span></p>
+<ol>
+<li>
+<strong><strong><span>Winning Ticket</span></strong></strong><span> (same mask + original init $\theta_0$): Matches or exceeds </span>
+<span>full network accuracy</span>
+</li>
+<li>
+<strong><strong><span>Same mask + random reinit</span></strong></strong><span> $\theta_0'$: Performance degrades significantly</span>
+</li>
+<li>
+<strong><strong><span>Random mask + original init</span></strong></strong><span>: Poor performance</span>
+</li>
+</ol>
+<p><span>This can be understood through the lens of the loss landscape. The </span>
+<span>initialization $\theta_0$ places the subnetwork in a favorable basin </span>
+<span>of attraction. The mask $m$ selects exactly those weights that, from </span>
+<span>this starting point, can navigate to a good minimum:</span></p>
+<p><span>$$\mathcal{L}(m \odot \theta_0) \xrightarrow{\text{SGD}} \theta^* \quad \text{(low loss minimum)}$$</span></p>
+<p><span>$$\mathcal{L}(m \odot \theta_0') \xrightarrow{\text{SGD}} \theta^{*'} \quad \text{(higher loss minimum)}$$</span></p>
+
+<figure>
+
+<img alt="" src="/assets/frontier/lottery_ticket_chart.png">
+</figure>
+<p><span>The chart above illustrates this effect. The winning ticket (green) maintains </span>
+<span>high accuracy even at extreme sparsity levels (80-90% of weights removed). </span>
+<span>The same pruning mask with a random reinitialization (orange) degrades earlier, </span>
+<span>and random pruning (red) collapses quickly. This confirms the hypothesis: </span>
+<span>it is the combination of structure (mask) and initialization that makes a </span>
+<span>winning ticket.</span></p>
+<hr>
+</section>
+<section id="Connection-to-Magnitude-Pruning-Theory">
+
+    <h3>
+    <a href="#Connection-to-Magnitude-Pruning-Theory"><span>Connection to Magnitude Pruning Theory</span> </a>
+    </h3>
+<p><span>Why does magnitude-based pruning work? One way to think about it is through </span>
+<span>the Taylor expansion of the loss function. When we remove weight $\theta_j$ </span>
+<span>(set it to zero), the change in loss is approximately:</span></p>
+<p><span>$$\Delta \mathcal{L}_j \approx -g_j \theta_j + \frac{1}{2} h_j \theta_j^2$$</span></p>
+<p><span>where $g_j = \frac{\partial \mathcal{L}}{\partial \theta_j}$ is the gradient </span>
+<span>and $h_j = \frac{\partial^2 \mathcal{L}}{\partial \theta_j^2}$ is the Hessian </span>
+<span>diagonal. At a converged minimum, $g_j \approx 0$, so:</span></p>
+<p><span>$$\Delta \mathcal{L}_j \approx \frac{1}{2} h_j \theta_j^2$$</span></p>
+<p><span>If we further assume $h_j$ is roughly constant across weights (a crude but </span>
+<span>useful approximation), then $\Delta \mathcal{L}_j \propto \theta_j^2$. </span>
+<span>This justifies pruning the smallest-magnitude weights: they cause the </span>
+<span>least damage when removed.</span></p>
+<p><span>More sophisticated methods like </span><strong><strong><span>Optimal Brain Surgeon</span></strong></strong><span> use the full </span>
+<span>Hessian $\mathbf{H}$ to compute the optimal weight to remove:</span></p>
+<p><span>$$\text{saliency}_j = \frac{\theta_j^2}{2 [H^{-1}]_{jj}}$$</span></p>
+<p><span>but magnitude pruning remains the practical workhorse due to its simplicity.</span></p>
+<hr>
+</section>
+<section id="A-Complete-Experiment">
+
+    <h3>
+    <a href="#A-Complete-Experiment"><span>A Complete Experiment</span> </a>
+    </h3>
+<p><span>Here is a complete implementation of the Lottery Ticket Hypothesis experiment </span>
+<span>on MNIST with a simple feedforward network:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">import</span> torch</span>
+<span class="line"><span class="hl-keyword">import</span> torch.nn <span class="hl-keyword">as</span> nn</span>
+<span class="line"><span class="hl-keyword">import</span> torch.optim <span class="hl-keyword">as</span> optim</span>
+<span class="line"><span class="hl-keyword">from</span> torchvision <span class="hl-keyword">import</span> datasets, transforms</span>
+<span class="line"><span class="hl-keyword">from</span> copy <span class="hl-keyword">import</span> deepcopy</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">class</span> <span class="hl-title class_">SimpleNet</span>(nn.Module):</span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">__init__</span>(<span class="hl-params">self</span>):</span>
+<span class="line">        <span class="hl-built_in">super</span>().__init__()</span>
+<span class="line">        self.fc1 = nn.Linear(<span class="hl-number">784</span>, <span class="hl-number">300</span>)</span>
+<span class="line">        self.fc2 = nn.Linear(<span class="hl-number">300</span>, <span class="hl-number">100</span>)</span>
+<span class="line">        self.fc3 = nn.Linear(<span class="hl-number">100</span>, <span class="hl-number">10</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">forward</span>(<span class="hl-params">self, x, masks=<span class="hl-literal">None</span></span>):</span>
+<span class="line">        x = x.view(-<span class="hl-number">1</span>, <span class="hl-number">784</span>)</span>
+<span class="line">        <span class="hl-keyword">if</span> masks:</span>
+<span class="line">            x = torch.relu(self.fc1(x) * masks[<span class="hl-number">0</span>])</span>
+<span class="line">            x = torch.relu(self.fc2(x) * masks[<span class="hl-number">1</span>])</span>
+<span class="line">            x = self.fc3(x) * masks[<span class="hl-number">2</span>]</span>
+<span class="line">        <span class="hl-keyword">else</span>:</span>
+<span class="line">            x = torch.relu(self.fc1(x))</span>
+<span class="line">            x = torch.relu(self.fc2(x))</span>
+<span class="line">            x = self.fc3(x)</span>
+<span class="line">        <span class="hl-keyword">return</span> x</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">train</span>(<span class="hl-params">model, loader, masks, epochs=<span class="hl-number">10</span>, lr=<span class="hl-number">0.01</span></span>):</span>
+<span class="line">    optimizer = optim.SGD(model.parameters(), lr=lr)</span>
+<span class="line">    criterion = nn.CrossEntropyLoss()</span>
+<span class="line">    <span class="hl-keyword">for</span> epoch <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(epochs):</span>
+<span class="line">        <span class="hl-keyword">for</span> data, target <span class="hl-keyword">in</span> loader:</span>
+<span class="line">            optimizer.zero_grad()</span>
+<span class="line">            output = model(data, masks)</span>
+<span class="line">            loss = criterion(output, target)</span>
+<span class="line">            loss.backward()</span>
+<span class="line">            <span class="hl-comment"># Zero gradients for pruned weights</span></span>
+<span class="line">            <span class="hl-keyword">if</span> masks:</span>
+<span class="line">                <span class="hl-keyword">for</span> param, mask <span class="hl-keyword">in</span> <span class="hl-built_in">zip</span>(model.parameters(), masks):</span>
+<span class="line">                    <span class="hl-keyword">if</span> param.grad <span class="hl-keyword">is</span> <span class="hl-keyword">not</span> <span class="hl-literal">None</span>:</span>
+<span class="line">                        param.grad *= mask</span>
+<span class="line">            optimizer.step()</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">evaluate</span>(<span class="hl-params">model, loader, masks=<span class="hl-literal">None</span></span>):</span>
+<span class="line">    correct = <span class="hl-number">0</span></span>
+<span class="line">    total = <span class="hl-number">0</span></span>
+<span class="line">    <span class="hl-keyword">with</span> torch.no_grad():</span>
+<span class="line">        <span class="hl-keyword">for</span> data, target <span class="hl-keyword">in</span> loader:</span>
+<span class="line">            output = model(data, masks)</span>
+<span class="line">            pred = output.argmax(dim=<span class="hl-number">1</span>)</span>
+<span class="line">            correct += (pred == target).<span class="hl-built_in">sum</span>().item()</span>
+<span class="line">            total += target.size(<span class="hl-number">0</span>)</span>
+<span class="line">    <span class="hl-keyword">return</span> correct / total</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">prune_by_magnitude</span>(<span class="hl-params">model, masks, prune_rate</span>):</span>
+<span class="line">    new_masks = []</span>
+<span class="line">    <span class="hl-keyword">for</span> param, mask <span class="hl-keyword">in</span> <span class="hl-built_in">zip</span>(model.parameters(), masks):</span>
+<span class="line">        alive = param.data.<span class="hl-built_in">abs</span>()[mask == <span class="hl-number">1</span>]</span>
+<span class="line">        threshold = torch.quantile(alive, prune_rate)</span>
+<span class="line">        new_mask = ((param.data.<span class="hl-built_in">abs</span>() &gt;= threshold) * mask).<span class="hl-built_in">float</span>()</span>
+<span class="line">        new_masks.append(new_mask)</span>
+<span class="line">    <span class="hl-keyword">return</span> new_masks</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">lottery_ticket_experiment</span>(<span class="hl-params">prune_rate=<span class="hl-number">0.2</span>, rounds=<span class="hl-number">5</span></span>):</span>
+<span class="line">    train_loader = torch.utils.data.DataLoader(</span>
+<span class="line">        datasets.MNIST(<span class="hl-string">&#x27;.&#x27;</span>, train=<span class="hl-literal">True</span>, download=<span class="hl-literal">True</span>,</span>
+<span class="line">                       transform=transforms.ToTensor()),</span>
+<span class="line">        batch_size=<span class="hl-number">128</span>, shuffle=<span class="hl-literal">True</span>)</span>
+<span class="line">    test_loader = torch.utils.data.DataLoader(</span>
+<span class="line">        datasets.MNIST(<span class="hl-string">&#x27;.&#x27;</span>, train=<span class="hl-literal">False</span>,</span>
+<span class="line">                       transform=transforms.ToTensor()),</span>
+<span class="line">        batch_size=<span class="hl-number">512</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Initialize model and save original weights</span></span>
+<span class="line">    model = SimpleNet()</span>
+<span class="line">    initial_state = deepcopy(model.state_dict())</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Initialize masks (all ones = no pruning)</span></span>
+<span class="line">    masks = [torch.ones_like(p) <span class="hl-keyword">for</span> p <span class="hl-keyword">in</span> model.parameters()]</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">for</span> r <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(rounds):</span>
+<span class="line">        <span class="hl-comment"># Reset to original initialization with current mask</span></span>
+<span class="line">        model.load_state_dict(initial_state)</span>
+<span class="line">        <span class="hl-keyword">for</span> param, mask <span class="hl-keyword">in</span> <span class="hl-built_in">zip</span>(model.parameters(), masks):</span>
+<span class="line">            param.data *= mask</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Train</span></span>
+<span class="line">        train(model, train_loader, masks)</span>
+<span class="line">        accuracy = evaluate(model, test_loader, masks)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Compute sparsity</span></span>
+<span class="line">        total = <span class="hl-built_in">sum</span>(m.numel() <span class="hl-keyword">for</span> m <span class="hl-keyword">in</span> masks)</span>
+<span class="line">        alive = <span class="hl-built_in">sum</span>(m.<span class="hl-built_in">sum</span>().item() <span class="hl-keyword">for</span> m <span class="hl-keyword">in</span> masks)</span>
+<span class="line">        sparsity = <span class="hl-number">1</span> - alive / total</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;Round <span class="hl-subst">{r}</span>: sparsity=<span class="hl-subst">{sparsity:<span class="hl-number">.1</span>%}</span>, acc=<span class="hl-subst">{accuracy:<span class="hl-number">.4</span>f}</span>&quot;</span>)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Prune</span></span>
+<span class="line">        masks = prune_by_magnitude(model, masks, prune_rate)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> masks, initial_state</span>
+<span class="line"></span>
+<span class="line">lottery_ticket_experiment()</span></code></pre>
+
+</figure>
+<hr>
+</section>
+<section id="Late-Rewinding">
+
+    <h3>
+    <a href="#Late-Rewinding"><span>Late Rewinding</span> </a>
+    </h3>
+<p><span>In follow-up work https://arxiv.org/abs/1903.01611, Frankle et al. found </span>
+<span>that for deeper networks (ResNets, VGGs), resetting to the exact </span>
+<span>initialization $\theta_0$ no longer works reliably. Instead, they </span>
+<span>propose </span><strong><strong><span>late rewinding</span></strong></strong><span>: resetting to weights at iteration $k$ </span>
+<span>early in training, rather than iteration 0:</span></p>
+<p><span>$$\theta_{\text{rewind}} = \theta_k \quad \text{where } k \ll T$$</span></p>
+<p><span>Typically $k$ corresponds to 1-5% of total training. This small </span>
+<span>amount of initial training moves the weights into a better region </span>
+<span>of the loss landscape, after which the mask becomes effective. </span>
+<span>This variant is sometimes called the </span><strong><strong><span>Stabilized Lottery Ticket </span>
+<span>Hypothesis</span></strong></strong><span> and has been shown to scale to ImageNet-level tasks.</span></p>
+<hr>
+</section>
+<section id="Connections-to-Other-Sparsity-Methods">
+
+    <h3>
+    <a href="#Connections-to-Other-Sparsity-Methods"><span>Connections to Other Sparsity Methods</span> </a>
+    </h3>
+<p><span>The Lottery Ticket Hypothesis connects deeply to other sparsity research:</span></p>
+<ul>
+<li>
+<p><strong><strong><span>Mixture of Experts (MoE):</span></strong></strong><span> MoE achieves conditional sparsity at </span>
+<span>inference time by routing tokens to a subset of experts. The lottery ticket </span>
+<span>perspective suggests that MoE might work because each expert is, in a sense, </span>
+<span>a winning ticket for its input distribution. The routing network learns to </span>
+<span>match inputs to their best subnetwork.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Sparse Autoencoders (SAE):</span></strong></strong><span> SAEs enforce sparsity in activations, </span>
+<span>meaning few neurons fire for any given input. Lottery tickets enforce </span>
+<span>sparsity in weights, meaning few connections exist at all. Both converge </span>
+<span>on the idea that neural networks are vastly over-parameterized and that </span>
+<span>most computation is redundant.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Quantization:</span></strong></strong><span> Quantization reduces the bits per weight, while </span>
+<span>pruning reduces the number of weights. They are complementary: a </span>
+<span>winning ticket can be further quantized. Recent work on SparseGPT </span>
+<span>combines unstructured pruning with quantization to achieve 60% </span>
+<span>sparsity + 4-bit weights with minimal accuracy loss on LLMs.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Neural Collapse:</span></strong></strong><span> At the end of training, features collapse to </span>
+<span>class means forming a simplex ETF. The lottery ticket hypothesis </span>
+<span>suggests that only a subset of the network is responsible for </span>
+<span>learning these collapsed representations, raising the question: </span>
+<span>do winning tickets exhibit neural collapse faster?</span></p>
+</li>
+</ul>
+</section>
+<section id="Open-Questions">
+
+    <h3>
+    <a href="#Open-Questions"><span>Open Questions</span> </a>
+    </h3>
+<p><span>Several important questions remain:</span></p>
+<ol>
+<li>
+<p><strong><strong><span>Is there a theory of winning tickets?</span></strong></strong><span> We know they exist </span>
+<span>empirically, but we lack a theory predicting which initializations </span>
+<span>will contain good tickets.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Can we find tickets without training?</span></strong></strong><span> Methods like SNIP </span>
+<span>(Single-shot Network Pruning) and GraSP attempt to identify </span>
+<span>sparse masks at initialization, before any training occurs.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Do LLMs have lottery tickets?</span></strong></strong><span> Recent work suggests yes, </span>
+<span>and that different tasks may activate different subnetworks </span>
+<span>within a large model, echoing the MoE philosophy.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Strong vs. Weak tickets:</span></strong></strong><span> Some tickets not only match but </span>
+<span>exceed the dense network</span>&rsquo;<span>s performance. Understanding when and </span>
+<span>why this happens remains open.</span></p>
+</li>
+</ol>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/pruning.html">#pruning</a><a class="tag" href="/tags/lottery-ticket.html">#lottery-ticket</a><a class="tag" href="/tags/efficiency.html">#efficiency</a></div>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2026-01-26-lottery-ticket.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>

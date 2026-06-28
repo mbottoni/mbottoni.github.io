@@ -1,0 +1,347 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>logit-graph — mbottoni</title>
+  <meta name="description" content="Fit, simulate, and compare logit graph models against ER/WS/BA via spectral GIC. On PyPI.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="logit-graph — mbottoni">
+  <meta property="og:description" content="Fit, simulate, and compare logit graph models against ER/WS/BA via spectral GIC. On PyPI.">
+  <meta property="og:url" content="https://mbottoni.github.io/projects/logit-graph.html">
+  <meta property="og:image" content="/assets/projects/logit-graph.gif">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="logit-graph — mbottoni">
+  <meta name="twitter:description" content="Fit, simulate, and compare logit graph models against ER/WS/BA via spectral GIC. On PyPI.">
+  <meta name="twitter:image" content="/assets/projects/logit-graph.gif">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/projects/logit-graph.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <article class="project-detail">
+        <p class="back-link"><a href="/projects.html">← All projects</a></p>
+        <header class="project-detail-header">
+          <h1>logit-graph <span class="muted">2025</span></h1>
+          <div class="tag-row"><span class="tag">research</span></div>
+          <p class="project-actions">
+            <a class="button" href="https://github.com/mbottoni/logit-graph">
+              <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+              View on GitHub
+            </a>
+          </p>
+        </header>
+        <figure class="project-figure"><img src="/assets/projects/logit-graph.gif" alt="logit-graph demo"><figcaption>Synthetic temporal logit graph: nodes arrive over time and attach preferentially to high-degree nodes, so hubs emerge as the network grows.</figcaption></figure>
+        <p><span>A Python package to </span><strong><strong><span>fit, simulate, and compare logit graph models</span></strong></strong><span> against the</span>
+<span>classic random-graph baselines </span>&mdash;<span> Erdős–Rényi (ER), Watts–Strogatz (WS), and</span>
+<span>Barabási–Albert (BA) </span>&mdash;<span> using a spectral Graph Information Criterion (GIC).</span>
+<span>Published on PyPI as </span><a href="https://pypi.org/project/logit-graph/"><code>logit-graph</code></a><span> with a</span>
+<span>scikit-learn-style API and reproducible, seedable comparisons.</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line">pip install <span class="hl-string">&quot;logit-graph&gt;=0.1.3&quot;</span></span></code></pre>
+
+</figure>
+<section id="What-it-does">
+
+    <h2>
+    <a href="#What-it-does"><span>What it does</span> </a>
+    </h2>
+<ul>
+<li>
+<strong><span>Estimate</span></strong><span> </span>&mdash;<span> pick the neighborhood depth </span><code>d̂</code><span> via AIC and the intercept </span><code>σ̂</code>
+<span>(offset logit) from a real graph.</span>
+</li>
+<li>
+<strong><span>Generate</span></strong><span> </span>&mdash;<span> sample graphs whose normalized-Laplacian spectrum matches the</span>
+<span>data, via a GIC-guided Gibbs sampler.</span>
+</li>
+<li>
+<strong><span>Compare</span></strong><span> </span>&mdash;<span> rank the logit graph against ER / WS / BA on the same spectral</span>
+<span>GIC (lower is better).</span>
+</li>
+</ul>
+</section>
+<section id="Results-at-a-glance">
+
+    <h2>
+    <a href="#Results-at-a-glance"><span>Results at a glance</span> </a>
+    </h2>
+<p><span>Reproducible comparison on the SNAP Facebook ego network </span><strong><strong><span>686</span></strong></strong>
+<span>(</span><code>random_state=0</code><span>):</span></p>
+<table>
+<tr>
+<th><span>Model</span></th>
+<th><span>GIC ↓</span></th>
+<th><span>Notes</span></th>
+</tr>
+<tr>
+<td><span>Logit Graph</span></td>
+<td><span>~4.07</span></td>
+<td><span>AIC-selected </span><code>d̂</code><span>, offset-logit </span><code>σ̂</code><span></span></td>
+</tr>
+<tr>
+<td><span>BA</span></td>
+<td><span>~4.12</span></td>
+<td><span>preferential-attachment grid search</span></td>
+</tr>
+<tr>
+<td><span>WS</span></td>
+<td><span>~4.57</span></td>
+<td><span>small-world grid search</span></td>
+</tr>
+<tr>
+<td><span>ER</span></td>
+<td><span>~5.78</span></td>
+<td><span>density-matched</span></td>
+</tr>
+</table>
+<p><span>The logit graph wins on this network </span>&mdash;<span> its degree-aware edge model captures</span>
+<span>spectral structure the classic baselines miss.</span></p>
+</section>
+<section id="A-60-second-taste">
+
+    <h2>
+    <a href="#A-60-second-taste"><span>A 60-second taste</span> </a>
+    </h2>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">from</span> logit_graph <span class="hl-keyword">import</span> simulate_graph, select_d_ensemble, estimate_sigma_from_graph</span>
+<span class="line"></span>
+<span class="line">adj, meta = simulate_graph(</span>
+<span class="line">    <span class="hl-number">200</span>, <span class="hl-number">1</span>, sigma=-<span class="hl-number">4.0</span>, n_iter=<span class="hl-number">30_000</span>,</span>
+<span class="line">    feature_mode=<span class="hl-string">&quot;incremental&quot;</span>, target_density=<span class="hl-number">0.10</span>, seed=<span class="hl-number">42</span>, return_meta=<span class="hl-literal">True</span>,</span>
+<span class="line">)</span>
+<span class="line">d_hat, _ = select_d_ensemble([adj], [<span class="hl-number">0</span>, <span class="hl-number">1</span>, <span class="hl-number">2</span>, <span class="hl-number">3</span>], <span class="hl-string">&quot;incremental&quot;</span>)</span>
+<span class="line">sigma_hat = estimate_sigma_from_graph(adj, d_hat, <span class="hl-string">&quot;incremental&quot;</span>)</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;d_hat=<span class="hl-subst">{d_hat}</span>, sigma_hat=<span class="hl-subst">{sigma_hat:<span class="hl-number">.3</span>f}</span>&quot;</span>)</span></code></pre>
+
+</figure>
+</section>
+<section id="Core-API">
+
+    <h2>
+    <a href="#Core-API"><span>Core API</span> </a>
+    </h2>
+<ul>
+<li>
+<code>simulate_graph</code><span> </span>&mdash;<span> generate a logit graph at </span><code>(n, d, σ)</code>
+</li>
+<li>
+<code>select_d_ensemble</code><span> </span>&mdash;<span> AIC model selection over the depth </span><code>d</code>
+</li>
+<li>
+<code>estimate_sigma_from_graph</code><span> </span>&mdash;<span> offset-logit </span><code>σ̂</code><span> at fixed </span><code>d</code>
+</li>
+<li>
+<code>GraphModelComparator</code><span> </span>&mdash;<span> logit graph vs baselines, scored by spectral GIC</span>
+</li>
+<li>
+<code>LogitGraphFitter</code><span> </span>&mdash;<span> fixed-</span><code>d</code><span> spectral fitter</span>
+</li>
+</ul>
+<p><span>The repo also ships an extensive experiment suite (reproducible </span><code>make</code><span> targets for</span>
+<span>parameter recovery, ROC power analysis, MCMC convergence diagnostics, and</span>
+<span>real-network GIC comparisons on Facebook, Twitch, arXiv, and animal connectomes),</span>
+<span>plus a newer </span><strong><strong><span>temporal</span></strong></strong><span> logit graph for growing networks.</span></p>
+</section>
+<section id="Links">
+
+    <h2>
+    <a href="#Links"><span>Links</span> </a>
+    </h2>
+<ul>
+<li>
+<span>PyPI: </span><a href="https://pypi.org/project/logit-graph/" class="url">https://pypi.org/project/logit-graph/</a>
+</li>
+<li>
+<span>Documentation: </span><a href="https://logit-graph.readthedocs.io/en/latest/" class="url">https://logit-graph.readthedocs.io/en/latest/</a>
+</li>
+</ul>
+</section>
+
+      </article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/projects/logit-graph.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>

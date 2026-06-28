@@ -1,0 +1,339 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projects — mbottoni</title>
+  <meta name="description" content="Open source projects and experiments.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Projects — mbottoni">
+  <meta property="og:description" content="Open source projects and experiments.">
+  <meta property="og:url" content="https://mbottoni.github.io/projects.html">
+  <meta property="og:image" content="https://avatars.githubusercontent.com/u/37229305?v=4">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Projects — mbottoni">
+  <meta name="twitter:description" content="Open source projects and experiments.">
+  <meta name="twitter:image" content="https://avatars.githubusercontent.com/u/37229305?v=4">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/projects.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html" class="active">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <section class="theme-page">
+        <header>
+          <h1>Projects</h1>
+          <p>A sample of my open source projects and experiments. More on
+          <a href="https://github.com/mbottoni">GitHub</a>.</p>
+        </header>
+        <div class="project-grid">
+      <article class="project-card">
+        <a class="project-media" href="/projects/fundamental-agents.html"><img src="/assets/projects/fundamental-agents.gif" alt="fundamental-agents demo" loading="lazy"></a>
+        <div class="project-body">
+          <h3><a href="/projects/fundamental-agents.html">fundamental-agents</a> <span class="muted">2025</span></h3>
+          <p>Multi-agent AI platform for fundamental stock analysis: an orchestrator runs five agents to turn a ticker into an investment report.</p>
+          <div class="tag-row"><span class="tag">projects</span></div>
+          <a class="project-more" href="/projects/fundamental-agents.html">Details →</a>
+        </div>
+      </article>
+    
+      <article class="project-card">
+        <a class="project-media" href="/projects/fisher-rao-ml.html"><img src="/assets/projects/fisher-rao-ml.gif" alt="fisher-rao-ml demo" loading="lazy"></a>
+        <div class="project-body">
+          <h3><a href="/projects/fisher-rao-ml.html">fisher-rao-ml</a> <span class="muted">2025</span></h3>
+          <p>An empirical study of the Fisher-Rao geodesic distance vs KL divergence in t-SNE and VAEs, with reproducible benchmarks and an arXiv-style report.</p>
+          <div class="tag-row"><span class="tag">research</span></div>
+          <a class="project-more" href="/projects/fisher-rao-ml.html">Details →</a>
+        </div>
+      </article>
+    
+      <article class="project-card">
+        <a class="project-media" href="/projects/scaling-ensembles.html"><img src="/assets/projects/scaling-ensembles.gif" alt="scaling-ensembles demo" loading="lazy"></a>
+        <div class="project-body">
+          <h3><a href="/projects/scaling-ensembles.html">scaling-ensembles</a> <span class="muted">2025</span></h3>
+          <p>Do independently trained networks converge to the same function as they widen? Width sweeps measuring function-space diversity.</p>
+          <div class="tag-row"><span class="tag">research</span></div>
+          <a class="project-more" href="/projects/scaling-ensembles.html">Details →</a>
+        </div>
+      </article>
+    
+      <article class="project-card">
+        <a class="project-media" href="/projects/vae-playground.html"><img src="/assets/projects/vae-playground.gif" alt="vae-playground demo" loading="lazy"></a>
+        <div class="project-body">
+          <h3><a href="/projects/vae-playground.html">vae-playground</a> <span class="muted">2025</span></h3>
+          <p>A modular playground of five VAE variants (Vanilla, β-VAE, Conditional, VQ-VAE, WAE-MMD) with interactive marimo notebooks.</p>
+          <div class="tag-row"><span class="tag">research</span></div>
+          <a class="project-more" href="/projects/vae-playground.html">Details →</a>
+        </div>
+      </article>
+    
+      <article class="project-card">
+        <a class="project-media" href="/projects/terror-reco.html"><img src="/assets/projects/terror-reco.gif" alt="terror-reco demo" loading="lazy"></a>
+        <div class="project-body">
+          <h3><a href="/projects/terror-reco.html">terror-reco</a> <span class="muted">2024</span></h3>
+          <p>Horror movie recommendations from free-text mood, via semantic search.</p>
+          <div class="tag-row"><span class="tag">projects</span></div>
+          <a class="project-more" href="/projects/terror-reco.html">Details →</a>
+        </div>
+      </article>
+    
+      <article class="project-card">
+        <a class="project-media" href="/projects/logit-graph.html"><img src="/assets/projects/logit-graph.gif" alt="logit-graph demo" loading="lazy"></a>
+        <div class="project-body">
+          <h3><a href="/projects/logit-graph.html">logit-graph</a> <span class="muted">2025</span></h3>
+          <p>Fit, simulate, and compare logit graph models against ER/WS/BA via spectral GIC. On PyPI.</p>
+          <div class="tag-row"><span class="tag">research</span></div>
+          <a class="project-more" href="/projects/logit-graph.html">Details →</a>
+        </div>
+      </article>
+    
+      <article class="project-card">
+        <a class="project-media" href="/projects/ml-prod.html"><img src="/assets/projects/ml-prod.gif" alt="ml-prod demo" loading="lazy"></a>
+        <div class="project-body">
+          <h3><a href="/projects/ml-prod.html">ml-prod</a> <span class="muted">2024</span></h3>
+          <p>End-to-end ML in production: a model microservice, Docker, Kubernetes, and drift monitoring.</p>
+          <div class="tag-row"><span class="tag">projects</span></div>
+          <a class="project-more" href="/projects/ml-prod.html">Details →</a>
+        </div>
+      </article>
+    
+      <article class="project-card">
+        <a class="project-media" href="/projects/flow-match.html"><img src="/assets/projects/flow-match.gif" alt="flow-match demo" loading="lazy"></a>
+        <div class="project-body">
+          <h3><a href="/projects/flow-match.html">flow-match</a> <span class="muted">2025</span></h3>
+          <p>Flow Matching for generative modeling: a scikit-learn-like FlowMatcher transporting noise to data via learned ODE velocity fields.</p>
+          <div class="tag-row"><span class="tag">research</span></div>
+          <a class="project-more" href="/projects/flow-match.html">Details →</a>
+        </div>
+      </article>
+    
+      <article class="project-card">
+        <a class="project-media" href="/projects/unet-fun.html"><img src="/assets/projects/unet-fun.gif" alt="unet-fun demo" loading="lazy"></a>
+        <div class="project-body">
+          <h3><a href="/projects/unet-fun.html">unet-fun</a> <span class="muted">2024</span></h3>
+          <p>A from-scratch U-Net for binary image segmentation (Carvana car masking) — encoder–decoder with skip connections.</p>
+          <div class="tag-row"><span class="tag">projects</span></div>
+          <a class="project-more" href="/projects/unet-fun.html">Details →</a>
+        </div>
+      </article>
+    
+      <article class="project-card">
+        <a class="project-media" href="/projects/kalman-transformer.html"><img src="/assets/projects/kalman-transformer.gif" alt="kalman-transformer demo" loading="lazy"></a>
+        <div class="project-body">
+          <h3><a href="/projects/kalman-transformer.html">kalman-transformer</a> <span class="muted">2024</span></h3>
+          <p>A Kalman filter and a Transformer as interchangeable expected-return estimators feeding a Markowitz backtest.</p>
+          <div class="tag-row"><span class="tag">research</span></div>
+          <a class="project-more" href="/projects/kalman-transformer.html">Details →</a>
+        </div>
+      </article>
+    
+      <article class="project-card">
+        <a class="project-media" href="/projects/rl-rubiks-cube.html"><img src="/assets/projects/rl-rubiks-cube.gif" alt="rl-rubiks-cube demo" loading="lazy"></a>
+        <div class="project-body">
+          <h3><a href="/projects/rl-rubiks-cube.html">rl-rubiks-cube</a> <span class="muted">2023</span></h3>
+          <p>Self-taught Rubik's Cube solver — Autodidactic Iteration (value+policy net, no dataset) solving via beam search.</p>
+          <div class="tag-row"><span class="tag">projects</span></div>
+          <a class="project-more" href="/projects/rl-rubiks-cube.html">Details →</a>
+        </div>
+      </article>
+    
+      <article class="project-card">
+        <a class="project-media" href="/projects/bertimbau-probing.html"><img src="/assets/projects/bertimbau-probing.gif" alt="bertimbau-probing demo" loading="lazy"></a>
+        <div class="project-body">
+          <h3><a href="/projects/bertimbau-probing.html">bertimbau-probing</a> <span class="muted">2023</span></h3>
+          <p>Fine-tuning BERTimbau on Portuguese reviews to probe whether its embeddings recover vowel density.</p>
+          <div class="tag-row"><span class="tag">research</span></div>
+          <a class="project-more" href="/projects/bertimbau-probing.html">Details →</a>
+        </div>
+      </article>
+    
+      <article class="project-card">
+        <a class="project-media" href="/projects/graph-corr-embedd.html"><img src="/assets/projects/graph-corr-embedd.gif" alt="graph-corr-embedd demo" loading="lazy"></a>
+        <div class="project-body">
+          <h3><a href="/projects/graph-corr-embedd.html">graph-corr-embedd</a> <span class="muted">2024</span></h3>
+          <p>Measuring correlation between graphs via learned embeddings vs. classical graph-distance measures.</p>
+          <div class="tag-row"><span class="tag">research</span></div>
+          <a class="project-more" href="/projects/graph-corr-embedd.html">Details →</a>
+        </div>
+      </article>
+    </div>
+      </section>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/src/projects.ts">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>

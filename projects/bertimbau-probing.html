@@ -1,0 +1,261 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>bertimbau-probing — mbottoni</title>
+  <meta name="description" content="Fine-tuning BERTimbau on Portuguese reviews to probe whether its embeddings recover vowel density.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="bertimbau-probing — mbottoni">
+  <meta property="og:description" content="Fine-tuning BERTimbau on Portuguese reviews to probe whether its embeddings recover vowel density.">
+  <meta property="og:url" content="https://mbottoni.github.io/projects/bertimbau-probing.html">
+  <meta property="og:image" content="/assets/projects/bertimbau-probing.gif">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="bertimbau-probing — mbottoni">
+  <meta name="twitter:description" content="Fine-tuning BERTimbau on Portuguese reviews to probe whether its embeddings recover vowel density.">
+  <meta name="twitter:image" content="/assets/projects/bertimbau-probing.gif">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/projects/bertimbau-probing.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <article class="project-detail">
+        <p class="back-link"><a href="/projects.html">← All projects</a></p>
+        <header class="project-detail-header">
+          <h1>bertimbau-probing <span class="muted">2023</span></h1>
+          <div class="tag-row"><span class="tag">research</span></div>
+          <p class="project-actions">
+            <a class="button" href="https://github.com/mbottoni/ep2-nlp">
+              <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+              View on GitHub
+            </a>
+          </p>
+        </header>
+        <figure class="project-figure"><img src="/assets/projects/bertimbau-probing.gif" alt="bertimbau-probing demo"><figcaption>Probing BERTimbau: a scan highlights vowels in each Portuguese review while the gauge shows the vowel density recovered from the embedding.</figcaption></figure>
+        <p><span>A probing study of </span><strong><strong><span>BERTimbau</span></strong></strong><span> </span>&mdash;<span> the BERT model pre-trained on Brazilian</span>
+<span>Portuguese (</span><code>neuralmind/bert-base-portuguese-cased</code><span>) </span>&mdash;<span> fine-tuned on real</span>
+<span>product reviews from the </span><strong><strong><span>B2W-Reviews01</span></strong></strong><span> dataset. The question: can a</span>
+<span>transformer</span>&rsquo;<span>s contextual embeddings recover a purely </span><strong><span>surface</span></strong><span> property of the</span>
+<span>text, namely its </span><strong><strong><span>vowel density</span></strong></strong><span> (the share of letters that are vowels)?</span></p>
+<section id="The-probe">
+
+    <h2>
+    <a href="#The-probe"><span>The probe</span> </a>
+    </h2>
+<p><span>Each review is reduced to a single number </span>&mdash;<span> its vowel density </span>&mdash;<span> and the</span>
+<span>model is trained to predict that number from the review text alone, in two</span>
+<span>flavors:</span></p>
+<ul>
+<li>
+<strong><span>Regression</span></strong><span> </span>&mdash;<span> predict the continuous vowel density of a review, scored by</span>
+<span>RMSE and MAE.</span>
+</li>
+<li>
+<strong><span>Classification</span></strong><span> </span>&mdash;<span> bucket density into three bands (low </span><code>&lt; 1/3</code><span>,</span>
+<span>mid </span><code>1/3–2/3</code><span>, high </span><code>&gt; 2/3</code><span>) and predict the band, in both an </span><strong><strong><span>unbalanced</span></strong></strong>
+<span>and a </span><strong><strong><span>class-balanced</span></strong></strong><span> setting.</span>
+</li>
+</ul>
+</section>
+<section id="Baselines">
+
+    <h2>
+    <a href="#Baselines"><span>Baselines</span> </a>
+    </h2>
+<p><span>To see whether the embeddings actually carry the signal </span>&mdash;<span> rather than the task</span>
+<span>being trivially easy </span>&mdash;<span> the fine-tuned model is compared against simple</span>
+<span>heuristics: the </span><strong><span>global</span></strong><span> average density, the density of just the </span><strong><span>first</span></strong><span> word,</span>
+<span>and the density of just the </span><strong><span>last</span></strong><span> word of each review.</span></p>
+</section>
+<section id="Data">
+
+    <h2>
+    <a href="#Data"><span>Data</span> </a>
+    </h2>
+<p><a href="https://github.com/americanas-tech/b2w-reviews01"><span>B2W-Reviews01</span></a><span> </span>&mdash;<span> a corpus of</span>
+<span>Brazilian e-commerce product reviews (title, rating, recommendation, free-text</span>
+<span>review). The experiments sample reviews and split them into train / validation /</span>
+<span>test.</span></p>
+</section>
+
+      </article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/projects/bertimbau-probing.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>

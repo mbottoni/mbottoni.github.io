@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>fisher-rao-ml — mbottoni</title>
+  <meta name="description" content="An empirical study of the Fisher-Rao geodesic distance vs KL divergence in t-SNE and VAEs, with reproducible benchmarks and an arXiv-style report.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="fisher-rao-ml — mbottoni">
+  <meta property="og:description" content="An empirical study of the Fisher-Rao geodesic distance vs KL divergence in t-SNE and VAEs, with reproducible benchmarks and an arXiv-style report.">
+  <meta property="og:url" content="https://mbottoni.github.io/projects/fisher-rao-ml.html">
+  <meta property="og:image" content="/assets/projects/fisher-rao-ml.gif">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="fisher-rao-ml — mbottoni">
+  <meta name="twitter:description" content="An empirical study of the Fisher-Rao geodesic distance vs KL divergence in t-SNE and VAEs, with reproducible benchmarks and an arXiv-style report.">
+  <meta name="twitter:image" content="/assets/projects/fisher-rao-ml.gif">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/projects/fisher-rao-ml.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <article class="project-detail">
+        <p class="back-link"><a href="/projects.html">← All projects</a></p>
+        <header class="project-detail-header">
+          <h1>fisher-rao-ml <span class="muted">2025</span></h1>
+          <div class="tag-row"><span class="tag">research</span></div>
+          <p class="project-actions">
+            <a class="button" href="https://github.com/mbottoni/fisher-rao-ml">
+              <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+              View on GitHub
+            </a>
+          </p>
+        </header>
+        <figure class="project-figure"><img src="/assets/projects/fisher-rao-ml.gif" alt="fisher-rao-ml demo"><figcaption>On the manifold of distributions, the Fisher-Rao distance is the geodesic arc (symmetric), while KL is flat and asymmetric — KL(A‖B) ≠ KL(B‖A).</figcaption></figure>
+        <p><span>A rigorous empirical study of the </span><strong><strong><span>Fisher-Rao geodesic distance</span></strong></strong><span> as a</span>
+<span>replacement or complement to </span><strong><strong><span>KL divergence</span></strong></strong><span> in t-SNE-style affinity matching</span>
+<span>and variational autoencoders.</span></p>
+<section id="The-geometry">
+
+    <h2>
+    <a href="#The-geometry"><span>The geometry</span> </a>
+    </h2>
+<p><span>Probability distributions live on a curved manifold. The </span><strong><strong><span>Fisher-Rao distance</span></strong></strong>
+<span>is the </span><strong><span>geodesic</span></strong><span> (shortest-path) distance on that manifold under the Fisher</span>
+<span>information metric </span>&mdash;<span> it is a true, </span><strong><strong><span>symmetric</span></strong></strong><span> distance. </span><strong><strong><span>KL divergence</span></strong></strong><span>, by</span>
+<span>contrast, is a flat, </span><strong><strong><span>asymmetric</span></strong></strong><span> divergence: </span><code>KL(A‖B) ≠ KL(B‖A)</code><span>. The</span>
+<span>animation above shows both for Bernoulli distributions, where each distribution</span>
+<span>maps to a point on the unit quarter-circle and Fisher-Rao becomes the arc between</span>
+<span>two points.</span></p>
+</section>
+<section id="What-s-inside">
+
+    <h2>
+    <a href="#What-s-inside"><span>What</span>&rsquo;<span>s inside</span> </a>
+    </h2>
+<ul>
+<li>
+<span>A </span><strong><strong><span>differentiable PyTorch</span></strong></strong><span> implementation of categorical and</span>
+<span>diagonal-Gaussian Fisher-Rao distances.</span>
+</li>
+<li>
+<span>t-SNE and VAE training scripts that </span><strong><strong><span>toggle between KL and Fisher-Rao</span></strong></strong>
+<span>objectives.</span>
+</li>
+<li>
+<span>Multi-seed, multi-dataset </span><strong><strong><span>benchmarks</span></strong></strong><span> (t-SNE robustness, a VAE β-sweep) plus</span>
+<span>targeted stress tests for regimes where KL</span>&rsquo;<span>s unbounded asymmetric pressure may</span>
+<span>be a liability (noisy soft labels, distillation).</span>
+</li>
+<li>
+<strong><strong><span>Paired statistical aggregation</span></strong></strong><span> — Wilcoxon signed-rank tests and Cliff</span>&rsquo;<span>s</span>
+<span>delta — and an arXiv-style LaTeX report.</span>
+</li>
+</ul>
+</section>
+<section id="Honest-findings">
+
+    <h2>
+    <a href="#Honest-findings"><span>Honest findings</span> </a>
+    </h2>
+<p><span>The headline t-SNE result is </span><strong><span>negative-leaning</span></strong><span>: KL keeps a small but consistent</span>
+<span>advantage in silhouette-based cluster separation. The VAE workflow asks a</span>
+<span>different question </span>&mdash;<span> whether Fisher-Rao</span>&rsquo;<span>s intrinsic geometry changes</span>
+<span>reconstruction, latent usefulness, posterior matching, and corruption robustness</span>
+<span>once each objective gets its own β tuning.</span></p>
+</section>
+
+      </article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/projects/fisher-rao-ml.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>

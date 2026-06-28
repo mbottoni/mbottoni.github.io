@@ -1,0 +1,547 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H-Neurons: Hallucination at the Neuron Level</title>
+  <meta name="description" content="Gao et al. https://arxiv.org/abs/2512.01797 present a compelling investigation 
+into the microscopic mechanisms of hallucination in LLMs. The central thesis is that 
+hallucinations are not diffuse phenomena spread across millions of parameters, but 
+are instead driven by a remarkably sparse subset of neurons -- fewer than 0.1% of the 
+total -- which the authors term H-Neurons (Hallucination-associated Neurons).">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="H-Neurons: Hallucination at the Neuron Level">
+  <meta property="og:description" content="Gao et al. https://arxiv.org/abs/2512.01797 present a compelling investigation 
+into the microscopic mechanisms of hallucination in LLMs. The central thesis is that 
+hallucinations are not diffuse phenomena spread across millions of parameters, but 
+are instead driven by a remarkably sparse subset of neurons -- fewer than 0.1% of the 
+total -- which the authors term H-Neurons (Hallucination-associated Neurons).">
+  <meta property="og:url" content="https://mbottoni.github.io/2026/01/27/h-neurons.html">
+  <meta property="og:image" content="/assets/frontier/h_neurons.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="H-Neurons: Hallucination at the Neuron Level">
+  <meta name="twitter:description" content="Gao et al. https://arxiv.org/abs/2512.01797 present a compelling investigation 
+into the microscopic mechanisms of hallucination in LLMs. The central thesis is that 
+hallucinations are not diffuse phenomena spread across millions of parameters, but 
+are instead driven by a remarkably sparse subset of neurons -- fewer than 0.1% of the 
+total -- which the authors term H-Neurons (Hallucination-associated Neurons).">
+  <meta name="twitter:image" content="/assets/frontier/h_neurons.png">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2026/01/27/h-neurons.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/frontier.html">
+          Frontier LLMs &amp; Architectures
+        </a>
+        <span class="post-meta"><time datetime="2026-01-27">Jan 27, 2026</time> · 9 min read</span>
+      </div>
+      
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <ul><li class="toc-l3"><a href="#Quantifying-Neuron-Contributions-The-CETT-Metric">Quantifying Neuron Contributions: The CETT Metric</a></li><li class="toc-l3"><a href="#Pseudocode-Computing-CETT-Scores">Pseudocode: Computing CETT Scores</a></li><li class="toc-l3"><a href="#Identifying-H-Neurons-Sparse-Logistic-Regression">Identifying H-Neurons: Sparse Logistic Regression</a></li><li class="toc-l3"><a href="#Causal-Intervention-Activation-Scaling">Causal Intervention: Activation Scaling</a></li><li class="toc-l3"><a href="#Origin-Pre-training-Not-Alignment">Origin: Pre-training, Not Alignment</a></li><li class="toc-l3"><a href="#Critical-Assessment">Critical Assessment</a></li></ul>
+    </details>
+  
+      <article >
+
+    <h1>
+    <a href="#H-Neurons-Hallucination-at-the-Neuron-Level"><span>H-Neurons: Hallucination at the Neuron Level</span> <time datetime="2026-01-27">Jan 27, 2026</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/frontier/h_neurons.png">
+</figure>
+<p><span>Gao et al. https://arxiv.org/abs/2512.01797 present a compelling investigation </span>
+<span>into the microscopic mechanisms of hallucination in LLMs. The central thesis is that </span>
+<span>hallucinations are not diffuse phenomena spread across millions of parameters, but </span>
+<span>are instead driven by a remarkably sparse subset of neurons </span>&ndash;<span> fewer than 0.1% of the </span>
+<span>total </span>&ndash;<span> which the authors term </span><strong><strong><span>H-Neurons</span></strong></strong><span> (Hallucination-associated Neurons).</span></p>
+<p><span>The paper addresses three questions: (1) do these neurons exist and can they be </span>
+<span>identified? (2) what is their causal impact on model behavior? and (3) when do they </span>
+<span>originate </span>&ndash;<span> during pre-training or post-training alignment? The answers are </span>
+<span>surprisingly clean: yes, they exist; they drive over-compliance behavior broadly </span>
+<span>(not just factual errors); and they emerge during pre-training, not alignment.</span></p>
+<p><span>This post walks through the methodology, reproduces the key formulations, and offers </span>
+<span>a critical assessment of the claims.</span></p>
+<hr>
+<section id="Quantifying-Neuron-Contributions-The-CETT-Metric">
+
+    <h3>
+    <a href="#Quantifying-Neuron-Contributions-The-CETT-Metric"><span>Quantifying Neuron Contributions: The CETT Metric</span> </a>
+    </h3>
+<p><span>The foundation of the paper is a way to measure how much each individual neuron </span>
+<span>contributes to the model</span>&rsquo;<span>s output at each token position. They adopt the CETT </span>
+<span>(Contribution Estimation via Token-level Tracking) metric from Zhang et al. (2024).</span></p>
+<p><span>Consider a transformer block processing token $t$ with hidden representation </span>
+<span>$x_t \in \mathbb{R}^d$. Inside the FFN (feed-forward network), the input is </span>
+<span>projected into an intermediate activation space:</span></p>
+<p><span>$$z_t = \sigma(W_{\text{gate}} x_t) \odot W_{\text{up}} x_t$$</span></p>
+<p><span>where $\sigma(\cdot)$ is a nonlinear activation (e.g., SiLU), $W_{\text{gate}}, W_{\text{up}} \in \mathbb{R}^{d_m \times d}$ are learned projections, and $\odot$ is element-wise multiplication. Each dimension $z_{j,t}$ is the activation of neuron $j$.</span></p>
+<p><span>The full hidden state is then:</span></p>
+<p><span>$$h_t = W_{\text{down}} z_t$$</span></p>
+<p><span>To isolate neuron $j$</span>&rsquo;<span>s contribution, we mask all other neurons, defining </span>
+<span>$z_t^{(j)} = z_{j,t} e_j$ where $e_j$ is the $j$-th standard basis vector. The </span>
+<span>down-projected vector attributable to neuron $j$ alone is $h_t^{(j)} = W_{\text{down}} z_t^{(j)}$.</span></p>
+<p><span>The CETT score </span>&ndash;<span> the normalized contribution of neuron $j$ at position $t$ </span>&ndash;<span> is:</span></p>
+<p><span>$$\text{CETT}_{j,t} = \frac{\| h_t^{(j)} \|_2}{\| h_t \|_2}$$</span></p>
+<p><span>This ratio captures the fraction of the information flow at token $t$ attributable to neuron $j$. The key insight: raw activation magnitude is insufficient because a neuron might fire strongly yet have negligible impact on the residual stream due to the downstream projection weights.</span></p>
+</section>
+<section id="Pseudocode-Computing-CETT-Scores">
+
+    <h3>
+    <a href="#Pseudocode-Computing-CETT-Scores"><span>Pseudocode: Computing CETT Scores</span> </a>
+    </h3>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">compute_cett_scores</span>(<span class="hl-params">model, input_ids, layer_idx</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;Compute per-neuron CETT contribution scores for a given layer.&quot;&quot;&quot;</span></span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">with</span> torch.no_grad():</span>
+<span class="line">        hidden_states = model.get_hidden_states(input_ids, layer_idx)</span>
+<span class="line">        x_t = hidden_states  <span class="hl-comment"># shape: [seq_len, d_model]</span></span>
+<span class="line">        </span>
+<span class="line">        ffn = model.layers[layer_idx].ffn</span>
+<span class="line">        W_gate = ffn.gate_proj.weight  <span class="hl-comment"># [d_intermediate, d_model]</span></span>
+<span class="line">        W_up = ffn.up_proj.weight      <span class="hl-comment"># [d_intermediate, d_model]</span></span>
+<span class="line">        W_down = ffn.down_proj.weight  <span class="hl-comment"># [d_model, d_intermediate]</span></span>
+<span class="line">        </span>
+<span class="line">        gate_out = torch.nn.functional.silu(x_t @ W_gate.T)</span>
+<span class="line">        up_out = x_t @ W_up.T</span>
+<span class="line">        z_t = gate_out * up_out  <span class="hl-comment"># [seq_len, d_intermediate]</span></span>
+<span class="line">        </span>
+<span class="line">        h_t = z_t @ W_down.T    <span class="hl-comment"># [seq_len, d_model]</span></span>
+<span class="line">        h_t_norm = torch.norm(h_t, dim=-<span class="hl-number">1</span>, keepdim=<span class="hl-literal">True</span>)  <span class="hl-comment"># [seq_len, 1]</span></span>
+<span class="line">        </span>
+<span class="line">        d_intermediate = z_t.shape[-<span class="hl-number">1</span>]</span>
+<span class="line">        cett = torch.zeros(z_t.shape)  <span class="hl-comment"># [seq_len, d_intermediate]</span></span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-keyword">for</span> j <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(d_intermediate):</span>
+<span class="line">            z_j = torch.zeros_like(z_t)</span>
+<span class="line">            z_j[:, j] = z_t[:, j]</span>
+<span class="line">            h_j = z_j @ W_down.T  <span class="hl-comment"># single-neuron projection</span></span>
+<span class="line">            cett[:, j] = torch.norm(h_j, dim=-<span class="hl-number">1</span>) / (h_t_norm.squeeze() + <span class="hl-number">1e-10</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> cett</span></code></pre>
+
+</figure>
+<p><span>In practice, the per-neuron loop would be vectorized. The authors aggregate </span>
+<span>CETT scores over answer tokens and non-answer tokens separately:</span></p>
+<p><span>$$\text{CETT}_{j,\text{answer}} = \frac{1}{|A|} \sum_{t \in A} \text{CETT}_{j,t}, \quad \text{CETT}_{j,\text{other}} = \frac{1}{|T \setminus A|} \sum_{t \in T \setminus A} \text{CETT}_{j,t}$$</span></p>
+<p><span>where $A$ is the set of answer token positions. This separation is critical: </span>
+<span>it forces the downstream classifier to distinguish neurons that are specifically </span>
+<span>active during factual claims from those involved in general language generation.</span></p>
+<hr>
+</section>
+<section id="Identifying-H-Neurons-Sparse-Logistic-Regression">
+
+    <h3>
+    <a href="#Identifying-H-Neurons-Sparse-Logistic-Regression"><span>Identifying H-Neurons: Sparse Logistic Regression</span> </a>
+    </h3>
+<p><span>With contribution profiles computed for 1,000 faithful and 1,000 hallucinatory </span>
+<span>responses (from TriviaQA), the authors frame identification as binary classification. </span>
+<span>The label assignment is deliberately asymmetric:</span></p>
+<ul>
+<li>
+<span>$y = 1$: answer-token features from </span><strong><strong><span>hallucinatory</span></strong></strong><span> responses</span>
+</li>
+<li>
+<span>$y = 0$: answer-token features from faithful responses, AND all non-answer tokens</span>
+</li>
+</ul>
+<p><span>This forces the classifier to find neurons that are specifically active when the </span>
+<span>model generates a </span><strong><strong><span>false factual claim</span></strong></strong><span>, not just any answer.</span></p>
+<p><span>The classifier is $\ell_1$-regularized logistic regression:</span></p>
+<p><span>$$\mathcal{L}(\theta) = -\sum_i \left[ y_i \log \sigma(\theta^\top x_i) + (1 - y_i) \log(1 - \sigma(\theta^\top x_i)) \right] + \lambda \| \theta \|_1$$</span></p>
+<p><span>The $\ell_1$ penalty drives most weights to zero. Neurons with positive </span>
+<span>$\theta_j &gt; 0$ are designated as H-Neurons </span>&ndash;<span> their activation positively </span>
+<span>correlates with hallucination.</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">from</span> sklearn.linear_model <span class="hl-keyword">import</span> LogisticRegression</span>
+<span class="line"><span class="hl-keyword">import</span> numpy <span class="hl-keyword">as</span> np</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">identify_h_neurons</span>(<span class="hl-params">cett_answer_faithful, cett_answer_halluc, </span></span>
+<span class="line"><span class="hl-params">                       cett_other_faithful, cett_other_halluc, C=<span class="hl-number">0.01</span></span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Identify H-Neurons via sparse logistic regression.</span></span>
+<span class="line"><span class="hl-string">    </span></span>
+<span class="line"><span class="hl-string">    Each input is shape [n_samples, n_neurons].</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-comment"># Positive class: answer tokens from hallucinated responses</span></span>
+<span class="line">    X_pos = cett_answer_halluc</span>
+<span class="line">    y_pos = np.ones(<span class="hl-built_in">len</span>(X_pos))</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-comment"># Negative class: answer tokens from faithful + all non-answer tokens</span></span>
+<span class="line">    X_neg = np.vstack([</span>
+<span class="line">        cett_answer_faithful,</span>
+<span class="line">        cett_other_faithful,</span>
+<span class="line">        cett_other_halluc</span>
+<span class="line">    ])</span>
+<span class="line">    y_neg = np.zeros(<span class="hl-built_in">len</span>(X_neg))</span>
+<span class="line">    </span>
+<span class="line">    X = np.vstack([X_pos, X_neg])</span>
+<span class="line">    y = np.concatenate([y_pos, y_neg])</span>
+<span class="line">    </span>
+<span class="line">    clf = LogisticRegression(</span>
+<span class="line">        penalty=<span class="hl-string">&#x27;l1&#x27;</span>, </span>
+<span class="line">        C=C,            <span class="hl-comment"># inverse regularization; lower = sparser</span></span>
+<span class="line">        solver=<span class="hl-string">&#x27;saga&#x27;</span>,</span>
+<span class="line">        max_iter=<span class="hl-number">5000</span>,</span>
+<span class="line">        class_weight=<span class="hl-string">&#x27;balanced&#x27;</span></span>
+<span class="line">    )</span>
+<span class="line">    clf.fit(X, y)</span>
+<span class="line">    </span>
+<span class="line">    weights = clf.coef_[<span class="hl-number">0</span>]</span>
+<span class="line">    h_neuron_indices = np.where(weights &gt; <span class="hl-number">0</span>)[<span class="hl-number">0</span>]</span>
+<span class="line">    </span>
+<span class="line">    total = <span class="hl-built_in">len</span>(weights)</span>
+<span class="line">    n_h = <span class="hl-built_in">len</span>(h_neuron_indices)</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;Identified <span class="hl-subst">{n_h}</span> H-Neurons out of <span class="hl-subst">{total}</span> (<span class="hl-subst">{n_h/total*<span class="hl-number">100</span>:<span class="hl-number">.3</span>f}</span>%)&quot;</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> h_neuron_indices, weights</span></code></pre>
+
+</figure>
+<p><span>The result is striking: across six models (Mistral-7B, Mistral-Small-24B, </span>
+<span>Gemma-3-4B, Gemma-3-27B, Llama-3.1-8B, Llama-3.3-70B), the identified </span>
+<span>H-Neurons constitute less than 0.1% of total neurons, yet classifiers </span>
+<span>built on them achieve 70-84% accuracy on in-domain TriviaQA and generalize </span>
+<span>to out-of-distribution biomedical QA (BioASQ) and fabricated entity </span>
+<span>detection (NonExist).</span></p>
+<hr>
+</section>
+<section id="Causal-Intervention-Activation-Scaling">
+
+    <h3>
+    <a href="#Causal-Intervention-Activation-Scaling"><span>Causal Intervention: Activation Scaling</span> </a>
+    </h3>
+<p><span>To move from correlation to causation, the authors perturb H-Neurons </span>
+<span>at inference time by scaling their activations:</span></p>
+<p><span>$$z_{j,t} \leftarrow \alpha \cdot z_{j,t}, \quad \alpha \in [0, 3]$$</span></p>
+<p><span>where $\alpha &lt; 1$ suppresses the neuron, $\alpha = 1$ is the baseline, </span>
+<span>and $\alpha &gt; 1$ amplifies it. The authors show that under this perturbation, </span>
+<span>the CETT score scales approximately linearly:</span></p>
+<p><span>$$\text{CETT}_{j,t}(\alpha) = \frac{\| \alpha \cdot h_t^{(j)} \|_2}{\| h_t + (\alpha - 1) h_t^{(j)} \|_2} \approx \alpha \cdot \text{CETT}_{j,t}$$</span></p>
+<p><span>The approximation holds because any single neuron</span>&rsquo;<span>s contribution </span>
+<span>$\| h_t^{(j)} \|_2$ is negligible relative to the full hidden state $\| h_t \|_2$ </span>
+<span>in models with thousands of neurons per layer.</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">intervene_h_neurons</span>(<span class="hl-params">model, h_neuron_indices, alpha=<span class="hl-number">0.0</span></span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;Register forward hooks to scale H-Neuron activations at inference.&quot;&quot;&quot;</span></span>
+<span class="line">    </span>
+<span class="line">    hooks = []</span>
+<span class="line">    <span class="hl-keyword">for</span> layer <span class="hl-keyword">in</span> model.layers:</span>
+<span class="line">        <span class="hl-keyword">def</span> <span class="hl-title function_">make_hook</span>(<span class="hl-params">layer_ffn</span>):</span>
+<span class="line">            <span class="hl-keyword">def</span> <span class="hl-title function_">hook_fn</span>(<span class="hl-params">module, <span class="hl-built_in">input</span>, output</span>):</span>
+<span class="line">                <span class="hl-comment"># output is z_t after gate * up projection</span></span>
+<span class="line">                <span class="hl-comment"># Scale only the H-Neuron dimensions</span></span>
+<span class="line">                output[:, :, h_neuron_indices] *= alpha</span>
+<span class="line">                <span class="hl-keyword">return</span> output</span>
+<span class="line">            <span class="hl-keyword">return</span> hook_fn</span>
+<span class="line">        </span>
+<span class="line">        h = layer.ffn.activation_layer.register_forward_hook(</span>
+<span class="line">            make_hook(layer.ffn)</span>
+<span class="line">        )</span>
+<span class="line">        hooks.append(h)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> hooks</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">evaluate_with_intervention</span>(<span class="hl-params">model, tokenizer, prompts, h_neurons, alpha</span>):</span>
+<span class="line">    hooks = intervene_h_neurons(model, h_neurons, alpha)</span>
+<span class="line">    </span>
+<span class="line">    results = []</span>
+<span class="line">    <span class="hl-keyword">for</span> prompt <span class="hl-keyword">in</span> prompts:</span>
+<span class="line">        inputs = tokenizer(prompt, return_tensors=<span class="hl-string">&quot;pt&quot;</span>)</span>
+<span class="line">        <span class="hl-keyword">with</span> torch.no_grad():</span>
+<span class="line">            output = model.generate(**inputs, max_new_tokens=<span class="hl-number">256</span>)</span>
+<span class="line">        results.append(tokenizer.decode(output[<span class="hl-number">0</span>], skip_special_tokens=<span class="hl-literal">True</span>))</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">for</span> h <span class="hl-keyword">in</span> hooks:</span>
+<span class="line">        h.remove()</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">return</span> results</span></code></pre>
+
+</figure>
+
+<figure>
+
+<img alt="" src="/assets/frontier/h_neurons_compliance.png">
+</figure>
+<p><span>The results are the most interesting part of the paper. Amplifying H-Neurons </span>
+<span>($\alpha &gt; 1$) increases compliance rates across </span><strong><strong><span>four distinct dimensions</span></strong></strong><span>: </span>
+<span>accepting invalid premises (FalseQA), following misleading context (FaithEval), </span>
+<span>caving to skeptical pushback (Sycophancy), and complying with harmful </span>
+<span>instructions (Jailbreak). Suppressing them ($\alpha &lt; 1$) reduces all four.</span></p>
+<p><span>This suggests H-Neurons do not merely encode </span>&ldquo;<span>factual incorrectness</span>&rdquo;<span> but </span>
+<span>rather a general </span><strong><strong><span>over-compliance disposition</span></strong></strong><span> </span>&ndash;<span> the model</span>&rsquo;<span>s tendency </span>
+<span>to satisfy the user at the expense of truthfulness, safety, or epistemic integrity.</span></p>
+<hr>
+</section>
+<section id="Origin-Pre-training-Not-Alignment">
+
+    <h3>
+    <a href="#Origin-Pre-training-Not-Alignment"><span>Origin: Pre-training, Not Alignment</span> </a>
+    </h3>
+<p><span>The final contribution traces H-Neurons back to pre-training. The authors </span>
+<span>apply classifiers trained on instruction-tuned models directly to their </span>
+<span>corresponding base models. AUROC scores remain well above chance (exceeding </span>
+<span>86% on TriviaQA for the Mistral family), demonstrating that the neural </span>
+<span>signatures of hallucination exist before any RLHF or SFT.</span></p>
+<p><span>To quantify how much alignment modifies these neurons, they compute the </span>
+<span>cosine distance between base and aligned model weights for each neuron</span>&rsquo;<span>s </span>
+<span>up-projection and down-projection:</span></p>
+<p><span>$$\Delta_j^{\text{up}} = 1 - \cos(W_{\text{up}}^{(j,\text{base})}, W_{\text{up}}^{(j,\text{chat})}), \quad \Delta_j^{\text{down}} = 1 - \cos(W_{\text{down}}^{(j,\text{base})}, W_{\text{down}}^{(j,\text{chat})})$$</span></p>
+<p><span>These are z-scored and averaged. The finding: H-Neurons concentrate in the </span>
+<strong><strong><span>low-drift</span></strong></strong><span> regime, meaning they are among the least modified neurons during </span>
+<span>alignment. Instruction tuning largely preserves these circuits rather than </span>
+<span>constructing them.</span></p>
+<hr>
+</section>
+<section id="Critical-Assessment">
+
+    <h3>
+    <a href="#Critical-Assessment"><span>Critical Assessment</span> </a>
+    </h3>
+<p><span>The paper makes a clean, well-structured argument, but several points </span>
+<span>deserve scrutiny:</span></p>
+<p><strong><strong><span>1. The CETT metric measures magnitude, not direction.</span></strong></strong><span> CETT captures </span>
+<span>$\| h_t^{(j)} \|_2 / \| h_t \|_2$ </span>&ndash;<span> the norm ratio. This tells us </span>
+<strong><span>how much</span></strong><span> a neuron contributes but not </span><strong><span>in which direction</span></strong><span> in the </span>
+<span>residual stream. Two neurons with identical CETT scores could push the </span>
+<span>hidden state in opposite directions. A directional metric (e.g., the </span>
+<span>projection onto the unembedding direction of the correct vs. incorrect </span>
+<span>token) would be more informative for understanding the mechanism.</span></p>
+<p><strong><strong><span>2. Linear probing is correlational by design.</span></strong></strong><span> While the perturbation </span>
+<span>experiments do establish causation, the identification step remains </span>
+<span>correlational. The $\ell_1$ logistic regression identifies neurons whose </span>
+<span>activations </span><strong><span>correlate</span></strong><span> with hallucination, but this does not mean these </span>
+<span>neurons are the </span><strong><span>cause</span></strong><span>. They could be downstream read-outs of an </span>
+<span>earlier computational process. The causal graph is: perturbation changes </span>
+<span>behavior, but we cannot distinguish whether H-Neurons are drivers or </span>
+<span>mediators without more fine-grained ablation at different layers.</span></p>
+<p><strong><strong><span>3. The over-compliance framing is compelling but unfalsifiable as stated.</span></strong></strong><span> </span>
+<span>The paper reframes hallucination as a special case of over-compliance. This </span>
+<span>is a useful conceptual move, but the four benchmarks (FalseQA, FaithEval, </span>
+<span>Sycophancy, Jailbreak) all involve the model generating text in response </span>
+<span>to a prompt. Almost any behavioral change from neuron perturbation would </span>
+<span>show up as a </span>&ldquo;<span>compliance</span>&rdquo;<span> shift on at least some of these benchmarks. A </span>
+<span>stronger test would include a benchmark where suppressing H-Neurons should </span>
+<span>have </span><strong><span>no</span></strong><span> effect </span>&ndash;<span> a negative control.</span></p>
+<p><strong><strong><span>4. The pre-training origin claim needs nuance.</span></strong></strong><span> The backward </span>
+<span>transferability result is strong: classifiers transfer from chat to </span>
+<span>base models. But this proves that the </span><strong><span>pattern</span></strong><span> exists in base models, </span>
+<span>not that alignment doesn</span>&rsquo;<span>t amplify it. The low-drift finding (H-Neurons </span>
+<span>are minimally modified by SFT) is more informative, but SFT with LoRA </span>
+<span>modifies very few parameters anyway </span>&ndash;<span> so most neurons show low drift </span>
+<span>regardless. The relevant comparison would be: is the drift of H-Neurons </span>
+<span>significantly </span><strong><span>lower</span></strong><span> than the average drift of neurons in the same layers?</span></p>
+<p><strong><strong><span>5. Scalability of the identification pipeline.</span></strong></strong><span> The method requires </span>
+<span>generating 10 responses per query (for consistency filtering), running </span>
+<span>GPT-4o for answer span extraction, computing CETT across all neurons </span>
+<span>and layers, and training a sparse classifier. For a 70B parameter model </span>
+<span>with thousands of neurons per layer across 80+ layers, this is a </span>
+<span>non-trivial computational pipeline that may not scale to rapid iteration.</span></p>
+<p><strong><strong><span>6. Missing comparison with SAE-based approaches.</span></strong></strong><span> Sparse autoencoders </span>
+<span>(Lindsey et al., 2025; Ferrando et al., 2025) decompose activations into </span>
+<span>interpretable features rather than raw neurons. The paper acknowledges this </span>
+<span>work but does not compare against it. SAE features are typically more </span>
+<span>monosemantic than individual neurons, so it is plausible that </span>
+&ldquo;<span>hallucination features</span>&rdquo;<span> identified via SAEs would be more interpretable </span>
+<span>and potentially fewer in number than H-Neurons.</span></p>
+<p><span>Despite these caveats, the paper provides a valuable contribution: it </span>
+<span>demonstrates that hallucination is not a distributed, intractable phenomenon </span>
+<span>but is concentrated in an identifiable, sparse, and causally effective </span>
+<span>subset of the network</span>&rsquo;<span>s computational units. This is encouraging for </span>
+<span>anyone working on interpretability-driven alignment.</span></p>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/interpretability.html">#interpretability</a><a class="tag" href="/tags/llm.html">#llm</a></div>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2026-01-27-h-neurons.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>

@@ -1,0 +1,266 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>scaling-ensembles — mbottoni</title>
+  <meta name="description" content="Do independently trained networks converge to the same function as they widen? Width sweeps measuring function-space diversity.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="scaling-ensembles — mbottoni">
+  <meta property="og:description" content="Do independently trained networks converge to the same function as they widen? Width sweeps measuring function-space diversity.">
+  <meta property="og:url" content="https://mbottoni.github.io/projects/scaling-ensembles.html">
+  <meta property="og:image" content="/assets/projects/scaling-ensembles.gif">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="scaling-ensembles — mbottoni">
+  <meta name="twitter:description" content="Do independently trained networks converge to the same function as they widen? Width sweeps measuring function-space diversity.">
+  <meta name="twitter:image" content="/assets/projects/scaling-ensembles.gif">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/projects/scaling-ensembles.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <article class="project-detail">
+        <p class="back-link"><a href="/projects.html">← All projects</a></p>
+        <header class="project-detail-header">
+          <h1>scaling-ensembles <span class="muted">2025</span></h1>
+          <div class="tag-row"><span class="tag">research</span></div>
+          <p class="project-actions">
+            <a class="button" href="https://github.com/mbottoni/scaling-ensembles">
+              <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+              View on GitHub
+            </a>
+          </p>
+        </header>
+        <figure class="project-figure"><img src="/assets/projects/scaling-ensembles.gif" alt="scaling-ensembles demo"><figcaption>As width grows, independently trained models (different seeds) collapse from diverse minima toward the same function — ensemble diversity collapses.</figcaption></figure>
+        <p><span>Reusable PyTorch experiments asking a single question: </span><strong><strong><span>do independently</span>
+<span>trained neural networks become more functionally similar as their parameter</span>
+<span>count grows?</span></strong></strong><span> Inspired by Fort, Hu &amp; Lakshminarayanan,</span>
+<a href="https://arxiv.org/abs/1912.02757"><strong><span>Deep Ensembles: A Loss Landscape Perspective</span></strong></a><span>.</span></p>
+<section id="The-experiment">
+
+    <h2>
+    <a href="#The-experiment"><span>The experiment</span> </a>
+    </h2>
+<p><span>A </span><strong><strong><span>width sweep</span></strong></strong><span>: for each network width, train several models from different</span>
+<span>random seeds, then measure how similar the resulting functions are to one</span>
+<span>another. As width increases, independently trained minima tend to collapse toward</span>
+<span>the </span><strong><span>same</span></strong><span> function (shown in the animation above), so ensemble diversity falls.</span></p>
+<p><span>The sweeps run across </span><strong><strong><span>MNIST</span></strong></strong><span> (MLP), </span><strong><strong><span>CIFAR-10</span></strong></strong><span> (CNN), and a </span><strong><strong><span>CIFAR-10</span>
+<span>patch-transformer</span></strong></strong><span>, and reproduce several views from Fort et al.: diversity</span>
+<span>versus accuracy, function similarity versus parameter count, interpolation</span>
+<span>barriers between minima, and final weight/function similarity matrices.</span></p>
+<p><span>The follow-up series digs into the sharper question:</span></p>
+
+<figure class="blockquote">
+<blockquote><p><span>When does overparameterization collapse functional diversity between</span>
+<span>independently trained neural-network minima?</span></p>
+</blockquote>
+
+</figure>
+</section>
+<section id="Engineering">
+
+    <h2>
+    <a href="#Engineering"><span>Engineering</span> </a>
+    </h2>
+<ul>
+<li>
+<span>A single CLI sweep runner driven by YAML configs (</span><code>scaling-ensembles-sweep</code><span>).</span>
+</li>
+<li>
+<strong><strong><span>Resumable</span></strong></strong><span> by default — checkpoints are reused and per-model logits cached.</span>
+</li>
+<li>
+<span>Optional </span><strong><strong><span>MLflow</span></strong></strong><span> tracking of configs, metrics, checkpoints, and logits, with</span>
+<span>a cache that can restore artifacts from previous runs.</span>
+</li>
+<li>
+<span>A paper-plot generator and an interactive marimo app.</span>
+</li>
+<li>
+<span>Apple-Silicon (MPS) / CUDA / CPU auto-detection.</span>
+</li>
+</ul>
+</section>
+
+      </article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/projects/scaling-ensembles.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>

@@ -1,0 +1,272 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>vae-playground — mbottoni</title>
+  <meta name="description" content="A modular playground of five VAE variants (Vanilla, β-VAE, Conditional, VQ-VAE, WAE-MMD) with interactive marimo notebooks.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="vae-playground — mbottoni">
+  <meta property="og:description" content="A modular playground of five VAE variants (Vanilla, β-VAE, Conditional, VQ-VAE, WAE-MMD) with interactive marimo notebooks.">
+  <meta property="og:url" content="https://mbottoni.github.io/projects/vae-playground.html">
+  <meta property="og:image" content="/assets/projects/vae-playground.gif">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="vae-playground — mbottoni">
+  <meta name="twitter:description" content="A modular playground of five VAE variants (Vanilla, β-VAE, Conditional, VQ-VAE, WAE-MMD) with interactive marimo notebooks.">
+  <meta name="twitter:image" content="/assets/projects/vae-playground.gif">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/projects/vae-playground.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <article class="project-detail">
+        <p class="back-link"><a href="/projects.html">← All projects</a></p>
+        <header class="project-detail-header">
+          <h1>vae-playground <span class="muted">2025</span></h1>
+          <div class="tag-row"><span class="tag">research</span></div>
+          <p class="project-actions">
+            <a class="button" href="https://github.com/mbottoni/vae-playground">
+              <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+              View on GitHub
+            </a>
+          </p>
+        </header>
+        <figure class="project-figure"><img src="/assets/projects/vae-playground.gif" alt="vae-playground demo"><figcaption>A VAE's latent space organizes data into clusters; sampling a point z and decoding it generates a new image.</figcaption></figure>
+        <p><span>A modular playground for experimenting with different </span><strong><strong><span>Variational Autoencoder</span></strong></strong>
+<span>families in PyTorch, paired with interactive </span><a href="https://marimo.io/"><span>marimo</span></a>
+<span>notebooks. A VAE encodes each input into a </span><strong><span>distribution</span></strong><span> over a latent space,</span>
+<span>samples a code </span><code>z</code><span> from it, and decodes that code back to an image </span>&mdash;<span> so the</span>
+<span>latent space becomes smooth and generative (shown in the animation above).</span></p>
+<section id="The-variants">
+
+    <h2>
+    <a href="#The-variants"><span>The variants</span> </a>
+    </h2>
+<table>
+<tr>
+<th><span>Model</span></th>
+<th><span>Key idea</span></th>
+</tr>
+<tr>
+<td><strong><strong><span>Vanilla VAE</span></strong></strong><span></span></td>
+<td><span>the standard ELBO (reconstruction + KL)</span></td>
+</tr>
+<tr>
+<td><strong><strong><span>β-VAE</span></strong></strong><span></span></td>
+<td><span>disentangled latents by weighting the KL term (β &gt; 1)</span></td>
+</tr>
+<tr>
+<td><strong><strong><span>Conditional VAE</span></strong></strong><span></span></td>
+<td><span>class-conditioned generation</span></td>
+</tr>
+<tr>
+<td><strong><strong><span>VQ-VAE</span></strong></strong><span></span></td>
+<td><span>discrete latent codes with a learned codebook</span></td>
+</tr>
+<tr>
+<td><strong><strong><span>WAE-MMD</span></strong></strong><span></span></td>
+<td><span>a Wasserstein objective with an MMD penalty</span></td>
+</tr>
+</table>
+</section>
+<section id="What-each-notebook-covers">
+
+    <h2>
+    <a href="#What-each-notebook-covers"><span>What each notebook covers</span> </a>
+    </h2>
+<p><span>Every variant has its own marimo notebook with the theory (with LaTeX), interactive</span>
+<span>hyperparameter controls, live training, original-vs-reconstructed views, a 2D</span>
+<span>latent-space visualization colored by class, sampling from the prior, and saving.</span>
+<span>A final </span><strong><strong><span>comparison notebook</span></strong></strong><span> loads the saved checkpoints and shows side-by-side</span>
+<span>reconstructions, latent spaces, loss curves, samples, and an MSE table.</span></p>
+</section>
+<section id="Datasets-hardware">
+
+    <h2>
+    <a href="#Datasets-hardware"><span>Datasets &amp; hardware</span> </a>
+    </h2>
+<p><span>MNIST, Fashion-MNIST, and CIFAR-10, downloaded automatically via torchvision. The</span>
+<span>trainer auto-detects the best device (Apple Silicon MPS, CUDA, or CPU).</span></p>
+</section>
+
+      </article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/projects/vae-playground.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>

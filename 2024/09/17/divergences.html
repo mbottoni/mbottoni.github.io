@@ -1,0 +1,317 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Some common divergences</title>
+  <meta name="description" content="Hey. usually on machine learning we have to consider distances between different probability distributions.
+This is in fact a hard problem and there is a misconception that the most common way to do this is using the
+kl divergence. I believe that this is not true.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Some common divergences">
+  <meta property="og:description" content="Hey. usually on machine learning we have to consider distances between different probability distributions.
+This is in fact a hard problem and there is a misconception that the most common way to do this is using the
+kl divergence. I believe that this is not true.">
+  <meta property="og:url" content="https://mbottoni.github.io/2024/09/17/divergences.html">
+  <meta property="og:image" content="/assets/foundations/divergences.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Some common divergences">
+  <meta name="twitter:description" content="Hey. usually on machine learning we have to consider distances between different probability distributions.
+This is in fact a hard problem and there is a misconception that the most common way to do this is using the
+kl divergence. I believe that this is not true.">
+  <meta name="twitter:image" content="/assets/foundations/divergences.png">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/09/17/divergences.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/foundations.html">
+          Math, Physics &amp; Foundations
+        </a>
+        <span class="post-meta"><time datetime="2024-09-17">Sep 17, 2024</time> · 2 min read</span>
+      </div>
+      
+      <article >
+
+    <h1>
+    <a href="#Some-common-divergences"><span>Some common divergences</span> <time datetime="2024-09-17">Sep 17, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/foundations/divergences.png">
+</figure>
+<p><span>Hey. usually on machine learning we have to consider distances between different probability distributions.</span>
+<span>This is in fact a hard problem and there is a misconception that the most common way to do this is using the</span>
+<span>kl divergence. I believe that this is not true.</span></p>
+<p><span>In fact, the KL divergence is not a metric, because it is not symmetric. It have nice properties that makes it useful</span>
+<span>but there are other metrics that are more useful in specific scenarios. Sadly these metrics are not taught on introductory</span>
+<span>courses in machine learning but there is a research trend on using these metrics on common architectures where you usually use </span>
+<span>the KL divergence on the loss, suck as the VAE</span>&rsquo;<span>s and DDPMs.</span></p>
+<p><span>For example, here is a pseudocode for some common divergences</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">kl_divergence</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Kullback-Leibler divergence D_KL(P || Q)</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    p = np.asarray(p, dtype=np.float64)</span>
+<span class="line">    q = np.asarray(q, dtype=np.float64)</span>
+<span class="line">    epsilon = <span class="hl-number">1e-10</span></span>
+<span class="line">    p = np.clip(p, epsilon, <span class="hl-number">1</span>)</span>
+<span class="line">    q = np.clip(q, epsilon, <span class="hl-number">1</span>)</span>
+<span class="line">    <span class="hl-keyword">return</span> np.<span class="hl-built_in">sum</span>(p * np.log(p / q))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">js_divergence</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Jensen-Shannon divergence between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    m = <span class="hl-number">0.5</span> * (p + q)</span>
+<span class="line">    <span class="hl-keyword">return</span> <span class="hl-number">0.5</span> * kl_divergence(p, m) + <span class="hl-number">0.5</span> * kl_divergence(q, m)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">hellinger_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Hellinger distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">return</span> np.sqrt(np.<span class="hl-built_in">sum</span>((np.sqrt(p) - np.sqrt(q))**<span class="hl-number">2</span>)) / np.sqrt(<span class="hl-number">2</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">total_variation_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Total Variation distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">return</span> <span class="hl-number">0.5</span> * np.<span class="hl-built_in">sum</span>(np.<span class="hl-built_in">abs</span>(p - q))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">bhattacharyya_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Bhattacharyya distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    bc = np.<span class="hl-built_in">sum</span>(np.sqrt(p * q))</span>
+<span class="line">    <span class="hl-keyword">return</span> -np.log(bc)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">cosine_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Cosine distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">return</span> cosine(p, q)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">euclidean_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Euclidean distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">return</span> euclidean(p, q)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">chi_squared_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Chi-Squared distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    epsilon = <span class="hl-number">1e-10</span></span>
+<span class="line">    p = np.asarray(p, dtype=np.float64) + epsilon</span>
+<span class="line">    q = np.asarray(q, dtype=np.float64) + epsilon</span>
+<span class="line">    <span class="hl-keyword">return</span> <span class="hl-number">0.5</span> * np.<span class="hl-built_in">sum</span>(((p - q)**<span class="hl-number">2</span>) / (p + q))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">kolmogorov_smirnov_statistic</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Kolmogorov-Smirnov statistic between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    cdf_p = np.cumsum(p)</span>
+<span class="line">    cdf_q = np.cumsum(q)</span>
+<span class="line">    <span class="hl-keyword">return</span> np.<span class="hl-built_in">max</span>(np.<span class="hl-built_in">abs</span>(cdf_p - cdf_q))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">mahalanobis_distance</span>(<span class="hl-params">p, q, cov=<span class="hl-literal">None</span></span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Mahalanobis distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    diff = p - q</span>
+<span class="line">    <span class="hl-keyword">if</span> cov <span class="hl-keyword">is</span> <span class="hl-literal">None</span>:</span>
+<span class="line">        cov = np.cov(np.stack([p, q], axis=<span class="hl-number">0</span>).T)</span>
+<span class="line">    cov_inv = inv(cov)</span>
+<span class="line">    <span class="hl-keyword">return</span> np.sqrt(np.dot(np.dot(diff.T, cov_inv), diff))</span></code></pre>
+
+</figure>
+<p><span>Anyway, for more details here is the colab where I implemented some of these metrics and more </span><a href="https://colab.research.google.com/drive/11WsBPSsF00E0w6FsRsU-bT_gm-KjCvGr?usp=sharing"><span>Link to code</span></a></p>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/information-theory.html">#information-theory</a><a class="tag" href="/tags/probability.html">#probability</a></div>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-09-17-divergences.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>

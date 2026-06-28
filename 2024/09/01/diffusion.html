@@ -1,0 +1,257 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diffusion models or Autoencoders?</title>
+  <meta name="description" content="Recent advancements in generative AI have brought diffusion models to the forefront, particularly 
+for their impressive performance in image generation. While these models are often seen as 
+distinct from traditional approaches, there's a compelling argument for viewing diffusion models 
+as a form of hierarchical autoencoder.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Diffusion models or Autoencoders?">
+  <meta property="og:description" content="Recent advancements in generative AI have brought diffusion models to the forefront, particularly 
+for their impressive performance in image generation. While these models are often seen as 
+distinct from traditional approaches, there's a compelling argument for viewing diffusion models 
+as a form of hierarchical autoencoder.">
+  <meta property="og:url" content="https://mbottoni.github.io/2024/09/01/diffusion.html">
+  <meta property="og:image" content="/assets/generative/diffusion.webp">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Diffusion models or Autoencoders?">
+  <meta name="twitter:description" content="Recent advancements in generative AI have brought diffusion models to the forefront, particularly 
+for their impressive performance in image generation. While these models are often seen as 
+distinct from traditional approaches, there's a compelling argument for viewing diffusion models 
+as a form of hierarchical autoencoder.">
+  <meta name="twitter:image" content="/assets/generative/diffusion.webp">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/09/01/diffusion.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/generative.html">
+          Diffusion &amp; Generative Modeling
+        </a>
+        <span class="post-meta"><time datetime="2024-09-01">Sep 1, 2024</time> · 1 min read</span>
+      </div>
+      
+      <article >
+
+    <h1>
+    <a href="#Diffusion-models-or-Autoencoders"><span>Diffusion models or Autoencoders?</span> <time datetime="2024-09-01">Sep 1, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/generative/diffusion.webp">
+</figure>
+<section id="Unmasking-the-Secret-Link-Are-Diffusion-Models-Just-Fancy-Autoencoders">
+
+    <h2>
+    <a href="#Unmasking-the-Secret-Link-Are-Diffusion-Models-Just-Fancy-Autoencoders"><span>Unmasking the Secret Link: Are Diffusion Models Just Fancy Autoencoders?</span> </a>
+    </h2>
+<p><span>Recent advancements in generative AI have brought diffusion models to the forefront, particularly </span>
+<span>for their impressive performance in image generation. While these models are often seen as </span>
+<span>distinct from traditional approaches, there</span>&rsquo;<span>s a compelling argument for viewing diffusion models </span>
+<span>as a form of hierarchical autoencoder.</span></p>
+<p><span>The key insight lies in the similarity between the noise addition process in diffusion models </span>
+<span>and the compression step in autoencoders. When a diffusion model adds noise to data, it</span>&rsquo;<span>s </span>
+<span>effectively compressing the information, retaining only the most robust features. This </span>
+<span>is analogous to how an autoencoder</span>&rsquo;<span>s encoder compresses input data into a </span>
+<span>lower-dimensional representation.</span></p>
+<p><span>Conversely, the denoising process in diffusion models resembles the reconstruction phase </span>
+<span>of autoencoders. The critical difference is that diffusion models perform this reconstruction </span>
+<span>gradually, over multiple steps, allowing them to capture a hierarchy of details. This </span>
+<span>multi-step process creates a series of latent representations at different levels of </span>
+<span>abstraction, much like a hierarchical autoencoder.</span></p>
+<p><span>The noise in diffusion models serves a similar purpose to the bottleneck layer in </span>
+<span>autoencoders, acting as an information constraint that forces the model to learn </span>
+<span>efficient, robust representations. This perspective suggests that diffusion models implicitly </span>
+<span>learn a series of nested representations, each corresponding to a different noise level.</span></p>
+<p><span>Viewing diffusion models through this lens opens up new possibilities for research </span>
+<span>and improvement. It suggests potential hybrid architectures combining elements of both </span>
+<span>approaches, and hints at applications beyond generation, such as in data compression.</span></p>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/diffusion.html">#diffusion</a><a class="tag" href="/tags/generative.html">#generative</a></div>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-09-01-diffusion.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>
