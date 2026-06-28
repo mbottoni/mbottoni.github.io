@@ -534,3 +534,42 @@ figure.code-block { position: relative; }
   color: var(--muted); font-size: 0.9rem; margin-bottom: 0;
   line-height: 1.6; font-family: "Open Sans", sans-serif;
 }
+
+/* ============================================================
+   Smartphone refinements — mobile only, desktop (≥601px) untouched
+   ============================================================ */
+@media (max-width: 600px) {
+  /* slightly smaller base → more comfortable line length */
+  html { font-size: 19px; }
+
+  /* readable body text: drop justified "rivers", break long words/URLs */
+  p {
+    text-align: left;
+    hyphens: manual;
+    -webkit-hyphens: manual;
+    overflow-wrap: break-word;
+  }
+  article, .theme-page, li { overflow-wrap: break-word; }
+  /* let long inline code / URLs wrap instead of overflowing */
+  p > code { white-space: normal; overflow-wrap: anywhere; }
+  a.url { word-break: break-word; }
+
+  /* "Filed under …" row: keep the date from clipping off-screen */
+  .theme-banner { gap: 0.4rem 0.6rem; }
+  .post-meta { margin-left: 0; }
+  .post-meta time { display: inline; }
+
+  /* table of contents: tighter so long headings fit */
+  .toc { padding: 0.4rem 0.85rem; }
+  .toc a { font-size: 0.9rem; }
+  .toc li.toc-l3 { margin-left: 0.9rem; }
+
+  /* wide tables scroll horizontally instead of breaking the layout */
+  article table { display: block; width: 100%; overflow-x: auto; }
+
+  /* code blocks: narrower line-number gutter to save horizontal space */
+  figure.code-block > pre > code > .line:before { width: 2ch; margin-right: 0.5ch; }
+
+  /* keep the homepage hero title from clipping */
+  .hero-body h1 { font-size: 1.4rem; }
+}
