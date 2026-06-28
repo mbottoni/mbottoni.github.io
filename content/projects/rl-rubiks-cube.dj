@@ -1,0 +1,33 @@
+Solving the 3×3×3 Rubik's Cube with **no human knowledge and no solved-cube
+dataset** --- the agent learns purely by scrambling cubes and teaching itself to
+reverse the scrambles. A compact, readable implementation of **Autodidactic
+Iteration (ADI)**, the method behind
+[DeepCube](https://arxiv.org/abs/1805.07470) (McAleer et al., 2018).
+
+## The challenge
+
+The cube has ~4.3 × 10¹⁹ states but only **one** goal, and the reward is only
+ever seen at that single solved state --- so supervised learning has no labels
+and naive exploration almost never stumbles onto the reward. ADI sidesteps both.
+
+## How it works
+
+- *State* --- 6 faces × 9 stickers, each one-hot encoded into a 324-dimensional
+  vector.
+- *Actions* --- the 12 quarter-turn moves (each face clockwise and
+  counter-clockwise).
+- *Self-generated data* --- there is no dataset. A solved cube is scrambled with
+  a random sequence, then that sequence is walked **backwards**, recording every
+  state together with its distance to solved. States nearer the goal are weighted
+  more, so the value signal propagates outward from the solved state.
+- *Network* --- a shared feed-forward trunk feeding two heads: a **value** (how
+  close a state is to solved) and a **policy** (which move makes progress).
+- *Training (ADI)* --- each state looks one move ahead at all 12 children and
+  bootstraps its target from the best child's value, iterating until the network
+  converges.
+- *Solving* --- a **beam search** uses the policy to propose moves and the value
+  to keep only the most promising states, walking a scrambled cube back to solved.
+
+## Tech stack
+
+PyTorch · NumPy. Packaged with a CLI, tests, and pretrained models.
