@@ -1,0 +1,34 @@
+Reusable PyTorch experiments asking a single question: **do independently
+trained neural networks become more functionally similar as their parameter
+count grows?** Inspired by Fort, Hu & Lakshminarayanan,
+[*Deep Ensembles: A Loss Landscape Perspective*](https://arxiv.org/abs/1912.02757).
+
+## The experiment
+
+A **width sweep**: for each network width, train several models from different
+random seeds, then measure how similar the resulting functions are to one
+another. As width increases, independently trained minima tend to collapse toward
+the *same* function (shown in the animation above), so ensemble diversity falls.
+
+The sweeps run across **MNIST** (MLP), **CIFAR-10** (CNN), and a **CIFAR-10
+patch-transformer**, and reproduce several views from Fort et al.: diversity
+versus accuracy, function similarity versus parameter count, interpolation
+barriers between minima, and final weight/function similarity matrices.
+
+The follow-up series digs into the sharper question:
+
+> When does overparameterization collapse functional diversity between
+> independently trained neural-network minima?
+
+## Engineering
+
+- A single CLI sweep runner driven by YAML configs (`scaling-ensembles-sweep`).
+- **Resumable** by default — checkpoints are reused and per-model logits cached.
+- Optional **MLflow** tracking of configs, metrics, checkpoints, and logits, with
+  a cache that can restore artifacts from previous runs.
+- A paper-plot generator and an interactive marimo app.
+- Apple-Silicon (MPS) / CUDA / CPU auto-detection.
+
+## Tech stack
+
+PyTorch · MLflow · marimo · NumPy · pandas.

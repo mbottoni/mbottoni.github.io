@@ -36,6 +36,18 @@ export const projects: Project[] = [
       "An orchestrator runs five agents in sequence — data gathering, financial metrics, news sentiment, valuation, synthesis — turning a ticker into an investment report.",
   },
   {
+    title: "scaling-ensembles",
+    slug: "scaling-ensembles",
+    description:
+      "Do independently trained networks converge to the same function as they widen? Width sweeps measuring function-space diversity.",
+    url: "https://github.com/mbottoni/scaling-ensembles",
+    tags: ["deep-learning", "ensembles", "loss-landscape"],
+    year: 2025,
+    gif: "/assets/projects/scaling-ensembles.gif",
+    gifCaption:
+      "As width grows, independently trained models (different seeds) collapse from diverse minima toward the same function — ensemble diversity collapses.",
+  },
+  {
     title: "vae-playground",
     slug: "vae-playground",
     description:
