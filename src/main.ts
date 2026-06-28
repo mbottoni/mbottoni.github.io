@@ -180,6 +180,9 @@ async function build(params: {
     );
   }
 
+  // Arcade
+  await update_file("out/res/arcade.html", templates.arcade_page().value);
+
   // Client-side search index + page
   await update_file("out/res/search.html", templates.search_page().value);
   const search_index = posts.map((post) => ({
@@ -212,6 +215,7 @@ async function build(params: {
     "css/*",
     "assets/*",
     "assets/resilient-parsing/*",
+    "arcade/*",
   ];
   for (const path of paths) {
     await update_path(path);
