@@ -99,8 +99,14 @@ body {
 }
 .nav-icon:hover { color: var(--link); }
 
-.nav-burger { display: none; cursor: pointer; }
-.nav-burger span {
+.nav-burger {
+  display: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0.2rem 0;
+}
+.nav-burger .bar {
   display: block;
   width: 22px;
   height: 2px;
@@ -120,7 +126,7 @@ body {
     max-height: 0;
     transition: max-height 0.2s ease;
   }
-  .nav-toggle:checked ~ .nav-links { max-height: 60vh; padding-top: 0.5rem; }
+  .navbar.nav-open .nav-links { max-height: 60vh; padding-top: 0.5rem; }
 }
 
 /* ============================================================

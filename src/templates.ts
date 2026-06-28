@@ -113,11 +113,10 @@ export const base = (
   <header class="site-header">
     <nav class="navbar">
       <a class="brand" href="/">mbottoni</a>
-      <input type="checkbox" id="nav-toggle" class="nav-toggle" hidden>
-      <label for="nav-toggle" class="nav-burger" aria-label="Toggle navigation">
-        <span></span><span></span><span></span>
-      </label>
-      <div class="nav-links">
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
         ${
     nav_links.map((l) =>
       html`<a href="${l.href}"${
@@ -179,6 +178,16 @@ export const base = (
           try { localStorage.setItem("theme", next); } catch (e) {}
         });
       }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
     })();
 
     function unwrapPlainSpans(root) {
@@ -209,7 +218,7 @@ export const base = (
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      unwrapPlainSpans(document.body);
+      unwrapPlainSpans(document.querySelector("main") || document.body);
       addCopyButtons();
       let attempts = 0;
       const maxAttempts = 40;
