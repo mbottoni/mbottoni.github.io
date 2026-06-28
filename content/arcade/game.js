@@ -197,9 +197,17 @@
 
     // ball
     var bx = wx(ball.x), by = wy(ball.y);
+    if (holding && state === "play") {
+      // "diving" aura so it's obvious the hold is registering
+      ctx.beginPath(); ctx.arc(bx, by, 18, 0, 6.2832);
+      ctx.fillStyle = "rgba(242,209,26,.30)"; ctx.fill();
+      ctx.fillStyle = "#f2d11a"; ctx.font = "bold 12px 'Open Sans',sans-serif";
+      ctx.textAlign = "center"; ctx.fillText("▼ dive", bx, by + 30);
+    }
     ctx.beginPath(); ctx.arc(bx, by, 10, 0, 6.2832);
     ctx.fillStyle = "#fdfdfc"; ctx.fill();
-    ctx.lineWidth = 3; ctx.strokeStyle = "#ba3925"; ctx.stroke();
+    ctx.lineWidth = 3; ctx.strokeStyle = holding && state === "play" ? "#f2d11a" : "#ba3925";
+    ctx.stroke();
 
     // HUD
     ctx.fillStyle = "#fdfdfc";
@@ -259,10 +267,19 @@
   }
   function release() { holding = false; }
 
-  canvas.addEventListener("mousedown", function (e) { e.preventDefault(); press(); });
-  window.addEventListener("mouseup", release);
-  canvas.addEventListener("touchstart", function (e) { e.preventDefault(); press(); }, { passive: false });
-  window.addEventListener("touchend", function (e) { release(); });
+  // Pointer Events unify mouse / touch / pen and avoid the double-fire you get
+  // from separate mouse+touch handlers (which left the hold state stuck). Pointer
+  // capture means we still get pointerup even if the finger/cursor leaves the
+  // canvas; blur/cancel release so holding can never get stuck on.
+  canvas.addEventListener("pointerdown", function (e) {
+    e.preventDefault();
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+    press();
+  });
+  canvas.addEventListener("pointerup", function (e) { e.preventDefault(); release(); });
+  canvas.addEventListener("pointercancel", release);
+  window.addEventListener("blur", release);
+
   window.addEventListener("keydown", function (e) {
     if (e.code === "Space" || e.key === " ") { e.preventDefault(); if (!e.repeat) press(); }
   });
