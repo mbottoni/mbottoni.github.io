@@ -96,10 +96,14 @@ export const projects: Project[] = [
   {
     title: "rl-rubiks-cube",
     slug: "rl-rubiks-cube",
-    description: "Project exploring RL algorithms with a Rubik's cube.",
+    description:
+      "Self-taught Rubik's Cube solver — Autodidactic Iteration (value+policy net, no dataset) solving via beam search.",
     url: "https://github.com/mbottoni/reinforcement-learning-final-project",
-    tags: ["reinforcement-learning"],
+    tags: ["reinforcement-learning", "deep-rl", "pytorch"],
     year: 2023,
+    gif: "/assets/projects/rl-rubiks-cube.gif",
+    gifCaption:
+      "A scrambled cube net solving itself by replaying the scramble backwards — the same 'scramble, then walk it back' idea the agent trains on.",
   },
   {
     title: "bertimbau-probing",
