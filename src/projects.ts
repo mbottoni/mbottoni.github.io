@@ -82,10 +82,13 @@ export const projects: Project[] = [
     title: "kalman-transformer",
     slug: "kalman-transformer",
     description:
-      "Exploring the intersection of Kalman Filters and Transformer architectures.",
+      "A Kalman filter and a Transformer as interchangeable expected-return estimators feeding a Markowitz backtest.",
     url: "https://github.com/mbottoni/kalman-transformer",
-    tags: ["transformers", "kalman-filter"],
+    tags: ["kalman-filter", "transformers", "portfolio-optimization"],
     year: 2024,
+    gif: "/assets/projects/kalman-transformer.gif",
+    gifCaption:
+      "Expected-return estimation as state estimation: a Kalman filter and a Transformer both denoise noisy returns into the expected return that feeds Markowitz.",
   },
   {
     title: "blur-filter-variations",

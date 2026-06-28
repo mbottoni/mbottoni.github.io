@@ -1,0 +1,35 @@
+**Can a Transformer play the role of a Kalman filter in portfolio
+construction?** This project answers that concretely. It frames expected-return
+estimation as a *state-estimation* problem and makes the estimator **pluggable**:
+a classical **local-level Kalman filter** and a learned **Transformer** expose the
+same interface, feed the same **Markowitz** optimizer, and are compared in the
+same rolling backtest on the same data.
+
+## The pipeline
+
+Prices → daily returns → an **expected-return estimator** → Markowitz weights →
+rolling backtest:
+
+- *mean* --- historical sample mean (baseline).
+- *kalman* --- a local-level model `μ_t = μ_{t-1} + w_t`, `r_t = μ_t + v_t`; the
+  filtered state is a denoised expected return.
+- *transformer* --- an encoder-only Transformer trained to forecast the next
+  return from a window of past returns.
+
+Each estimator's `μ̂` and the sample covariance `Σ` go into a **Markowitz**
+optimizer (max Sharpe or min variance), and the resulting weights are held over a
+rolling backtest reporting Sharpe, volatility, drawdown, and the equity curve.
+
+## Why they're interchangeable
+
+A local-level Kalman filter treats the expected return `μ_t` as a hidden state
+observed through noisy returns (`r_t = μ_t + noise`); the filtered state is a
+denoised expectation. The Transformer is the same idea made nonlinear and
+learned --- it maps a window of past returns to a one-step-ahead expectation.
+Both answer *"what return do we expect next?"*, so they slot into the exact same
+place in the pipeline (shown in the animation above).
+
+## Tech stack
+
+PyTorch · NumPy · pandas · yfinance (with a deterministic synthetic fallback so
+the pipeline and tests run offline). Packaged with a CLI, tests, and CI.
