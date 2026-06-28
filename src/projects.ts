@@ -36,6 +36,18 @@ export const projects: Project[] = [
       "An orchestrator runs five agents in sequence — data gathering, financial metrics, news sentiment, valuation, synthesis — turning a ticker into an investment report.",
   },
   {
+    title: "vae-playground",
+    slug: "vae-playground",
+    description:
+      "A modular playground of five VAE variants (Vanilla, β-VAE, Conditional, VQ-VAE, WAE-MMD) with interactive marimo notebooks.",
+    url: "https://github.com/mbottoni/vae-playground",
+    tags: ["generative", "vae", "pytorch"],
+    year: 2025,
+    gif: "/assets/projects/vae-playground.gif",
+    gifCaption:
+      "A VAE's latent space organizes data into clusters; sampling a point z and decoding it generates a new image.",
+  },
+  {
     title: "terror-reco",
     slug: "terror-reco",
     description:
