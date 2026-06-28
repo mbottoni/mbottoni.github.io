@@ -375,21 +375,36 @@ export const news_page = (news: NewsItem[]): HtmlString => {
   });
 };
 
-export const projects_page = (projects: Project[]): HtmlString => {
+export function projectDetailPath(slug: string): string {
+  return `/projects/${slug}.html`;
+}
+
+function project_media(p: Project): HtmlString {
+  const initials = p.title.slice(0, 2).toUpperCase();
+  if (p.gif) return html`<img src="${p.gif}" alt="${p.title} demo" loading="lazy">`;
+  if (p.image) return html`<img src="${p.image}" alt="${p.title}" loading="lazy">`;
+  return html`<span class="project-monogram">${initials}</span>`;
+}
+
+export const projects_page = (
+  projects: Project[],
+  detailSlugs: Set<string>,
+): HtmlString => {
   const cards = projects.map((p) => {
-    const initials = p.title.slice(0, 2).toUpperCase();
-    const media = p.image
-      ? html`<img src="${p.image}" alt="${p.title}">`
-      : html`<span class="project-monogram">${initials}</span>`;
+    const target = detailSlugs.has(p.slug) ? projectDetailPath(p.slug) : p.url;
+    const more = detailSlugs.has(p.slug)
+      ? html`<a class="project-more" href="${target}">Details →</a>`
+      : html`<a class="project-more" href="${p.url}">View on GitHub →</a>`;
     return html`
       <article class="project-card">
-        <a class="project-media" href="${p.url}">${media}</a>
+        <a class="project-media" href="${target}">${project_media(p)}</a>
         <div class="project-body">
-          <h3><a href="${p.url}">${p.title}</a>${
+          <h3><a href="${target}">${p.title}</a>${
       p.year ? html` <span class="muted">${p.year}</span>` : ""
     }</h3>
           <p>${p.description}</p>
           ${tag_pills(p.tags)}
+          ${more}
         </div>
       </article>
     `;
@@ -408,6 +423,42 @@ export const projects_page = (projects: Project[]): HtmlString => {
         </header>
         <div class="project-grid">${cards}</div>
       </section>
+    `,
+  });
+};
+
+export const project_detail_page = (
+  p: Project,
+  body: HtmlString,
+): HtmlString => {
+  return base({
+    path: projectDetailPath(p.slug),
+    title: `${p.title} — mbottoni`,
+    description: p.description,
+    src: `/content/projects/${p.slug}.dj`,
+    image: p.gif ?? p.image,
+    content: html`
+      <article class="project-detail">
+        <p class="back-link"><a href="/projects.html">← All projects</a></p>
+        <header class="project-detail-header">
+          <h1>${p.title}${
+      p.year ? html` <span class="muted">${p.year}</span>` : ""
+    }</h1>
+          ${tag_pills(p.tags)}
+          <p class="project-actions">
+            <a class="button" href="${p.url}">
+              <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+              View on GitHub
+            </a>
+          </p>
+        </header>
+        ${
+      p.gif
+        ? html`<figure class="project-figure"><img src="${p.gif}" alt="${p.title} demo"></figure>`
+        : ""
+    }
+        ${body}
+      </article>
     `,
   });
 };
