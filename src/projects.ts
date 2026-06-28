@@ -24,6 +24,18 @@ export type Project = {
 
 export const projects: Project[] = [
   {
+    title: "fundamental-agents",
+    slug: "fundamental-agents",
+    description:
+      "Multi-agent AI platform for fundamental stock analysis: an orchestrator runs five agents to turn a ticker into an investment report.",
+    url: "https://github.com/mbottoni/fundamental-agents",
+    tags: ["multi-agent", "fastapi", "nextjs"],
+    year: 2025,
+    gif: "/assets/projects/fundamental-agents.gif",
+    gifCaption:
+      "An orchestrator runs five agents in sequence — data gathering, financial metrics, news sentiment, valuation, synthesis — turning a ticker into an investment report.",
+  },
+  {
     title: "terror-reco",
     slug: "terror-reco",
     description:

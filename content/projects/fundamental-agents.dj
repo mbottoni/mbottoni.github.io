@@ -1,0 +1,33 @@
+A **multi-agent AI platform for fundamental stock analysis**. Input a ticker and
+get an institutional-style investment report --- produced by specialized agents
+that gather data, compute metrics, analyze sentiment, and model valuations,
+coordinated by an **orchestrator**.
+
+## The agent pipeline
+
+The orchestrator runs five agents in sequence (shown in the animation above):
+
+- *Data Gathering* --- fetches financial statements, price history, company
+  profile, and recent news (Financial Modeling Prep, NewsAPI).
+- *Financial Metrics* --- computes P/E, D/E, ROE, and the current ratio from the
+  raw financials.
+- *News Sentiment* --- VADER sentiment analysis over recent articles.
+- *Valuation* --- a discounted-cash-flow model (WACC, projected free cash flow,
+  terminal value).
+- *Synthesis* --- assembles every agent's output into a markdown report with a
+  recommendation.
+
+## Full-stack app
+
+It is a complete product, not just a script:
+
+- *Frontend* --- Next.js 13 (App Router), React, TypeScript, Tailwind, with auth,
+  a dashboard, a report viewer, and pricing pages.
+- *Backend* --- FastAPI + SQLAlchemy + Pydantic, PostgreSQL, JWT auth, and Stripe
+  checkout/webhooks.
+- *Infrastructure* --- Docker Compose, Caddy reverse proxy, and GitHub Actions.
+
+## Tech stack
+
+Next.js · React · TypeScript · Tailwind · FastAPI · SQLAlchemy · PostgreSQL ·
+NLTK VADER · Stripe · Docker.
