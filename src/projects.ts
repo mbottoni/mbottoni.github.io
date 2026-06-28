@@ -49,10 +49,13 @@ export const projects: Project[] = [
     title: "ml-prod",
     slug: "ml-prod",
     description:
-      "Machine learning in production: Kubernetes, AI workflows, and deployment strategies.",
+      "End-to-end ML in production: a model microservice, Docker, Kubernetes, and drift monitoring.",
     url: "https://github.com/mbottoni/ml-prod",
-    tags: ["mlops", "kubernetes"],
+    tags: ["mlops", "docker", "kubernetes", "flask"],
     year: 2024,
+    gif: "/assets/projects/ml-prod.gif",
+    gifCaption:
+      "The ML production lifecycle: data → train → Docker → Kubernetes → monitor, looping back to retrain when the monitor detects drift.",
   },
   {
     title: "flow-match",

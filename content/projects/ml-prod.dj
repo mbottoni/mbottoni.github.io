@@ -1,0 +1,29 @@
+A hands-on tour of taking a machine-learning model all the way to production ---
+from a trained model to a containerized, orchestrated, monitored service ---
+built around the IBM AI Enterprise Workflow curriculum. The recurring theme is the
+full lifecycle: *data → train → serve → containerize → orchestrate → monitor →
+retrain*.
+
+## What's inside
+
+- *Model microservice* --- a Flask API exposing train and predict endpoints,
+  with versioned model artifacts, structured logging, and a monitoring module
+  that watches for data drift. Packaged in Docker, with unit tests covering the
+  API, the model, and the logger.
+- *Kubernetes* --- deploying and scaling the service on a cluster.
+- *AI Workflow capstone* --- time-series revenue forecasting from raw invoice
+  data: a data-ingestion pipeline that reconciles messy JSON, exploratory
+  analysis, and a comparison of forecasting models.
+- *Deployment solution* --- tying the pieces together into a deployable workflow.
+
+## Why it matters
+
+Most of the work in an ML system isn't the model --- it's everything around it:
+serving predictions reliably, shipping reproducible containers, scaling under
+load, logging and monitoring for drift, and closing the loop by retraining when
+performance degrades. This project walks through each of those stages on a
+concrete example.
+
+## Tech stack
+
+Python · Flask · scikit-learn · pandas · Docker · Kubernetes · pytest.
