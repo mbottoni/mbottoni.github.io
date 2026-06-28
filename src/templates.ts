@@ -18,12 +18,12 @@ const socials = [
 const nav_links = [
   { href: "/", label: "Blog" },
   { href: "/projects.html", label: "Projects" },
-  { href: "/arcade.html", label: "Arcade" },
   { href: "/news.html", label: "News" },
   { href: "/archive.html", label: "Archive" },
   { href: "/about.html", label: "About" },
   { href: "/resume.pdf", label: "Resume" },
   { href: "/links.html", label: "Links" },
+  { href: "/arcade.html", label: "Arcade" },
 ];
 
 const moon_svg =
