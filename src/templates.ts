@@ -21,7 +21,7 @@ const nav_links = [
   { href: "/news.html", label: "News" },
   { href: "/archive.html", label: "Archive" },
   { href: "/about.html", label: "About" },
-  { href: "/resume.html", label: "Resume" },
+  { href: "/resume.pdf", label: "Resume" },
   { href: "/links.html", label: "Links" },
 ];
 
