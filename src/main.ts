@@ -131,10 +131,27 @@ async function build(params: {
   }
   await update_file("out/res/feed.xml", templates.feed(posts).value);
 
-  // Projects, news, archive
+  // Projects: render a detail page for each project that has a
+  // content/projects/<slug>.dj file; the index links to those when present.
+  const projectDetails = new Set<string>();
+  for (const project of projects) {
+    let text: string | undefined;
+    try {
+      text = await Deno.readTextFile(`content/projects/${project.slug}.dj`);
+    } catch {
+      continue;
+    }
+    const parsed = djot.parse(text);
+    const body = djot.render(parsed.doc, {}, parsed.math);
+    await update_file(
+      `out/res/projects/${project.slug}.html`,
+      templates.project_detail_page(project, body).value,
+    );
+    projectDetails.add(project.slug);
+  }
   await update_file(
     "out/res/projects.html",
-    templates.projects_page(projects).value,
+    templates.projects_page(projects, projectDetails).value,
   );
   await update_file("out/res/news.html", templates.news_page(news).value);
   await update_file("out/res/archive.html", templates.archive_page(posts).value);

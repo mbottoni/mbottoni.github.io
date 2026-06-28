@@ -1,0 +1,36 @@
+A horror movie recommendation engine powered by semantic search,
+sentence-transformers, and the OMDb API. Describe a mood, scene, or vibe in plain
+text and get matched with horror movies that fit --- no categories, no keyword lists.
+
+For example:
+
+- *"a slow-burn psychological thriller set in a remote cabin"*
+- *"found footage alien abduction at night"*
+- *"gothic vampire romance in Eastern Europe"*
+
+## How it works
+
+A FastAPI app routes each query to one of four recommendation strategies, then
+applies filters and stochastic sampling so results stay fresh on every search:
+
+- *Semantic Search* --- sentence-transformer embeddings (`all-mpnet-base-v2`)
+  match your text against movie plots by meaning, not keywords.
+- *Unified* --- blends semantic scores with MMR diversity for varied results.
+- *TF-IDF Similarity* --- scikit-learn cosine similarity over OMDb plots.
+- *Keyword Match* --- OMDb title search ranked by IMDb rating.
+
+## Features
+
+- Free-text mood/scene search over a pre-built horror corpus
+- Advanced filters: year range, minimum IMDb rating, type, English-only
+- Movie detail modal with director, cast, runtime, awards, and a direct IMDb link
+- Like / dislike feedback stored per user for future personalisation
+- User accounts with Argon2 password hashing and CSRF protection, plus search history
+- Stripe "buy me a coffee" checkout with webhooks
+- A dark, responsive horror-themed UI
+- Dockerised with a CI/CD pipeline (lint, type-check, test, build)
+
+## Tech stack
+
+FastAPI · Uvicorn · Jinja2 · sentence-transformers · scikit-learn · SQLAlchemy ·
+OMDb API · Stripe · Docker · GitHub Actions.
