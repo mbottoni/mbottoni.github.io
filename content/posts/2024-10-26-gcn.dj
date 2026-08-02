@@ -49,9 +49,27 @@ def GCN_forward(G, X):
 The core operation performs message passing 
 through Â = D^(-1/2)(A + I)D^(-1/2), where A is the adjacency matrix, I is the identity 
 matrix (self-loops), and D is the degree matrix. This normalization prevents numerical 
-instabilities and exploding/vanishing gradients. Each layer then applies this 
-normalized adjacency matrix to the node features, followed by a learned weight 
+instabilities and exploding/vanishing gradients. Each layer then applies this
+normalized adjacency matrix to the node features, followed by a learned weight
 transformation and non-linearity.
+
+Below is that `Â` acting on a small two-community graph, with the weight matrix
+and the non-linearity stripped out so you can see what the propagation alone
+does. Two things are worth pulling on.
+
+Press *Single spike* and step the depth up: the signal spreads exactly one hop
+per layer, so a GCN's receptive field is precisely its depth --- nothing more,
+nothing less. Then press *Two communities* and drag the depth all the way. The
+features start perfectly separated and end up indistinguishable. This is
+**over-smoothing**, and it is not a training pathology: `Â` has a dominant
+eigenvector proportional to `sqrt(deg)` with eigenvalue exactly 1, so repeated
+application drives *any* signal towards a multiple of that vector, which knows
+only about degrees and nothing about communities. Depth in a GCN destroys the
+signal it is supposed to be refining.
+
+{cap="Node colour is the feature after the chosen number of propagation steps; hue is the sign and opacity the magnitude. 'Separation' is the gap between the two community means, 'smoothness' is the Dirichlet energy relative to layer 0 (log-scaled bar). Click any node to put a single spike on it."}
+::: widget-gcn
+:::
 
 
 
