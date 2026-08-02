@@ -11,7 +11,20 @@ kl divergence. I believe that this is not true.
 In fact, the KL divergence is not a metric, because it is not symmetric. It have nice properties that makes it useful
 but there are other metrics that are more useful in specific scenarios. Sadly these metrics are not taught on introductory
 courses in machine learning but there is a research trend on using these metrics on common architectures where you usually use 
-the KL divergence on the loss, suck as the VAE's and DDPMs. 
+the KL divergence on the loss, suck as the VAE's and DDPMs.
+
+The asymmetry is easier to believe when you can move the distributions around
+yourself. Drag `P` and `Q` below: the two KL numbers are computed from the same
+pair and they disagree, while the three symmetric measures underneath do not
+care which distribution you call which. Try *Same mean* --- two distributions
+centred identically, one narrow and one wide --- and watch `KL(P‖Q)` and
+`KL(Q‖P)` differ by more than a nat. That gap is the whole reason the
+mode-seeking and mass-covering behaviours of a VAE depend on which way round you
+write the loss.
+
+{cap="KL in both directions, plus Jensen-Shannon, Hellinger and total variation, computed live from the two distributions. The shaded region is the mass P and Q share; total variation is one minus its area. Note that KL is unbounded while the symmetric measures saturate at 1 (JS at ln 2)."}
+::: widget-divergences
+:::
 
 For example, here is a pseudocode for some common divergences
 
