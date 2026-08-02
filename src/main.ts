@@ -216,6 +216,7 @@ async function build(params: {
     "assets/*",
     "assets/resilient-parsing/*",
     "arcade/*",
+    "widgets/*",
   ];
   for (const path of paths) {
     await update_path(path);
@@ -274,6 +275,7 @@ export type Post = {
   tags: string[];
   readingTime: number;
   image?: string;
+  widgets: string[];
 };
 
 async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
@@ -301,9 +303,25 @@ async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
     ctx.parse_ms += performance.now() - t;
 
     t = performance.now();
-    const render_ctx = { date, summary: undefined, title: undefined };
+    const render_ctx = {
+      date,
+      summary: undefined,
+      title: undefined,
+      widgets: new Set<string>(),
+    };
     const html = djot.render(parsed.doc, render_ctx, parsed.math);
     ctx.render_ms += performance.now() - t;
+
+    // Fail loudly rather than shipping a post with a dead widget mount.
+    const widgets = [...render_ctx.widgets].sort();
+    for (const widget of widgets) {
+      if (!await fs.exists(`content/widgets/${widget}.js`)) {
+        fatal(
+          `${entry.name}: embeds '::: widget-${widget}' but ` +
+            `content/widgets/${widget}.js does not exist`,
+        );
+      }
+    }
 
     const hero = extract_first_image(text);
     const words = text.trim().split(/\s+/).filter(Boolean).length;
@@ -324,6 +342,7 @@ async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
       tags: resolveTags(slug),
       readingTime,
       image: hero,
+      widgets,
     });
   }
   posts.sort((l, r) => l.path < r.path ? 1 : -1);

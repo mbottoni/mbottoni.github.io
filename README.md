@@ -17,6 +17,37 @@ $ deno task watch
 4. Run `deno task build` (or `deno task watch` while editing) to regenerate HTML and theme pages under `out/res/`.
 5. Preview locally by serving `out/res/` (e.g. `deno task serve`) before committing and pushing.
 
+## Interactive Widgets
+
+Posts can embed interactive figures. Drop a self-contained script at
+`content/widgets/<name>.js` and reference it from a post with a fenced div:
+
+```
+{cap="Optional caption rendered under the figure."}
+::: widget-<name>
+:::
+```
+
+The build renders a `<figure class="widget" data-widget="<name>">` containing an
+empty `.widget-mount`, and adds `<script defer src="/widgets/<name>.js">` **only
+to pages that embed it** — no other post pays for the script. The widget script
+is responsible for finding its own mount(s) and building the UI inside them:
+
+```js
+document.querySelectorAll('.widget[data-widget="<name>"] .widget-mount')
+```
+
+If a post references a widget with no matching file, the build fails rather than
+shipping a dead mount point.
+
+Shared chrome (`.widget-btn`, `.widget-stat`, `.widget-bar`, `.widget-canvas`,
+`.widget-controls`, …) lives in `content/css/main.css`, so widgets look
+consistent without shipping their own styles. Read theme colours from the CSS
+custom properties (`--accent`, `--card-bg`, `--border`) at draw time and observe
+`data-theme` on `<html>` so the figure follows the dark-mode toggle.
+
+`content/widgets/hopfield.js` is the reference implementation.
+
 ## Updating the Resume
 
 The resume PDF is generated from LaTeX source in `resume/`:

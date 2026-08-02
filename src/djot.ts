@@ -43,7 +43,24 @@ type RenderCtx = {
   date?: Date;
   summary?: string;
   title?: string;
+  // Names of interactive widgets embedded in this document, collected during
+  // render so the page can load only the scripts it actually uses.
+  widgets?: Set<string>;
 };
+
+// `::: widget-<name>` embeds content/widgets/<name>.js at that point in the post.
+function widget_name(node: AstNode): string | undefined {
+  const classes = (node.attributes?.["class"] ?? "").split(" ");
+  for (const cls of classes) {
+    if (!cls.startsWith("widget-")) continue;
+    const name = cls.slice("widget-".length);
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) {
+      throw new Error(`invalid widget name: ${JSON.stringify(name)}`);
+    }
+    return name;
+  }
+  return undefined;
+}
 
 export function render(
   doc: Doc,
@@ -130,6 +147,19 @@ ${cite}
 `;
     },
     div: (node: Div, r: djot.HTMLRenderer): string => {
+      const widget = widget_name(node);
+      if (widget) {
+        ctx.widgets?.add(widget);
+        const cap = extract_cap(node);
+        return `
+<figure class="widget" data-widget="${widget}">
+<div class="widget-mount"></div>
+<noscript><p class="widget-fallback">This figure is interactive and needs JavaScript.</p></noscript>
+${cap ? `<figcaption class="title">${cap}</figcaption>` : ""}
+</figure>
+`;
+      }
+
       let admon_icon = "";
       if (has_class(node, "note")) admon_icon = "info";
       if (has_class(node, "quiz")) admon_icon = "question";

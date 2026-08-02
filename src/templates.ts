@@ -692,12 +692,21 @@ function toc_from_content(content: HtmlString): HtmlString {
 
 export function post(post: Post, spellcheck: boolean): HtmlString {
   const meta = html`${time(post.date)} · ${post.readingTime} min read`;
+  // Only posts that embed a widget pay for its script.
+  const widget_scripts = post.widgets.length
+    ? new HtmlString(
+      post.widgets
+        .map((w) => `<script defer src="/widgets/${w}.js"></script>`)
+        .join("\n"),
+    )
+    : undefined;
   return base({
     src: post.src,
     title: post.title,
     description: post.summary,
     path: post.path,
     image: post.image,
+    body_end: widget_scripts,
     content: html`
       <div class="theme-banner">
         <span>Filed under</span>

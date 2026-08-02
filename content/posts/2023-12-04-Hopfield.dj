@@ -14,6 +14,15 @@ system's 'energy' is minimized, representing a memory. The overall network state
 an image or a pattern, making Hopfield Networks particularly effective in pattern recognition
 and completion tasks.
 
+That last sentence is much easier to believe once you have watched it happen, so
+here is a real one --- 144 neurons, three stored patterns, Hebbian weights, and
+the asynchronous update rule running in your browser. Draw on the grid, corrupt
+a memory, and press Recall.
+
+{cap="A Hopfield network with three stored patterns. Recall runs asynchronous sign updates in random order; the energy is a Lyapunov function, so it can only fall. Starting from noise you will occasionally land in a spurious mixture instead of a stored memory."}
+::: widget-hopfield
+:::
+
 ## Hopfield Networks is all you need
 
 Now with a little bit of more context of Hopfield Networks's we will
