@@ -61,9 +61,32 @@ When comparing the two models, several key differences emerge. In terms of sampl
 slower generation. DDIM, on the other hand, allows for accelerated sampling with fewer steps, significantly reducing generation time. This efficiency gain 
 in DDIM comes with a potential trade-off in sample quality, especially at very low step counts, though it can generally maintain comparable quality to DDPM.
 
-The latent space properties of these models also differ significantly. DDPM's stochastic nature makes it challenging 
-to manipulate the latent space directly. In contrast, DDIM's deterministic option allows 
+The latent space properties of these models also differ significantly. DDPM's stochastic nature makes it challenging
+to manipulate the latent space directly. In contrast, DDIM's deterministic option allows
 for more controlled latent space manipulation, enabling operations like interpolation.
+
+That last point is the one worth seeing directly. Below, both samplers run on a
+toy target --- eight Gaussian modes on a ring --- with **no trained network at
+all**. Because the target is a known mixture, the score of every noised marginal
+is available in closed form, so `eps_hat` is exact. Whatever the samplers do
+here is the sampler's doing and nothing else.
+
+Watch the *re-run drift* readout, which re-runs the chain from the identical
+starting latent with a different noise stream. At `eta = 0` it is exactly zero:
+the same latent always produces the same sample, which is precisely what makes
+DDIM latents interpolable. Push `eta` to 1 and it jumps to around 1.9 --- the
+latent no longer determines anything.
+
+One honest caveat, since the widget will show it to you anyway: with an *exact*
+score, DDPM is not worse than DDIM. Over 2000 samples at 30 steps it is actually
+slightly tighter (mean distance to a mode centre 0.126 against 0.143). The
+efficiency advantage described above is real in practice, but it comes from how
+a *learned* network's errors compound under a stochastic sampler --- it is not a
+property of the update rule by itself. Determinism is.
+
+{cap="Eight modes on a ring, sampled from pure noise. 'Mode dist' is the mean distance from a sample to the nearest mode centre, against an ideal of 0.163 for a perfect draw; 'network calls' is the step count, which is the quantity DDIM is meant to save. Drag steps down to 5 and both samplers smear — resolution costs calls regardless of eta."}
+::: widget-diffusion
+:::
 
 From a theoretical standpoint, DDPM provides stronger guarantees due to its well-defined probabilistic 
 framework. DDIM, while sacrificing some theoretical rigor, gains practical advantages in sampling speed and control. Both models can utilize 
