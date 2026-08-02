@@ -7,7 +7,17 @@
 A simple RL example, where i want an agent to navigate a grid to reach a goal while avoiding holes.
 For more details here is the colab where I implemented the RL example [Link to code][colab]
 
-```python 
+Here is the same thing running in the page --- the standard FrozenLake 4x4 map,
+`is_slippery=False`, and the same Q-learning update as the code below. Press
+*Train* and watch value flow backwards from the goal one step at a time. You can
+also click any cell to move the holes around, which wipes the table and makes it
+start over.
+
+{cap="Tabular Q-learning, learning live. Cell shade is V(s) = max_a Q(s,a) and the arrow is the greedy action; once it converges the values are close to 0.95 raised to the number of steps from the goal. Unlike the code below this starts Q at a small optimistic 0.05 rather than zero — with sparse reward and a decaying epsilon, zero-initialised Q solves this map only about 14% of the time inside a few hundred episodes, whereas a little optimism drives enough exploration to solve it every time by roughly episode 40."}
+::: widget-gridworld
+:::
+
+```python
 import gym
 import numpy as np
 env = gym.make('FrozenLake-v1', is_slippery=False, render_mode='human')
