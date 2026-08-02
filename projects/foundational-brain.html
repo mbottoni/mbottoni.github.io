@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>foundational-brain — mbottoni</title>
+  <meta name="description" content="A self-supervised foundation model for fMRI: an encoder, an RNN over the latent space, and a decoder — beating AR(1) at forecasting brain dynamics by 31%.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="foundational-brain — mbottoni">
+  <meta property="og:description" content="A self-supervised foundation model for fMRI: an encoder, an RNN over the latent space, and a decoder — beating AR(1) at forecasting brain dynamics by 31%.">
+  <meta property="og:url" content="https://mbottoni.github.io/projects/foundational-brain.html">
+  <meta property="og:image" content="/assets/projects/foundational-brain.gif">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="foundational-brain — mbottoni">
+  <meta name="twitter:description" content="A self-supervised foundation model for fMRI: an encoder, an RNN over the latent space, and a decoder — beating AR(1) at forecasting brain dynamics by 31%.">
+  <meta name="twitter:image" content="/assets/projects/foundational-brain.gif">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/projects/foundational-brain.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <article class="project-detail">
+        <p class="back-link"><a href="/projects.html">← All projects</a></p>
+        <header class="project-detail-header">
+          <h1>foundational-brain <span class="muted">2026</span></h1>
+          <div class="tag-row"><span class="tag">research</span></div>
+          <p class="project-actions">
+            <a class="button" href="https://github.com/mbottoni/foundational-brain">
+              <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+              View on GitHub
+            </a>
+            <a class="button button--ghost" href="https://mbottoni.github.io/foundational-brain/">Visual explainer ↗</a>
+          </p>
+        </header>
+        <figure class="project-figure"><img src="/assets/projects/foundational-brain.gif" alt="foundational-brain demo"><figcaption>Each fMRI frame is compressed to a latent z_t, a recurrent core steps it forward to z_t+1, and the decoder maps it back to ROI space — where the one-step-ahead forecast is scored against the truth.</figcaption></figure>
+        <p><strong><strong><span>What does a foundation model for the brain actually learn?</span></strong></strong><span> This project</span>
+<span>builds one from three composable parts </span>&mdash;<span> an </span><strong><strong><span>encoder</span></strong></strong><span> that compresses a</span>
+<span>single fMRI frame into a latent vector, a </span><strong><strong><span>recurrent core</span></strong></strong><span> that models how</span>
+<span>those latents evolve, and a </span><strong><strong><span>decoder</span></strong></strong><span> that maps them back to brain space </span>&mdash;
+<span>and then takes the answer seriously, including where it is unflattering.</span></p>
+<p><span>No labels, no downstream task baked in. The model is trained purely to predict</span>
+<span>the next moment of brain activity.</span></p>
+<section id="The-setup">
+
+    <h2>
+    <a href="#The-setup"><span>The setup</span> </a>
+    </h2>
+<p><span>fMRI is a 4-D signal </span><code>(X, Y, Z, T)</code><span>. Each volume is projected onto a brain atlas</span>
+<span>to give a </span><code>T × N_regions</code><span> matrix of ROI time series </span>&mdash;<span> the standard,</span>
+<span>scanner-comparable representation. The corpus is </span><strong><strong><span>ABIDE-PCP</span></strong></strong><span>: 871</span>
+<span>quality-checked resting-state subjects across 20 sites, already parcellated,</span>
+<span>fully open.</span></p>
+<p><span>The three self-supervised objectives are trained jointly:</span></p>
+<ul>
+<li>
+<strong><strong><span>Reconstruction</span></strong></strong><span> </span>&mdash;<span> </span><code>‖D(E(x_t)) − x_t‖²</code><span>, which keeps the latent informative.</span>
+</li>
+<li>
+<strong><strong><span>Latent forecasting</span></strong></strong><span> </span>&mdash;<span> </span><code>‖F(z_{1:t}) − z_{t+1}‖²</code><span>, the core dynamics objective.</span>
+</li>
+<li>
+<strong><strong><span>Masked latent modeling</span></strong></strong><span> </span>&mdash;<span> mask timepoints, reconstruct them from context.</span>
+</li>
+</ul>
+</section>
+<section id="Letting-the-data-set-the-hyperparameters">
+
+    <h2>
+    <a href="#Letting-the-data-set-the-hyperparameters"><span>Letting the data set the hyperparameters</span> </a>
+    </h2>
+<p><span>Profiling all 871 subjects </span><strong><span>before</span></strong><span> training changed the plan in ways worth</span>
+<span>recording:</span></p>
+<ul>
+<li>
+<strong><strong><span>A brain frame is not low-rank.</span></strong></strong><span> 125 of 200 components are needed for 90% of</span>
+<span>frame variance. The originally configured </span><code>latent_dim=256</code><span> </span><strong><span>exceeded the input</span>
+<span>dimension</span></strong><span> </span>&mdash;<span> an expansion, not a bottleneck. Now 128.</span>
+</li>
+<li>
+<strong><strong><span>Forecasting only works at one step.</span></strong></strong><span> At a 2-TR horizon both persistence and</span>
+<span>AR(1) are already worse than predicting the mean, so a multi-step objective</span>
+<span>would be fitting noise.</span>
+</li>
+<li>
+<strong><strong><span>Sites do not share a repetition time.</span></strong></strong><span> Lag-1 autocorrelation ranges 0.534 to</span>
+<span>0.874 across sites </span>&mdash;<span> </span>&ldquo;<span>one step</span>&rdquo;<span> means a different amount of elapsed time</span>
+<span>depending on where the subject was scanned. Resolved by </span><strong><span>partition</span></strong><span>: pretrain</span>
+<span>on the TR = 2.0 s group (10 sites, 522 subjects) and hold the rest out as a</span>
+<span>cross-TR test.</span>
+</li>
+<li>
+<strong><strong><span>But the dynamics are not AR(1) either.</span></strong></strong><span> </span><code>acf(2)/acf(1)²</code><span> sits at 0.43</span>&ndash;<span>0.72</span>
+<span>where a first-order Markov process would give exactly 1.0 </span>&mdash;<span> so a model with</span>
+<span>memory has genuine headroom.</span>
+</li>
+</ul>
+</section>
+<section id="What-worked">
+
+    <h2>
+    <a href="#What-worked"><span>What worked</span> </a>
+    </h2>
+<p><span>The dynamics half delivers. Against an AR(1) bar of 0.389, the latent RNN reaches</span>
+<strong><strong><span>0.268 validation 1-TR forecast MSE </span>&mdash;<span> 31% better</span></strong></strong><span> </span>&mdash;<span> and it is better on</span>
+<strong><strong><span>100% of held-out subjects</span></strong></strong><span> on both splits (Wilcoxon </span><strong><span>p</span></strong><span> = 3.5e-10, so this is</span>
+<span>not an outlier-carried average). On 349 subjects from sites whose repetition time</span>
+<span>was never seen during training it still wins by 27%, so the representation is not</span>
+<span>just memorizing one sampling rate.</span></p>
+</section>
+<section id="What-didn-t-and-why-that-s-the-interesting-part">
+
+    <h2>
+    <a href="#What-didn-t-and-why-that-s-the-interesting-part"><span>What didn</span>&rsquo;<span>t, and why that</span>&rsquo;<span>s the interesting part</span> </a>
+    </h2>
+<ul>
+<li>
+<strong><strong><span>The spatial map is essentially linear.</span></strong></strong><span> The encoder never beats PCA at a</span>
+<span>matched width </span>&mdash;<span> at </span><strong><span>every</span></strong><span> width from 8 to 128, with the gap growing from</span>
+<span>0.7% to 10%. The nonlinear encoder earns nothing for pure reconstruction. The</span>
+<span>useful consequence is a clean decomposition: the model</span>&rsquo;<span>s entire advantage over</span>
+<span>baselines lives in the temporal core.</span>
+</li>
+<li>
+<strong><strong><span>Reconstruction is an ally, not a competitor.</span></strong></strong><span> I expected down-weighting</span>
+<span>reconstruction to free the latent for forecasting. The opposite held: forecast</span>
+<span>MSE is </span><strong><span>best</span></strong><span> at </span><code>w_reconstruction = 1.0</code><span> and degrades as it is down-weighted.</span>
+<span>The default 1</span>:1:<span>1 was validated rather than changed.</span>
+</li>
+<li>
+<strong><strong><span>Pooling mattered more than the representation.</span></strong></strong><span> Under mean+std pooling,</span>
+<span>phenotype decoding looked weak (DX AUC ≈ 0.63). Under connectivity pooling </span>&mdash;
+<span>where resting-state phenotype signal actually lives </span>&mdash;<span> it jumps to DX 0.76,</span>
+<span>sex 0.78, age R² 0.43. The weak first result was largely a pooling artifact.</span>
+</li>
+<li>
+<strong><strong><span>The model does not beat raw functional connectivity.</span></strong></strong><span> For diagnosis and sex,</span>
+<code>raw_fc</code><span> matches or beats the learned features; only age shows a model win.</span>
+<span>And the RNN</span>&rsquo;<span>s features stay the </span><strong><span>most</span></strong><span> site-decodable of all (0.835).</span>
+</li>
+</ul>
+<p><span>So: the model forecasts well and encodes real temporal structure, but those</span>
+<span>dynamics are </span><strong><strong><span>not yet a clean, biology-carrying transfer representation</span></strong></strong><span> </span>&mdash;
+<span>they are partly acquisition. It learned the scanner as much as the brain. That</span>
+<span>result is what makes the next step obvious: </span><strong><strong><span>site-adversarial pretraining</span></strong></strong><span>, with</span>
+<span>the test being whether site-decodability falls while forecasting and phenotype</span>
+<span>hold.</span></p>
+</section>
+<section id="What-s-inside">
+
+    <h2>
+    <a href="#What-s-inside"><span>What</span>&rsquo;<span>s inside</span> </a>
+    </h2>
+<p><span>Python 3.12 with PyTorch and nilearn, managed by </span><code>uv</code><span>; 58 tests; ~7 minutes to</span>
+<span>pretrain 60 epochs on an M-series GPU. Every claim above is backed by a generated</span>
+<span>report in </span><code>docs/</code><span> </span>&mdash;<span> the corpus profile, the latent-width sweep, the loss-weight</span>
+<span>sweep, and both probe analyses.</span></p>
+<p><span>There is also a </span><a href="https://mbottoni.github.io/foundational-brain/"><span>visual explainer</span></a><span>:</span>
+<span>an animated, layman-friendly walkthrough of what the model predicts and what it</span>
+<span>did and didn</span>&rsquo;<span>t learn, with every animation driven by real ABIDE scans and the</span>
+<span>trained model rather than mock-ups.</span></p>
+</section>
+
+      </article>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/projects/foundational-brain.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>

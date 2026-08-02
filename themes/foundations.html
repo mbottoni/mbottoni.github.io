@@ -1,0 +1,368 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Math, Physics &amp; Foundations — mbottoni</title>
+  <meta name="description" content="Hopfield networks, Kalman filters, Kolmogorov ideas, probability, information theory, and philosophical musings.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Math, Physics &amp; Foundations — mbottoni">
+  <meta property="og:description" content="Hopfield networks, Kalman filters, Kolmogorov ideas, probability, information theory, and philosophical musings.">
+  <meta property="og:url" content="https://mbottoni.github.io/themes/foundations.html">
+  <meta property="og:image" content="https://avatars.githubusercontent.com/u/37229305?v=4">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Math, Physics &amp; Foundations — mbottoni">
+  <meta name="twitter:description" content="Hopfield networks, Kalman filters, Kolmogorov ideas, probability, information theory, and philosophical musings.">
+  <meta name="twitter:image" content="https://avatars.githubusercontent.com/u/37229305?v=4">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/themes/foundations.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <section class="theme-page">
+        <header class="theme-section">
+          <h1>Math, Physics &amp; Foundations</h1>
+          <p>Hopfield networks, Kalman filters, Kolmogorov ideas, probability, information theory, and philosophical musings.</p>
+        </header>
+        <ul class="post-list">
+          
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2026/01/25/epiplexity.html"><img src="/assets/foundations/coin_flip.jpg" alt="From Entropy to Epiplexity preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2026-01-25">Jan 25, 2026</time> · <a href="/2026/01/25/epiplexity.html">From Entropy to Epiplexity</a></h3>
+          <p>In this paper https://arxiv.org/abs/2601.03220, Finzi et al. argue that classical information theory (Shannon entropy and Kolmogorov complexity) is insufficient for understanding modern 
+AI because it assumes an observer with unlimited computational power. Under classical theory, deterministic transformations cannot create new 
+information, yet empirically, processes like self-play (AlphaZero) and synthetic data generation clearly improve model capabilities.</p>
+          <div class="tag-row"><a class="tag" href="/tags/information-theory.html">#information-theory</a><a class="tag" href="/tags/probability.html">#probability</a></div>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/12/23/prob.html"><img src="/assets/foundations/prob.png" alt="Probability Paradigms preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-12-23">Dec 23, 2024</time> · <a href="/2024/12/23/prob.html">Probability Paradigms</a></h3>
+          <p>When we think about probability, there are three 
+main philosophical approaches: frequentist, Bayesian, and propensity. Each offers 
+a different lens for understanding uncertainty and probability.</p>
+          <div class="tag-row"><a class="tag" href="/tags/probability.html">#probability</a><a class="tag" href="/tags/foundations.html">#foundations</a></div>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/11/17/plato.html"><img src="/assets/foundations/plato.png" alt="The Platonic Representation Hypothesis: Are AI Models Converging on Universal Representations? preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-11-17">Nov 17, 2024</time> · <a href="/2024/11/17/plato.html">The Platonic Representation Hypothesis: Are AI Models Converging on Universal Representations?</a></h3>
+          <p>This blog post is based on The Platonic Representation Hypothesis by Huh et al. (2024), MIT. AI models are becoming increasingly similar 
+in how they represent the world, regardless of how they're trained or what kind of data they process. This fascinating trend suggests we 
+may be approaching a universal way of representing reality.</p>
+          <div class="tag-row"><a class="tag" href="/tags/philosophy.html">#philosophy</a><a class="tag" href="/tags/representation-learning.html">#representation-learning</a></div>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/10/20/IIT.html"><img src="/assets/foundations/iit.jpg" alt="Integrated Information Theory (IIT) preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-10-20">Oct 20, 2024</time> · <a href="/2024/10/20/IIT.html">Integrated Information Theory (IIT)</a></h3>
+          <p>One of the most interesting question to be made is about the nature of consciousness.
+During a long time the question of consciousness was considered as a philosophical question
+but during the last decades this question has been approached by the science with the
+emergence of the Integrated Information Theory (IIT) by Giulio Tononi.
+This paradigm, proposes a radical reconceptualization of consciousness, framing 
+it as an intrinsic property of physical systems, quantifiable through information integration.</p>
+          <div class="tag-row"><a class="tag" href="/tags/consciousness.html">#consciousness</a><a class="tag" href="/tags/information-theory.html">#information-theory</a><a class="tag" href="/tags/philosophy.html">#philosophy</a></div>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/09/17/divergences.html"><img src="/assets/foundations/divergences.png" alt="Some common divergences preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-09-17">Sep 17, 2024</time> · <a href="/2024/09/17/divergences.html">Some common divergences</a></h3>
+          <p>Hey. usually on machine learning we have to consider distances between different probability distributions.
+This is in fact a hard problem and there is a misconception that the most common way to do this is using the
+kl divergence. I believe that this is not true.</p>
+          <div class="tag-row"><a class="tag" href="/tags/information-theory.html">#information-theory</a><a class="tag" href="/tags/probability.html">#probability</a></div>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/07/29/kolmogorov.html"><img src="/assets/foundations/kolmogorov.png" alt="Kolmogorov Complexity preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-07-29">Jul 29, 2024</time> · <a href="/2024/07/29/kolmogorov.html">Kolmogorov Complexity</a></h3>
+          <p>Think of Kolmogorov Complexity as a way to measure the complexity of 
+a string (a sequence of characters) by looking at the length of the 
+shortest possible program that can produce that string. Imagine you have a 
+super-efficient computer program that generates text. Kolmogorov Complexity is about 
+finding the tiniest program that can spit out the exact text you have.</p>
+          <div class="tag-row"><a class="tag" href="/tags/kolmogorov.html">#kolmogorov</a><a class="tag" href="/tags/information-theory.html">#information-theory</a></div>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2024/05/12/mandelbrot.html"><img src="/assets/foundations/mandelbrot.png" alt="Some tests with the Mandelbrot set and parallelization preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2024-05-12">May 12, 2024</time> · <a href="/2024/05/12/mandelbrot.html">Some tests with the Mandelbrot set and parallelization</a></h3>
+          <p>Hello. It has been a while since I lasted programed
+with OpenMP and C. For refreshing my mind and keeping
+the concepts clear I was doing some tests with the
+Mandelbrot Set with OpenMP and with a single thread.
+Here is the code for both cases:</p>
+          <div class="tag-row"><a class="tag" href="/tags/fractals.html">#fractals</a><a class="tag" href="/tags/math.html">#math</a><a class="tag" href="/tags/visualization.html">#visualization</a></div>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2023/12/19/Kalman.html"><img src="/assets/foundations/kalman1.jpg" alt="Implementing the Kalman Filter in Python preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2023-12-19">Dec 19, 2023</time> · <a href="/2023/12/19/Kalman.html">Implementing the Kalman Filter in Python</a></h3>
+          <p>Hello. I'm trying to experiment with some recent articles that tries to 
+connect transformers and kalman filter. I remember that I saw in my undergrad
+this concept on the control lecture but to be honest I didn't quite understand
+the concept at the time. To help my understanding i tried to implement
+using only some basic python libraries the Kalman Filter in python.</p>
+          <div class="tag-row"><a class="tag" href="/tags/kalman-filter.html">#kalman-filter</a><a class="tag" href="/tags/bayesian.html">#bayesian</a><a class="tag" href="/tags/time-series.html">#time-series</a></div>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2023/12/12/UP.html"><img src="/assets/foundations/cat_coding.jpg" alt="Implementing from scratch a Hopfield Network preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2023-12-12">Dec 12, 2023</time> · <a href="/2023/12/12/UP.html">Implementing from scratch a Hopfield Network</a></h3>
+          <p>A while ago I posted about Hopfield Networks. I wanted to further explore this theme
+by trying to implement this type of idea from scratch in python.</p>
+          <div class="tag-row"><a class="tag" href="/tags/probability.html">#probability</a><a class="tag" href="/tags/kolmogorov.html">#kolmogorov</a></div>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2023/12/06/Hopfield_from_scratch.html"><img src="/assets/foundations/meme_stock_res.jpg" alt="Understanding Cover's Universal Portfolio preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2023-12-06">Dec 6, 2023</time> · <a href="/2023/12/06/Hopfield_from_scratch.html">Understanding Cover's Universal Portfolio</a></h3>
+          <p>I always wanted to understandt the concept of a universal portfolio
+from Cover's. This topic always fascinated me since I first heard about it
+on my information theory lectures and you know what they say... The best 
+way to learn is to practice. So here's my attempt ...</p>
+          <div class="tag-row"><a class="tag" href="/tags/hopfield.html">#hopfield</a><a class="tag" href="/tags/from-scratch.html">#from-scratch</a><a class="tag" href="/tags/energy-based.html">#energy-based</a></div>
+        </div>
+      </li>
+    
+      <li class="post-card">
+        <div class="post-card__media">
+          <a href="/2023/12/04/Hopfield.html"><img src="/assets/foundations/hopfield.gif" alt="Hopfield Networks for dummies preview"></a>
+        </div>
+        <div class="post-card__body">
+          <h3><time datetime="2023-12-04">Dec 4, 2023</time> · <a href="/2023/12/04/Hopfield.html">Hopfield Networks for dummies</a></h3>
+          <p>Hopfield Networks, a type of Recurrent Neural Network (RNN), are renowned for their unique ability to
+store and retrieve patterns through associative memory. This means they can recall a complete memory from
+just a partial input. Inspired by the Ising model in physics, which explains magnetic behaviors in
+certain materials, Hopfield Networks use a system of interconnected neurons, each able to be in
+one of two states, akin to magnetic dipoles. These neurons are fully connected, each influencing the other
+based on the strength of their connections. The network dynamically evolves to a stable state where the
+system's energy is minimized, representing a memory. The overall network state thus can represent binary information, like
+an image or a pattern, making Hopfield Networks particularly effective in pattern recognition
+and completion tasks.</p>
+          <div class="tag-row"><a class="tag" href="/tags/hopfield.html">#hopfield</a><a class="tag" href="/tags/associative-memory.html">#associative-memory</a><a class="tag" href="/tags/energy-based.html">#energy-based</a></div>
+        </div>
+      </li>
+    
+        </ul>
+      </section>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/src/templates.ts">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>

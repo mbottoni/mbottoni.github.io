@@ -1,0 +1,243 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BERT and fine tunning</title>
+  <meta name="description" content="Hey, I this is my first blog post ever =)">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="BERT and fine tunning">
+  <meta property="og:description" content="Hey, I this is my first blog post ever =)">
+  <meta property="og:url" content="https://mbottoni.github.io/2023/12/03/Bertimbau.html">
+  <meta property="og:image" content="/assets/frontier/arch.jpg">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="BERT and fine tunning">
+  <meta name="twitter:description" content="Hey, I this is my first blog post ever =)">
+  <meta name="twitter:image" content="/assets/frontier/arch.jpg">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2023/12/03/Bertimbau.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/frontier.html">
+          Frontier LLMs &amp; Architectures
+        </a>
+        <span class="post-meta"><time datetime="2023-12-03">Dec 3, 2023</time> · 2 min read</span>
+      </div>
+      
+      <article >
+
+    <h1>
+    <a href="#BERT-and-fine-tunning"><span>BERT and fine tunning</span> <time datetime="2023-12-03">Dec 3, 2023</time></a>
+    </h1>
+<p><span>Hey, I this is my first blog post ever =)</span></p>
+<p><span>In this post i will show something that i did for a NLP course that I</span>&rsquo;<span>m currently enrolled, I focused</span>
+<span>on fine-tuning the BERTimabu model, a Portuguese version of the BERT model, for two</span>
+<span>specific tasks: vowel density regression and sentence classification. BERT, a revolutionary model in </span>
+<span>natural language processing, uses a bidirectional transformer architecture, significantly enhancing the</span>
+<span>context understanding of words in sentences. This architecture, based on the Transformer model and its</span>
+<span>encoder component, marks a departure from previous sequential learning methods by employing attention mechanisms exclusively.</span>
+<span>Here is a image of the architecture</span></p>
+
+<figure>
+
+<img alt="" src="/assets/frontier/arch.jpg">
+</figure>
+<p><span>My study delves into the application of BERT in two areas. First, I investigated the regression of vowel</span>
+<span>density in texts. This involved calculating the proportion of vowels (ignoring spaces, punctuation, and</span>
+<span>non-letter characters) and exploring how well the BERT model could predict this density. The task posed</span>
+<span>challenges, as traditional models often struggled with such context-specific predictions.</span></p>
+<p><span>I also explored sentence classification based on vowel density, dividing sentences into three classes</span>
+<span>according to their vowel density. This classification was examined in both balanced and unbalanced</span>
+<span>datasets, with the performance assessed across various metrics. The results highlighted the impact of</span>
+<span>class imbalance on model performance, especially in the unbalanced dataset.</span></p>
+<p><span>Throughout this work, I demonstrated the adaptability and effectiveness of the BERT model in handling</span>
+<span>these distinct linguistic tasks. The experiments underscored the importance of context in language models and</span>
+<span>the potential of BERT in enhancing the understanding and processing of Portuguese language tasks. The findings provide</span>
+<span>valuable insights into the model</span>&rsquo;<span>s capabilities and limitations, paving the way for further refinements and</span>
+<span>applications in natural language processing.</span></p>
+<p><span>For more details here is the colab where I implemented the models </span><a href="https://colab.research.google.com/drive/1k0w9xlsbXeHHdBy3GJu472fPC0Rz2vA9?usp=sharing"><span>Link to code</span></a></p>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/nlp.html">#nlp</a><a class="tag" href="/tags/bert.html">#bert</a><a class="tag" href="/tags/transformers.html">#transformers</a></div>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2023-12-03-Bertimbau.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>

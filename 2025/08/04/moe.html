@@ -1,0 +1,331 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mixture of Experts</title>
+  <meta name="description" content="In the pursuit of scaling neural networks to unprecedented parameter counts while 
+maintaining computational tractability, the paradigm of conditional computation 
+has emerged as a cornerstone of modern deep learning architectures. A prominent and 
+highly successful incarnation of this principle is the Mixture of Experts (MoE) layer. At its core, an MoE model eschews 
+the monolithic, dense activation of traditional networks, wherein every parameter is engaged 
+for every input. Instead, it employs a collection of specialized 
+subnetworks, termed experts, and dynamically selects a sparse combination of these 
+experts to process each input token. This approach allows for a dramatic increase in 
+model capacity without a commensurate rise in computational cost (FLOPs), as only 
+a fraction of the network's parameters are utilized for any given forward pass.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Mixture of Experts">
+  <meta property="og:description" content="In the pursuit of scaling neural networks to unprecedented parameter counts while 
+maintaining computational tractability, the paradigm of conditional computation 
+has emerged as a cornerstone of modern deep learning architectures. A prominent and 
+highly successful incarnation of this principle is the Mixture of Experts (MoE) layer. At its core, an MoE model eschews 
+the monolithic, dense activation of traditional networks, wherein every parameter is engaged 
+for every input. Instead, it employs a collection of specialized 
+subnetworks, termed experts, and dynamically selects a sparse combination of these 
+experts to process each input token. This approach allows for a dramatic increase in 
+model capacity without a commensurate rise in computational cost (FLOPs), as only 
+a fraction of the network's parameters are utilized for any given forward pass.">
+  <meta property="og:url" content="https://mbottoni.github.io/2025/08/04/moe.html">
+  <meta property="og:image" content="/assets/frontier/moe.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Mixture of Experts">
+  <meta name="twitter:description" content="In the pursuit of scaling neural networks to unprecedented parameter counts while 
+maintaining computational tractability, the paradigm of conditional computation 
+has emerged as a cornerstone of modern deep learning architectures. A prominent and 
+highly successful incarnation of this principle is the Mixture of Experts (MoE) layer. At its core, an MoE model eschews 
+the monolithic, dense activation of traditional networks, wherein every parameter is engaged 
+for every input. Instead, it employs a collection of specialized 
+subnetworks, termed experts, and dynamically selects a sparse combination of these 
+experts to process each input token. This approach allows for a dramatic increase in 
+model capacity without a commensurate rise in computational cost (FLOPs), as only 
+a fraction of the network's parameters are utilized for any given forward pass.">
+  <meta name="twitter:image" content="/assets/frontier/moe.png">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2025/08/04/moe.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/frontier.html">
+          Frontier LLMs &amp; Architectures
+        </a>
+        <span class="post-meta"><time datetime="2025-08-04">Aug 4, 2025</time> · 3 min read</span>
+      </div>
+      
+      <article >
+
+    <h1>
+    <a href="#Mixture-of-Experts"><span>Mixture of Experts</span> <time datetime="2025-08-04">Aug 4, 2025</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/frontier/moe.png">
+</figure>
+<p><span>In the pursuit of scaling neural networks to unprecedented parameter counts while </span>
+<span>maintaining computational tractability, the paradigm of conditional computation </span>
+<span>has emerged as a cornerstone of modern deep learning architectures. A prominent and </span>
+<span>highly successful incarnation of this principle is the Mixture of Experts (MoE) layer. At its core, an MoE model eschews </span>
+<span>the monolithic, dense activation of traditional networks, wherein every parameter is engaged </span>
+<span>for every input. Instead, it employs a collection of specialized </span>
+<span>subnetworks, termed </span>&ldquo;<span>experts,</span>&rdquo;<span> and dynamically selects a sparse combination of these </span>
+<span>experts to process each input token. This approach allows for a dramatic increase in </span>
+<span>model capacity without a commensurate rise in computational cost (FLOPs), as only </span>
+<span>a fraction of the network</span>&rsquo;<span>s parameters are utilized for any given forward pass.</span></p>
+<p><span>The architecture is orchestrated by two primary components: a set of N expert </span>
+<span>networks, E</span><em><span>1, E</span></em><span>2, </span>&hellip;<span>, E_N, and a trainable gating network, G. The expert </span>
+<span>networks are typically homogenous in their architecture (e.g., small feed-forward networks) but learn </span>
+<span>distinct functions over the course of training. The gating network, often a simple linear layer </span>
+<span>followed by a softmax function, serves as a dynamic router. For a given input vector x, the gating network produces a </span>
+<span>normalized distribution of weights over the N experts, effectively learning to predict which experts </span>
+<span>are most suitable for processing that specific input.</span></p>
+<p><span>The final output of the MoE layer, $y$, is not the output of a single chosen expert but </span>
+<span>rather a weighted sum of the outputs from all experts. The weights for this </span>
+<span>summation are precisely the probabilities generated by the gating network. The output is thus computed as:</span></p>
+<p><span>$$y = \sum_{i=1}^{N} g_i(x) \, E_i(x)$$</span></p>
+<p><span>where $E_i(x)$ is the output of the i-th expert for the input $x$, and $g(x)$ is the vector of gating weights produced by the gating </span>
+<span>network G. The weights are typically computed via a softmax over the logits.</span></p>
+<p><span>In practice, to enforce sparsity and reduce computation, a variant known as </span>
+<span>the Sparse Mixture of Experts is commonly deployed. In this formulation, only the </span>
+<span>experts with the highest gating weights—the </span>&ldquo;<span>top-k</span>&rdquo;<span> experts, where $k$ is a small </span>
+<span>integer (e.g., 1 or 2)—are activated. The gating weights are re-normalized over </span>
+<span>this small subset of selected experts. This ensures that the computational cost is independent </span>
+<span>of the total number of experts, N, and dependent only on k. This sparse, conditional activation is the key to the MoE</span>&rsquo;<span>s efficiency.</span></p>
+<section id="Pseudocode-Top-k-Mixture-of-Experts-Forward-Pass">
+
+    <h3>
+    <a href="#Pseudocode-Top-k-Mixture-of-Experts-Forward-Pass"><span>Pseudocode: Top-k Mixture of Experts Forward Pass</span> </a>
+    </h3>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-comment"># Let x be the input token representation</span></span>
+<span class="line"><span class="hl-comment"># Let E be the set of N expert networks {E_1, ..., E_N}</span></span>
+<span class="line"><span class="hl-comment"># Let G be the gating network</span></span>
+<span class="line"><span class="hl-comment"># Let k be the number of experts to select</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 1. Compute gating logits for the input token x.</span></span>
+<span class="line"><span class="hl-comment"># W_g is the weight matrix of the gating network.</span></span>
+<span class="line">logits = G(x)  <span class="hl-comment"># Shape: [N]</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 2. Select the top k experts.</span></span>
+<span class="line"><span class="hl-comment"># Get the k largest logit values and their corresponding indices.</span></span>
+<span class="line">top_k_logits, top_k_indices = TopK(logits, k)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 3. Compute the normalized routing weights for the selected experts.</span></span>
+<span class="line"><span class="hl-comment"># Apply softmax only to the selected logits to get sparse weights.</span></span>
+<span class="line">routing_weights = Softmax(top_k_logits) <span class="hl-comment"># Shape: [k]</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 4. Initialize the final output vector.</span></span>
+<span class="line"><span class="hl-comment"># The output has the same dimension as the expert outputs.</span></span>
+<span class="line">final_output = <span class="hl-number">0</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 5. Compute the weighted sum of the selected expert outputs.</span></span>
+<span class="line"><span class="hl-comment"># Iterate through the chosen experts and their corresponding weights.</span></span>
+<span class="line"><span class="hl-keyword">for</span> i <span class="hl-keyword">in</span> <span class="hl-number">1.</span>.k:</span>
+<span class="line">    <span class="hl-comment"># Get the index of the i-th expert in the top-k set.</span></span>
+<span class="line">    expert_index = top_k_indices[i]</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Get the routing weight for this expert.</span></span>
+<span class="line">    weight = routing_weights[i]</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Retrieve the corresponding expert network.</span></span>
+<span class="line">    selected_expert = E[expert_index]</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Process the input token with the selected expert.</span></span>
+<span class="line">    expert_output = selected_expert(x)</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-comment"># Accumulate the weighted expert output.</span></span>
+<span class="line">    final_output += weight * expert_output</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 6. Return the combined output.</span></span>
+<span class="line"><span class="hl-comment"># This output is then passed to the next layer in the network.</span></span>
+<span class="line"><span class="hl-keyword">return</span> final_output</span></code></pre>
+
+</figure>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/mixture-of-experts.html">#mixture-of-experts</a><a class="tag" href="/tags/llm.html">#llm</a><a class="tag" href="/tags/architecture.html">#architecture</a></div>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2025-08-04-moe.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>

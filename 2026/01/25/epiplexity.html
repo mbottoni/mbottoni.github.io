@@ -1,0 +1,357 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>From Entropy to Epiplexity</title>
+  <meta name="description" content="In this paper https://arxiv.org/abs/2601.03220, Finzi et al. argue that classical information theory (Shannon entropy and Kolmogorov complexity) is insufficient for understanding modern 
+AI because it assumes an observer with unlimited computational power. Under classical theory, deterministic transformations cannot create new 
+information, yet empirically, processes like self-play (AlphaZero) and synthetic data generation clearly improve model capabilities.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="From Entropy to Epiplexity">
+  <meta property="og:description" content="In this paper https://arxiv.org/abs/2601.03220, Finzi et al. argue that classical information theory (Shannon entropy and Kolmogorov complexity) is insufficient for understanding modern 
+AI because it assumes an observer with unlimited computational power. Under classical theory, deterministic transformations cannot create new 
+information, yet empirically, processes like self-play (AlphaZero) and synthetic data generation clearly improve model capabilities.">
+  <meta property="og:url" content="https://mbottoni.github.io/2026/01/25/epiplexity.html">
+  <meta property="og:image" content="/assets/foundations/coin_flip.jpg">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="From Entropy to Epiplexity">
+  <meta name="twitter:description" content="In this paper https://arxiv.org/abs/2601.03220, Finzi et al. argue that classical information theory (Shannon entropy and Kolmogorov complexity) is insufficient for understanding modern 
+AI because it assumes an observer with unlimited computational power. Under classical theory, deterministic transformations cannot create new 
+information, yet empirically, processes like self-play (AlphaZero) and synthetic data generation clearly improve model capabilities.">
+  <meta name="twitter:image" content="/assets/foundations/coin_flip.jpg">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2026/01/25/epiplexity.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/foundations.html">
+          Math, Physics &amp; Foundations
+        </a>
+        <span class="post-meta"><time datetime="2026-01-25">Jan 25, 2026</time> · 3 min read</span>
+      </div>
+      
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <ul><li class="toc-l3"><a href="#Theoretical-Framework">Theoretical Framework</a></li><li class="toc-l3"><a href="#Paradoxes-of-Information">Paradoxes of Information</a></li><li class="toc-l3"><a href="#Measuring-Epiplexity">Measuring Epiplexity</a></li><li class="toc-l3"><a href="#Implications-for-Generalization-and-Pre-training">Implications for Generalization and Pre-training</a></li></ul>
+    </details>
+  
+      <article >
+
+    <h1>
+    <a href="#From-Entropy-to-Epiplexity"><span>From Entropy to Epiplexity</span> <time datetime="2026-01-25">Jan 25, 2026</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/foundations/coin_flip.jpg">
+</figure>
+<p><span>In this paper https://arxiv.org/abs/2601.03220, Finzi et al. argue that classical information theory (Shannon entropy and Kolmogorov complexity) is insufficient for understanding modern </span>
+<span>AI because it assumes an observer with unlimited computational power. Under classical theory, deterministic transformations cannot create new </span>
+<span>information, yet empirically, processes like self-play (AlphaZero) and synthetic data generation clearly improve model capabilities.</span></p>
+<p><span>To resolve this interesting tension, the authors introduce </span><strong><strong><span>Epiplexity</span></strong></strong><span> (epistemic complexity), a measure of the structural information a </span>
+<strong><span>computationally bounded</span></strong><span> observer can extract from data.</span></p>
+<hr>
+<section id="Theoretical-Framework">
+
+    <h3>
+    <a href="#Theoretical-Framework"><span>Theoretical Framework</span> </a>
+    </h3>
+<p><span>The authors propose decomposing the total information of a</span>
+<span>dataset into two distinct components relative to a time-bounded observer:</span></p>
+<ul>
+<li>
+<p><strong><strong><span>Time-Bounded Entropy ($H_T(X)$):</span></strong></strong><span> The random, unpredictable content. For a computationally limited observer, even </span>
+<span>deterministic encryption (like a CSPRNG) appears to have maximal entropy because the pattern cannot be cracked within the time limit.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Epiplexity ($K_T(X)$):</span></strong></strong><span> The structural, learnable content. This is the length of the program a model learns to describe the data</span>&rsquo;<span>s patterns.</span></p>
+</li>
+</ul>
+<p><span>Formally, for a random variable $X$ and a time bound $T$, the authors define these via the Minimum Description Length (MDL) principle:</span></p>
+<p><span>$$-\log P(X) \approx K_T(X) + H_T(X)$$</span></p>
+<p><span>Where:</span></p>
+<ul>
+<li>
+<span>$K_T(X)$ is the Epiplexity (program length).</span>
+</li>
+<li>
+<span>$H_T(X)$ is the Time-Bounded Entropy (expected loss).</span>
+</li>
+</ul>
+<hr>
+</section>
+<section id="Paradoxes-of-Information">
+
+    <h3>
+    <a href="#Paradoxes-of-Information"><span>Paradoxes of Information</span> </a>
+    </h3>
+<p><span>The paper uses Epiplexity to resolve three apparent contradictions between information theory and machine learning practice:</span></p>
+<section id="Paradox-1-Creation-of-Information-via-Computation">
+
+    <h4>
+    <a href="#Paradox-1-Creation-of-Information-via-Computation"><span>Paradox 1: Creation of Information via Computation</span> </a>
+    </h4>
+<ul>
+<li>
+<p><strong><strong><span>Classical View:</span></strong></strong><span> Deterministic processing cannot increase information (Data Processing Inequality).</span></p>
+</li>
+<li>
+<p><strong><strong><span>Epiplexity View:</span></strong></strong><span> Computation </span><strong><span>can</span></strong><span> create information. By applying a deterministic rule (like Cellular Automata Rule 54), one can generate data with high Epiplexity. While the </span>&ldquo;<span>seed</span>&rdquo;<span> is simple, the resulting structure requires a complex program for a bounded observer to predict.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Key Finding:</span></strong></strong><span> Synthetic data adds value when the generating function is easy to run but hard to invert/predict, forcing the model to learn complex internal structures.</span></p>
+</li>
+</ul>
+</section>
+<section id="Paradox-2-The-Importance-of-Data-Ordering">
+
+    <h4>
+    <a href="#Paradox-2-The-Importance-of-Data-Ordering"><span>Paradox 2: The Importance of Data Ordering</span> </a>
+    </h4>
+<ul>
+<li>
+<p><strong><strong><span>Classical View:</span></strong></strong><span> Information is symmetric; $I(X; Y) = I(Y; X)$.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Epiplexity View:</span></strong></strong><span> Factorization order matters. Predicting </span>&ldquo;<span>Board $\to$ Moves</span>&rdquo;<span> in chess is computationally harder than </span>&ldquo;<span>Moves $\to$ Board.</span>&rdquo;<span> The harder ordering forces the model to learn deeper structural rules (higher Epiplexity), whereas the easier ordering relies on surface statistics.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Result:</span></strong></strong><span> Models trained on the high-epiplexity ordering (Reverse) showed significantly better Out-of-Distribution (OOD) generalization.</span></p>
+</li>
+</ul>
+</section>
+<section id="Paradox-3-Likelihood-Modeling-vs-Distribution-Matching">
+
+    <h4>
+    <a href="#Paradox-3-Likelihood-Modeling-vs-Distribution-Matching"><span>Paradox 3: Likelihood Modeling vs. Distribution Matching</span> </a>
+    </h4>
+<ul>
+<li>
+<p><strong><strong><span>Classical View:</span></strong></strong><span> A model only learns to match the data-generating process.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Epiplexity View:</span></strong></strong><span> Computationally bounded models often learn </span><strong><span>more</span></strong><span> structure than exists in the generator. This is called </span><strong><strong><span>Induction</span></strong></strong><span> or </span><strong><strong><span>Emergence</span></strong></strong><span>.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Example:</span></strong></strong><span> In </span>&ldquo;<span>Game of Life</span>&rdquo;<span> simulations, a bounded model cannot simply simulate the pixel-level physics (which is computationally expensive). Instead, it learns emergent concepts like </span>&ldquo;<span>gliders</span>&rdquo;<span> and </span>&ldquo;<span>collision rules</span>&rdquo;<span> to shortcut the simulation. The learned model becomes more complex (higher Epiplexity) than the simple rules that generated the data.</span></p>
+</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="Measuring-Epiplexity">
+
+    <h3>
+    <a href="#Measuring-Epiplexity"><span>Measuring Epiplexity</span> </a>
+    </h3>
+<p><span>Since finding the optimal program $K_T$ is intractable, the authors propose two practical estimation methods using neural networks:</span></p>
+<ol>
+<li>
+<p><strong><strong><span>Prequential Coding:</span></strong></strong><span> Estimates Epiplexity as the area under the loss curve minus the final loss. If a model</span>&rsquo;<span>s loss drops significantly and accurately over time, it has </span>&ldquo;<span>absorbed</span>&rdquo;<span> a large amount of structural information.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Requential Coding:</span></strong></strong><span> A more rigorous approach that explicitly codes the model weights by tracking the cumulative KL divergence between a </span>&ldquo;<span>teacher</span>&rdquo;<span> (generating synthetic data) and a </span>&ldquo;<span>student</span>&rdquo;<span> model. This separates the cost of encoding the model from the cost of the data.</span></p>
+</li>
+</ol>
+<hr>
+</section>
+<section id="Implications-for-Generalization-and-Pre-training">
+
+    <h3>
+    <a href="#Implications-for-Generalization-and-Pre-training"><span>Implications for Generalization and Pre-training</span> </a>
+    </h3>
+<p><span>The paper argues that </span><strong><strong><span>OOD generalization is driven by Epiplexity, not just low loss.</span></strong></strong><span> A model generalizes well when it reuses learned structural sub-programs (circuits) for new tasks.</span></p>
+<ul>
+<li>
+<p><strong><strong><span>Modality Differences:</span></strong></strong><span> Language data was found to have significantly higher Epiplexity than image data (CIFAR-5M), explaining why LLMs generalize better across tasks than vision models.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Data Selection:</span></strong></strong><span> Strategies that prioritize high-epiplexity data (data where the loss drops rapidly, indicating learnable structure) outperform random sampling on downstream tasks.</span></p>
+</li>
+</ul>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/information-theory.html">#information-theory</a><a class="tag" href="/tags/probability.html">#probability</a></div>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2026-01-25-epiplexity.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>
