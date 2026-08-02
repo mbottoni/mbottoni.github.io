@@ -7,6 +7,15 @@ by trying to implement this type of idea from scratch in python.
 
 Here is the link to my code: [GitHub](https://github.com/mbottoni/hopfield-scratch)
 
+The whole thing is small enough to run in a browser, so here it is --- the same
+from-scratch network, 144 neurons and three stored patterns, with the Hebbian
+weights and the asynchronous update rule written out in
+[the widget source](https://github.com/mbottoni/mbottoni.github.io/blob/main/content/widgets/hopfield.js).
+
+{cap="The from-scratch network, live. Corrupt a stored pattern and press Recall: each neuron is updated one at a time in random order, taking the sign of its weighted input, and the energy falls until the state stops changing."}
+::: widget-hopfield
+:::
+
 Some nice results are shown here:
 
 The reconstruction of the images using associative memory of the network:
