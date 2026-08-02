@@ -9,6 +9,8 @@
 // `gifCaption` — optional caption rendered under the GIF on the detail page.
 // `image` — optional static thumbnail; cards with neither gif nor image render a
 //           generated monogram tile.
+// `demo`  — optional live demo / explainer URL; renders a second button on the
+//           detail page, labelled `demoLabel` (default "Live demo").
 
 export type Project = {
   title: string;
@@ -20,9 +22,25 @@ export type Project = {
   gif?: string;
   gifCaption?: string;
   image?: string;
+  demo?: string;
+  demoLabel?: string;
 };
 
 export const projects: Project[] = [
+  {
+    title: "foundational-brain",
+    slug: "foundational-brain",
+    description:
+      "A self-supervised foundation model for fMRI: an encoder, an RNN over the latent space, and a decoder — beating AR(1) at forecasting brain dynamics by 31%.",
+    url: "https://github.com/mbottoni/foundational-brain",
+    demo: "https://mbottoni.github.io/foundational-brain/",
+    demoLabel: "Visual explainer",
+    tags: ["research"],
+    year: 2026,
+    gif: "/assets/projects/foundational-brain.gif",
+    gifCaption:
+      "Each fMRI frame is compressed to a latent z_t, a recurrent core steps it forward to z_t+1, and the decoder maps it back to ROI space — where the one-step-ahead forecast is scored against the truth.",
+  },
   {
     title: "fundamental-agents",
     slug: "fundamental-agents",

@@ -464,6 +464,13 @@ export const project_detail_page = (
               <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
               View on GitHub
             </a>
+            ${
+      p.demo
+        ? html`<a class="button button--ghost" href="${p.demo}">${
+          p.demoLabel ?? "Live demo"
+        } ↗</a>`
+        : ""
+    }
           </p>
         </header>
         ${

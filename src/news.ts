@@ -8,6 +8,12 @@ export type NewsItem = {
 
 export const news: NewsItem[] = [
   {
+    date: "2026-08-02",
+    html:
+      `New project: <a href="/projects/foundational-brain.html">foundational-brain</a>, ` +
+      `a self-supervised foundation model for fMRI dynamics.`,
+  },
+  {
     date: "2026-01-27",
     html:
       `New post: <a href="/2026/01/27/h-neurons.html">Helpful Neurons in LLMs</a>.`,
