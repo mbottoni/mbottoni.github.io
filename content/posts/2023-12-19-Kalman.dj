@@ -41,6 +41,22 @@ The beauty of the Kalman filter lies in its ability to deal with uncertainty. It
 predicted state and the new measurements, considering the uncertainties in
 both. If the measurements are very accurate, it gives them more weight. If the predictions are believed to be more reliable, it leans more on them.
 
+That weighing is the Kalman gain, and it is worth playing with directly. Below,
+a hidden state does a random walk and you only ever see the noisy dots. The two
+sliders do not change the data --- they change what the *filter believes* about
+the noise. Push `Q` down and it decides the state can barely move, so it
+smooths hard and lags; push `Q` up and it chases every measurement. In between
+it beats the raw sensor by a wide margin.
+
+One thing worth noticing: only the **ratio** `Q/R` affects the estimate. Scale
+both up by a thousand and the red line does not move at all --- but the
+uncertainty band does, because the filter now believes it is far less sure than
+it really is.
+
+{cap="A scalar Kalman filter on a local-level model. The blue line is the hidden state you are trying to recover, the grey dots are what the sensor reports, and the red line with its ±2σ band is the filter's estimate. RMSE is measured against the hidden truth, so you can see directly how much the filter buys you over the raw measurements."}
+::: widget-kalman
+:::
+
 * Real-World Applications
 While the GPS example is straightforward, the Kalman filter is used in much more complex
 situations. It's vital in the operation of satellites and spacecraft, where precise navigation is crucial. In the financial world, it

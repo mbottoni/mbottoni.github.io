@@ -564,6 +564,32 @@ time { color: var(--muted); font-family: "Open Sans", sans-serif; font-size: 1re
   font-family: "JetBrains Mono", monospace; font-size: 0.72rem;
 }
 
+/* Sliders */
+.widget-slider-row {
+  display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.55rem;
+}
+.widget-slider-row > span:first-child {
+  width: 6.4em; color: var(--muted); font-size: 0.73rem;
+}
+.widget-slider {
+  flex: 1 1 auto; min-width: 0; -webkit-appearance: none; appearance: none;
+  height: 5px; border-radius: 3px; background: var(--block-bg); outline: none;
+  border: 1px solid var(--border);
+}
+.widget-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 15px; height: 15px; border-radius: 50%; cursor: pointer;
+  background: var(--accent); border: 2px solid var(--card-bg);
+}
+.widget-slider::-moz-range-thumb {
+  width: 15px; height: 15px; border-radius: 50%; cursor: pointer;
+  background: var(--accent); border: 2px solid var(--card-bg);
+}
+.widget-slider-val {
+  width: 4.4em; text-align: right;
+  font-family: "JetBrains Mono", monospace; font-size: 0.72rem;
+}
+
 .widget-energy {
   display: flex; justify-content: space-between; align-items: baseline;
   margin-top: 1.1rem;
