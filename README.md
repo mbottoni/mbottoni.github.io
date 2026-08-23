@@ -24,6 +24,13 @@ reading order; every listed post renders a "Part N of M" box linking to the othe
 Refer to posts by slug, or by the full `YYYY-MM-DD-slug` stem when two posts share a
 slug. The build fails if a series references an unknown or ambiguous post.
 
+## Comments
+
+Post pages embed [giscus](https://giscus.app) threads backed by GitHub Discussions
+(category *General*). Configuration lives in `src/comments.ts`; add a slug to
+`exclude` to hide comments on a specific post, or set `enabled: false` to turn them
+off site-wide. The giscus GitHub App must be installed on the repository.
+
 ## Interactive Widgets
 
 Posts can embed interactive figures. Drop a self-contained script at
