@@ -842,3 +842,20 @@ h4:hover .heading-anchor, .heading-anchor:focus { opacity: 1; }
     margin-bottom: 0; font-size: 0.85em;
   }
 }
+   Series box
+   ============================================================ */
+.series-box {
+  border: 1px solid var(--border); border-left: 3px solid var(--accent-blue);
+  border-radius: 6px; background: var(--block-bg);
+  padding: 0.6rem 1rem; margin-bottom: 1.5rem; font-size: 0.95em;
+}
+.series-box__head { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: baseline; }
+.series-box__label {
+  font-family: "Open Sans", sans-serif; font-size: 0.75rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent-blue);
+}
+.series-box__title { font-weight: 600; }
+.series-box p { margin: 0.3rem 0 0; font-size: 0.9em; }
+.series-box__list { margin: 0.5rem 0 0; padding-left: 1.4rem; }
+.series-box__list li { margin: 0.15rem 0; }
+.series-box__current { font-weight: 600; }

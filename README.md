@@ -17,6 +17,13 @@ $ deno task watch
 4. Run `deno task build` (or `deno task watch` while editing) to regenerate HTML and theme pages under `out/res/`.
 5. Preview locally by serving `out/res/` (e.g. `deno task serve`) before committing and pushing.
 
+## Series
+
+Multi-part posts can be grouped in `src/series.ts`. Each entry lists its posts in
+reading order; every listed post renders a "Part N of M" box linking to the others.
+Refer to posts by slug, or by the full `YYYY-MM-DD-slug` stem when two posts share a
+slug. The build fails if a series references an unknown or ambiguous post.
+
 ## Interactive Widgets
 
 Posts can embed interactive figures. Drop a self-contained script at

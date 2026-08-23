@@ -7,6 +7,7 @@ import { resolveTheme, themes, type ThemeConfig } from "./themes.ts";
 import { projects } from "./projects.ts";
 import { news } from "./news.ts";
 import { resolveTags, tagSlug } from "./tags.ts";
+import { resolveSeries, type SeriesMembership, validateSeries } from "./series.ts";
 
 async function main() {
   const params = {
@@ -197,7 +198,7 @@ async function build(params: {
   for (const post of posts) {
     await update_file(
       `out/res${post.path}`,
-      templates.post(post, params.spell, nav.get(post.path)!).value,
+      templates.post(post, params.spell, nav.get(post.path)!, posts).value,
     );
   }
 
@@ -277,6 +278,7 @@ export type Post = {
   readingTime: number;
   image?: string;
   widgets: string[];
+  series?: SeriesMembership;
 };
 
 // Cross-post navigation computed once all posts are known: chronological
@@ -388,12 +390,21 @@ async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
       readingTime,
       image: hero,
       widgets,
+      series: resolveSeries(`${y}-${m}-${d}-${slug}`, slug),
     });
   }
   posts.sort((l, r) => l.path < r.path ? 1 : -1);
+  if (filter === "") {
+    validateSeries(
+      posts.map((p) => `${p.year}-${pad(p.month)}-${pad(p.day)}-${p.slug}`),
+      posts.map((p) => p.slug),
+    );
+  }
   ctx.collect_ms = performance.now() - start;
   return posts;
 }
+
+const pad = (n: number) => String(n).padStart(2, "0");
 
 function extract_first_image(source: string): string | undefined {
   const markdown_image = source.match(/!\[[^\]]*\]\(([^\s)]+)(?:\s"[^"]*")?\)/);
