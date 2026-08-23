@@ -85,9 +85,13 @@ export function render(
       if (node.level == 1) ctx.title = get_string_content(node);
       const id = section?.attributes?.id;
       if (id) {
+        // Level-1 headings are the post title; sections get a hover anchor.
+        const anchor = node.level > 1
+          ? `<a class="heading-anchor" href="#${id}" aria-label="Link to this section">#</a>`
+          : "";
         return `
     <${tag}${r.renderAttributes(node)}>
-    <a href="#${id}">${children} ${date}</a>
+    <a href="#${id}">${children} ${date}</a>${anchor}
     </${tag}>\n`;
       } else {
         return `\n<${tag}${
