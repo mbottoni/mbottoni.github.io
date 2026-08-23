@@ -6,6 +6,7 @@ Source code for the blog. The `./src` directory contains a deno script that read
 
 $ deno task build
 $ deno task watch
+$ deno task check   # verify internal links, #anchors and assets in out/res
 ```
 
 ## Authoring a New Post

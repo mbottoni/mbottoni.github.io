@@ -99,6 +99,11 @@ export function render(
         const anchor = node.level > 1
           ? `<a class="heading-anchor" href="#${id}" aria-label="Link to this section">#</a>`
           : "";
+        // The level-1 section wrapper is dropped above, so carry its id on
+        // the heading itself; otherwise the title's self-link is dead.
+        if (node.level == 1) {
+          node.attributes = { ...(node.attributes ?? {}), id };
+        }
         return `
     <${tag}${r.renderAttributes(node)}>
     <a href="#${id}">${children} ${date}</a>${anchor}
