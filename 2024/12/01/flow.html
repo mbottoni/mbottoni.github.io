@@ -1,0 +1,514 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flow Matching, a short overview</title>
+  <meta name="description" content="In summary, flow matching is a generative modeling technique that provides 
+an elegant way to transform data distributions.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Flow Matching, a short overview">
+  <meta property="og:description" content="In summary, flow matching is a generative modeling technique that provides 
+an elegant way to transform data distributions.">
+  <meta property="og:url" content="https://mbottoni.github.io/2024/12/01/flow.html">
+  <meta property="og:image" content="/assets/generative/flow.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Flow Matching, a short overview">
+  <meta name="twitter:description" content="In summary, flow matching is a generative modeling technique that provides 
+an elegant way to transform data distributions.">
+  <meta name="twitter:image" content="/assets/generative/flow.png">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/12/01/flow.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="reading-progress" aria-hidden="true"><div class="reading-progress__bar"></div></div>
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/generative.html">
+          Diffusion &amp; Generative Modeling
+        </a>
+        <span class="post-meta"><time datetime="2024-12-01">Dec 1, 2024</time> · 2 min read</span>
+      </div>
+      
+    <aside class="series-box">
+      <div class="series-box__head">
+        <span class="series-box__label">Series</span>
+        <span class="series-box__title">Diffusion and flows</span>
+        <span class="muted">Part 4 of 5</span>
+      </div>
+      <p class="muted">Diffusion models, samplers, guidance, and their flow-matching cousins.</p>
+      <ol class="series-box__list"><li><a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a></li><li><a href="/2024/09/09/ddim_ddpm.html">DDIM vs DDPM</a></li><li><a href="/2024/12/15/cfg.html">Classifier free diffusion guidance</a></li><li class="series-box__current" aria-current="page">Flow Matching, a short overview</li><li><a href="/2024/12/07/timeseries-diffusion.html">Diffusion models for time series</a></li></ol>
+    </aside>
+  
+      
+      <article >
+
+    <h1 id="Flow-Matching-a-short-overview">
+    <a href="#Flow-Matching-a-short-overview"><span>Flow Matching, a short overview</span> <time datetime="2024-12-01">Dec 1, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/generative/flow.png">
+</figure>
+<p><span>In summary, flow matching is a generative modeling technique that provides </span>
+<span>an elegant way to transform data distributions.</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"></span>
+<span class="line"><span class="hl-keyword">import</span> numpy <span class="hl-keyword">as</span> np</span>
+<span class="line"><span class="hl-keyword">import</span> torch</span>
+<span class="line"><span class="hl-keyword">import</span> torch.nn <span class="hl-keyword">as</span> nn</span>
+<span class="line"><span class="hl-keyword">import</span> torch.optim <span class="hl-keyword">as</span> optim</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">class</span> <span class="hl-title class_">FlowMatchingModel</span>:</span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">__init__</span>(<span class="hl-params">self, input_dim, hidden_dim</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">        Initialize Flow Matching Model</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Args:</span></span>
+<span class="line"><span class="hl-string">            input_dim (int): Dimension of input data</span></span>
+<span class="line"><span class="hl-string">            hidden_dim (int): Dimension of hidden layers</span></span>
+<span class="line"><span class="hl-string">        &quot;&quot;&quot;</span></span>
+<span class="line">        self.base_distribution = <span class="hl-literal">None</span>  <span class="hl-comment"># Initial data distribution</span></span>
+<span class="line">        self.target_distribution = <span class="hl-literal">None</span>  <span class="hl-comment"># Target data distribution</span></span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Neural network to learn the flow</span></span>
+<span class="line">        self.flow_network = nn.Sequential(</span>
+<span class="line">            nn.Linear(input_dim + <span class="hl-number">1</span>, hidden_dim),  <span class="hl-comment"># +1 for time conditioning</span></span>
+<span class="line">            nn.ReLU(),</span>
+<span class="line">            nn.Linear(hidden_dim, hidden_dim),</span>
+<span class="line">            nn.ReLU(),</span>
+<span class="line">            nn.Linear(hidden_dim, input_dim)</span>
+<span class="line">        )</span>
+<span class="line">        </span>
+<span class="line">        self.optimizer = optim.Adam(self.flow_network.parameters())</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">sample_base_distribution</span>(<span class="hl-params">self, num_samples</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">        Sample from the base (initial) distribution</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Args:</span></span>
+<span class="line"><span class="hl-string">            num_samples (int): Number of samples to generate</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Returns:</span></span>
+<span class="line"><span class="hl-string">            torch.Tensor: Samples from base distribution</span></span>
+<span class="line"><span class="hl-string">        &quot;&quot;&quot;</span></span>
+<span class="line">        <span class="hl-comment"># Example: Gaussian distribution</span></span>
+<span class="line">        <span class="hl-keyword">return</span> torch.randn(num_samples, self.input_dim)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">probability_flow_ode</span>(<span class="hl-params">self, x, t</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">        Compute the probability flow ODE</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Args:</span></span>
+<span class="line"><span class="hl-string">            x (torch.Tensor): Current data point</span></span>
+<span class="line"><span class="hl-string">            t (torch.Tensor): Time variable</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Returns:</span></span>
+<span class="line"><span class="hl-string">            torch.Tensor: Flow direction</span></span>
+<span class="line"><span class="hl-string">        &quot;&quot;&quot;</span></span>
+<span class="line">        <span class="hl-comment"># Combine input and time as network input</span></span>
+<span class="line">        network_input = torch.cat([x, t], dim=<span class="hl-number">1</span>)</span>
+<span class="line">        <span class="hl-keyword">return</span> self.flow_network(network_input)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">conditional_vector_field</span>(<span class="hl-params">self, x0, x1, t</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">        Compute the conditional vector field</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Args:</span></span>
+<span class="line"><span class="hl-string">            x0 (torch.Tensor): Initial data point</span></span>
+<span class="line"><span class="hl-string">            x1 (torch.Tensor): Target data point</span></span>
+<span class="line"><span class="hl-string">            t (torch.Tensor): Time variable</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Returns:</span></span>
+<span class="line"><span class="hl-string">            torch.Tensor: Conditional vector field</span></span>
+<span class="line"><span class="hl-string">        &quot;&quot;&quot;</span></span>
+<span class="line">        <span class="hl-comment"># Interpolate between source and target</span></span>
+<span class="line">        x_t = x0 * (<span class="hl-number">1</span> - t) + x1 * t</span>
+<span class="line">        vector_field = x1 - x0</span>
+<span class="line">        <span class="hl-keyword">return</span> vector_field</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">loss_function</span>(<span class="hl-params">self, x0, x1</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">        Compute the flow matching loss</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Args:</span></span>
+<span class="line"><span class="hl-string">            x0 (torch.Tensor): Initial data points</span></span>
+<span class="line"><span class="hl-string">            x1 (torch.Tensor): Target data points</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Returns:</span></span>
+<span class="line"><span class="hl-string">            torch.Tensor: Training loss</span></span>
+<span class="line"><span class="hl-string">        &quot;&quot;&quot;</span></span>
+<span class="line">        batch_size = x0.shape[<span class="hl-number">0</span>]</span>
+<span class="line">        t = torch.rand(batch_size, <span class="hl-number">1</span>)  <span class="hl-comment"># Random time sampling</span></span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Compute vector field</span></span>
+<span class="line">        true_vector_field = self.conditional_vector_field(x0, x1, t)</span>
+<span class="line">        predicted_vector_field = self.probability_flow_ode(x0, t)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Compute MSE loss between true and predicted vector fields</span></span>
+<span class="line">        loss = torch.mean((predicted_vector_field - true_vector_field) ** <span class="hl-number">2</span>)</span>
+<span class="line">        <span class="hl-keyword">return</span> loss</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">train</span>(<span class="hl-params">self, dataloader, epochs</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">        Train the Flow Matching Model</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Args:</span></span>
+<span class="line"><span class="hl-string">            dataloader (torch.utils.data.DataLoader): Training data</span></span>
+<span class="line"><span class="hl-string">            epochs (int): Number of training epochs</span></span>
+<span class="line"><span class="hl-string">        &quot;&quot;&quot;</span></span>
+<span class="line">        <span class="hl-keyword">for</span> epoch <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(epochs):</span>
+<span class="line">            <span class="hl-keyword">for</span> batch_x0, batch_x1 <span class="hl-keyword">in</span> dataloader:</span>
+<span class="line">                self.optimizer.zero_grad()</span>
+<span class="line">                loss = self.loss_function(batch_x0, batch_x1)</span>
+<span class="line">                loss.backward()</span>
+<span class="line">                self.optimizer.step()</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;Epoch <span class="hl-subst">{epoch+<span class="hl-number">1</span>}</span>/<span class="hl-subst">{epochs}</span>, Loss: <span class="hl-subst">{loss.item()}</span>&quot;</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">generate_samples</span>(<span class="hl-params">self, num_samples</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">        Generate new samples using the learned flow</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Args:</span></span>
+<span class="line"><span class="hl-string">            num_samples (int): Number of samples to generate</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Returns:</span></span>
+<span class="line"><span class="hl-string">            torch.Tensor: Generated samples</span></span>
+<span class="line"><span class="hl-string">        &quot;&quot;&quot;</span></span>
+<span class="line">        <span class="hl-comment"># Start from base distribution and follow the learned flow</span></span>
+<span class="line">        x0 = self.sample_base_distribution(num_samples)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Perform sampling through ODE solving</span></span>
+<span class="line">        x_generated = x0  <span class="hl-comment"># Starting point</span></span>
+<span class="line">        time_steps = torch.linspace(<span class="hl-number">0</span>, <span class="hl-number">1</span>, <span class="hl-number">100</span>)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-keyword">for</span> t <span class="hl-keyword">in</span> time_steps[<span class="hl-number">1</span>:]:</span>
+<span class="line">            vector_field = self.probability_flow_ode(x_generated, t)</span>
+<span class="line">            x_generated += vector_field * (time_steps[<span class="hl-number">1</span>] - time_steps[<span class="hl-number">0</span>])</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-keyword">return</span> x_generated</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">main</span>():</span>
+<span class="line">    <span class="hl-comment"># Hyperparameters</span></span>
+<span class="line">    input_dim = <span class="hl-number">10</span></span>
+<span class="line">    hidden_dim = <span class="hl-number">64</span></span>
+<span class="line">    num_epochs = <span class="hl-number">100</span></span>
+<span class="line">    </span>
+<span class="line">    flow_matching = FlowMatchingModel(input_dim, hidden_dim)</span>
+<span class="line">    flow_matching.train(dataloader, num_epochs)</span>
+<span class="line">    generated_samples = flow_matching.generate_samples(<span class="hl-number">1000</span>)</span></code></pre>
+
+</figure>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/flow-matching.html">#flow-matching</a><a class="tag" href="/tags/generative.html">#generative</a></div>
+      <section class="related">
+        <h2>Related posts</h2>
+        <ul class="related-list">
+          <li>
+              <a href="/2024/12/15/cfg.html">Classifier free diffusion guidance</a>
+              <span class="muted"><time datetime="2024-12-15">Dec 15, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li><li>
+              <a href="/2024/12/07/timeseries-diffusion.html">Diffusion models for time series</a>
+              <span class="muted"><time datetime="2024-12-07">Dec 7, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li><li>
+              <a href="/2024/10/13/vaes.html">A comprehensive list of different types of VAEs</a>
+              <span class="muted"><time datetime="2024-10-13">Oct 13, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li>
+        </ul>
+      </section><nav class="post-nav" aria-label="Chronological">
+        <a class="post-nav__link post-nav__prev" href="/2024/11/25/ssl.html">
+          <span class="post-nav__label">← Older</span>
+          <span class="post-nav__title">Scarf: Self Supervised Learning for Tabular Data</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/12/07/timeseries-diffusion.html">
+          <span class="post-nav__label">Newer →</span>
+          <span class="post-nav__title">Diffusion models for time series</span>
+        </a>
+      </nav><nav class="post-nav post-nav--theme" aria-label="Same theme">
+        <a class="post-nav__link post-nav__prev" href="/2024/10/13/vaes.html">
+          <span class="post-nav__label">← Older in theme</span>
+          <span class="post-nav__title">A comprehensive list of different types of VAEs</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/12/07/timeseries-diffusion.html">
+          <span class="post-nav__label">Newer in theme →</span>
+          <span class="post-nav__title">Diffusion models for time series</span>
+        </a>
+      </nav>
+      
+    <section class="comments" id="comments">
+      <h2>Comments</h2>
+      <div class="giscus"></div>
+      <noscript><p class="muted">Comments are powered by <a href="https://giscus.app">giscus</a> and need JavaScript.</p></noscript>
+    </section>
+    <script>
+    (function () {
+      // Inject giscus with the theme the site is actually using (the toggle
+      // persists in localStorage), rather than the OS preference.
+      var siteTheme = function () {
+        var t = document.documentElement.getAttribute("data-theme");
+        if (t) return t === "dark" ? "dark" : "light";
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark" : "light";
+      };
+      var s = document.createElement("script");
+      s.src = "https://giscus.app/client.js";
+      var attrs = {
+        "data-repo": "mbottoni/mbottoni.github.io",
+        "data-repo-id": "R_kgDOKv71Lg",
+        "data-category": "General",
+        "data-category-id": "DIC_kwDOKv71Ls4DEBYr",
+        "data-mapping": "pathname",
+        "data-strict": "1",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "top",
+        "data-theme": siteTheme(),
+        "data-lang": "en",
+        "data-loading": "lazy",
+        "crossorigin": "anonymous"
+      };
+      for (var k in attrs) s.setAttribute(k, attrs[k]);
+      s.async = true;
+      document.getElementById("comments").appendChild(s);
+
+      // Follow the dark-mode toggle after load.
+      new MutationObserver(function () {
+        var frame = document.querySelector("iframe.giscus-frame");
+        if (!frame) return;
+        frame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: siteTheme() } } },
+          "https://giscus.app");
+      }).observe(document.documentElement,
+        { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+    </script>
+  
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-12-01-flow.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  <script>
+(function () {
+  var bar = document.querySelector(".reading-progress__bar");
+  var article = document.querySelector("article");
+  if (bar && article) {
+    var update = function () {
+      var top = article.offsetTop;
+      var h = article.offsetHeight - window.innerHeight;
+      var p = h > 0 ? (window.scrollY - top) / h : 1;
+      bar.style.transform = "scaleX(" + Math.min(1, Math.max(0, p)) + ")";
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
+  var toc = document.querySelector(".toc");
+  if (!toc || !("IntersectionObserver" in window)) return;
+  var links = {};
+  toc.querySelectorAll("a[href^='#']").forEach(function (a) {
+    links[decodeURIComponent(a.getAttribute("href").slice(1))] = a;
+  });
+  var ids = Object.keys(links);
+  if (!ids.length) return;
+  var visible = {};
+  var setActive = function () {
+    var first = null;
+    for (var i = 0; i < ids.length; i++) {
+      if (visible[ids[i]]) { first = ids[i]; break; }
+    }
+    ids.forEach(function (id) {
+      links[id].classList.toggle("active", id === first);
+    });
+  };
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    setActive();
+  }, { rootMargin: "-10% 0px -70% 0px", threshold: 0 });
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>
+</body>
+
+</html>
