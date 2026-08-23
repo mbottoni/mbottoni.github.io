@@ -193,10 +193,11 @@ async function build(params: {
     tags: post.tags,
   }));
   await update_file("out/res/search.json", JSON.stringify(search_index));
+  const nav = compute_nav(posts);
   for (const post of posts) {
     await update_file(
       `out/res${post.path}`,
-      templates.post(post, params.spell).value,
+      templates.post(post, params.spell, nav.get(post.path)!).value,
     );
   }
 
@@ -277,6 +278,50 @@ export type Post = {
   image?: string;
   widgets: string[];
 };
+
+// Cross-post navigation computed once all posts are known: chronological
+// neighbours, the neighbours within the same theme, and tag-similar posts.
+export type PostNav = {
+  newer?: Post;
+  older?: Post;
+  themeNewer?: Post;
+  themeOlder?: Post;
+  related: Post[];
+};
+
+export function compute_nav(posts: Post[]): Map<string, PostNav> {
+  // `posts` is sorted newest first.
+  const nav = new Map<string, PostNav>();
+  for (let i = 0; i < posts.length; i++) {
+    const post = posts[i];
+    const sameTheme = posts.filter((p) => p.theme.key === post.theme.key);
+    const j = sameTheme.indexOf(post);
+    const tags = new Set(post.tags);
+    const related = posts
+      .filter((p) => p !== post)
+      .map((p) => {
+        const shared = p.tags.filter((t) => tags.has(t)).length;
+        // Shared tags dominate; same theme is a tiebreaker so posts with no
+        // tags still get sensible suggestions.
+        const score = shared * 10 + (p.theme.key === post.theme.key ? 1 : 0);
+        return { p, score };
+      })
+      .filter((it) => it.score > 0)
+      .sort((a, b) =>
+        b.score - a.score || b.p.date.getTime() - a.p.date.getTime()
+      )
+      .slice(0, 3)
+      .map((it) => it.p);
+    nav.set(post.path, {
+      newer: posts[i - 1],
+      older: posts[i + 1],
+      themeNewer: sameTheme[j - 1],
+      themeOlder: sameTheme[j + 1],
+      related,
+    });
+  }
+  return nav;
+}
 
 async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
   const start = performance.now();

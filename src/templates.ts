@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { Post } from "./main.ts";
+import { Post, PostNav } from "./main.ts";
 import { type ThemeConfig } from "./themes.ts";
 import { type Project } from "./projects.ts";
 import { type NewsItem } from "./news.ts";
@@ -690,7 +690,43 @@ function toc_from_content(content: HtmlString): HtmlString {
   `;
 }
 
-export function post(post: Post, spellcheck: boolean): HtmlString {
+function post_nav(nav: PostNav): HtmlString {
+  const link = (p: Post | undefined, label: string, cls: string) =>
+    p
+      ? html`<a class="post-nav__link ${cls}" href="${p.path}">
+          <span class="post-nav__label">${label}</span>
+          <span class="post-nav__title">${p.title}</span>
+        </a>`
+      : html`<span class="post-nav__link ${cls} post-nav__link--empty"></span>`;
+  const chrono = nav.newer || nav.older
+    ? html`<nav class="post-nav" aria-label="Chronological">
+        ${link(nav.older, "← Older", "post-nav__prev")}
+        ${link(nav.newer, "Newer →", "post-nav__next")}
+      </nav>`
+    : "";
+  const inTheme = nav.themeNewer || nav.themeOlder
+    ? html`<nav class="post-nav post-nav--theme" aria-label="Same theme">
+        ${link(nav.themeOlder, "← Older in theme", "post-nav__prev")}
+        ${link(nav.themeNewer, "Newer in theme →", "post-nav__next")}
+      </nav>`
+    : "";
+  const related = nav.related.length
+    ? html`<section class="related">
+        <h2>Related posts</h2>
+        <ul class="related-list">
+          ${nav.related.map((p) =>
+            html`<li>
+              <a href="${p.path}">${p.title}</a>
+              <span class="muted">${time(p.date)} · ${p.theme.title}</span>
+            </li>`
+          )}
+        </ul>
+      </section>`
+    : "";
+  return html`${related}${chrono}${inTheme}`;
+}
+
+export function post(post: Post, spellcheck: boolean, nav: PostNav): HtmlString {
   const meta = html`${time(post.date)} · ${post.readingTime} min read`;
   // Only posts that embed a widget pay for its script.
   const widget_scripts = post.widgets.length
@@ -720,6 +756,7 @@ export function post(post: Post, spellcheck: boolean): HtmlString {
       spellcheck ? 'contentEditable="true"' : ""
     }>\n${post.content}</article>
       ${tag_pills(post.tags)}
+      ${post_nav(nav)}
     `,
   });
 }
