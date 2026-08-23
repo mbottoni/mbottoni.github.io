@@ -62,6 +62,27 @@ custom properties (`--accent`, `--card-bg`, `--border`) at draw time and observe
 
 `content/widgets/hopfield.js` is the reference implementation.
 
+## Runnable Code Blocks
+
+Add `{.run}` on the line before a ` ```python ` or ` ```javascript ` fence to make it
+executable in the reader's browser:
+
+```
+{.run}
+```python
+import numpy as np
+print(np.arange(3))
+```
+```
+
+The block renders with **Run** / **Edit** buttons and an output panel. Python runs
+on [Pyodide](https://pyodide.org) (loaded from the jsDelivr CDN on first run, ~10 MB;
+packages such as `numpy`/`scipy` are resolved from the snippet's imports), JavaScript
+runs natively; both execute in a Web Worker so the page never blocks, and *Stop*
+terminates a runaway snippet. Python state persists between runs on a page, like a
+notebook kernel. `content/js/runner.js` is loaded only on pages that contain a
+runnable block. Other languages fail the build.
+
 ## Updating the Resume
 
 The resume PDF is generated from LaTeX source in `resume/`:

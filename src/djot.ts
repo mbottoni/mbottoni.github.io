@@ -46,6 +46,16 @@ type RenderCtx = {
   // Names of interactive widgets embedded in this document, collected during
   // render so the page can load only the scripts it actually uses.
   widgets?: Set<string>;
+  // Set when the document contains a `{.run}` code block, so the page can
+  // load the in-browser runner script.
+  runnable?: boolean;
+};
+
+const RUNNABLE_LANGS: Record<string, string> = {
+  python: "python",
+  py: "python",
+  javascript: "javascript",
+  js: "javascript",
 };
 
 // `::: widget-<name>` embeds content/widgets/<name>.js at that point in the post.
@@ -223,6 +233,32 @@ ${r.renderChildren(node)}
         node.lang,
         node.attributes?.highlight,
       ).value;
+
+      // `{.run}` code blocks get a Run/Edit toolbar and execute in-browser.
+      if (has_class(node, "run")) {
+        const lang = RUNNABLE_LANGS[node.lang ?? ""];
+        if (!lang) {
+          throw new Error(
+            `runnable code block must be python or javascript, got '${node.lang}'`,
+          );
+        }
+        ctx.runnable = true;
+        return `
+<figure class="code-block runnable" data-lang="${lang}">
+${cap}
+${pre}
+<textarea class="run-source" hidden spellcheck="false">${escape_html(node.text)}</textarea>
+<div class="run-bar">
+<button type="button" class="widget-btn run-btn">Run</button>
+<button type="button" class="widget-btn run-edit">Edit</button>
+<span class="run-status muted"></span>
+</div>
+<pre class="run-output" hidden></pre>
+<noscript><p class="widget-fallback">This snippet can be run in the browser with JavaScript enabled.</p></noscript>
+</figure>
+`;
+      }
+
       return `
 <figure class="code-block">
 ${cap}

@@ -852,11 +852,13 @@ function comments_section(post: Post): HtmlString {
 export function post(post: Post, spellcheck: boolean, nav: PostNav, all: Post[]): HtmlString {
   const meta = html`${time(post.date)} · ${post.readingTime} min read`;
   // Only posts that embed a widget pay for its script.
-  const body_end = new HtmlString(
-    post.widgets
-      .map((w) => `<script defer src="/widgets/${w}.js"></script>`)
-      .join("\n") + "\n" + post_scripts,
-  );
+  const scripts = post.widgets
+    .map((w) => `<script defer src="/widgets/${w}.js"></script>`);
+  // Only pages with a `{.run}` code block load the in-browser runner.
+  if (post.runnable) scripts.push(`<script defer src="/js/runner.js"></script>`);
+  scripts.push(post_scripts);
+  const body_end = new HtmlString(scripts.join("
+"));
   return base({
     src: post.src,
     title: post.title,

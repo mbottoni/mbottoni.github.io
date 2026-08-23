@@ -26,9 +26,16 @@ write the loss.
 ::: widget-divergences
 :::
 
-For example, here is a pseudocode for some common divergences
+For example, here is code for some common divergences. The block below
+actually runs in your browser (Python via Pyodide, with NumPy): press *Run*, or
+*Edit* to try your own distributions.
 
+{.run}
 ```python
+import numpy as np
+from scipy.spatial.distance import cosine, euclidean
+from numpy.linalg import inv
+
 def kl_divergence(p, q):
     """
     Compute the Kullback-Leibler divergence D_KL(P || Q)
@@ -104,6 +111,17 @@ def mahalanobis_distance(p, q, cov=None):
         cov = np.cov(np.stack([p, q], axis=0).T)
     cov_inv = inv(cov)
     return np.sqrt(np.dot(np.dot(diff.T, cov_inv), diff))
+
+p = np.array([0.1, 0.2, 0.3, 0.4])
+q = np.array([0.4, 0.3, 0.2, 0.1])
+
+for name, f in [("KL(P||Q)", kl_divergence), ("KL(Q||P)", lambda a, b: kl_divergence(b, a)),
+                ("Jensen-Shannon", js_divergence), ("Hellinger", hellinger_distance),
+                ("Total variation", total_variation_distance),
+                ("Bhattacharyya", bhattacharyya_distance), ("Cosine", cosine_distance),
+                ("Euclidean", euclidean_distance),
+                ("Chi-squared", chi_squared_distance), ("KS statistic", kolmogorov_smirnov_statistic)]:
+    print(f"{name:16s} {f(p, q):.4f}")
 ```
 
 Anyway, for more details here is the colab where I implemented some of these metrics and more [Link to code][colab]

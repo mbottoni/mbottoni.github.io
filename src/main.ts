@@ -219,6 +219,7 @@ async function build(params: {
     "assets/resilient-parsing/*",
     "arcade/*",
     "widgets/*",
+    "js/*",
   ];
   for (const path of paths) {
     await update_path(path);
@@ -279,6 +280,7 @@ export type Post = {
   image?: string;
   widgets: string[];
   series?: SeriesMembership;
+  runnable: boolean;
 };
 
 // Cross-post navigation computed once all posts are known: chronological
@@ -355,6 +357,7 @@ async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
       summary: undefined,
       title: undefined,
       widgets: new Set<string>(),
+      runnable: false,
     };
     const html = djot.render(parsed.doc, render_ctx, parsed.math);
     ctx.render_ms += performance.now() - t;
@@ -391,6 +394,7 @@ async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
       image: hero,
       widgets,
       series: resolveSeries(`${y}-${m}-${d}-${slug}`, slug),
+      runnable: render_ctx.runnable,
     });
   }
   posts.sort((l, r) => l.path < r.path ? 1 : -1);
