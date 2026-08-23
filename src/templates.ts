@@ -773,7 +773,31 @@ const post_scripts = `<script>
 })();
 </script>`;
 
-export function post(post: Post, spellcheck: boolean, nav: PostNav): HtmlString {
+function series_box(post: Post, all: Post[]): HtmlString {
+  const m = post.series;
+  if (!m) return new HtmlString("");
+  const parts = all
+    .filter((p) => p.series?.series.key === m.series.key)
+    .sort((a, b) => a.series!.index - b.series!.index);
+  const items = parts.map((p) =>
+    p === post
+      ? html`<li class="series-box__current" aria-current="page">${p.title}</li>`
+      : html`<li><a href="${p.path}">${p.title}</a></li>`
+  );
+  return html`
+    <aside class="series-box">
+      <div class="series-box__head">
+        <span class="series-box__label">Series</span>
+        <span class="series-box__title">${m.series.title}</span>
+        <span class="muted">Part ${m.index + 1} of ${parts.length}</span>
+      </div>
+      ${m.series.description ? html`<p class="muted">${m.series.description}</p>` : ""}
+      <ol class="series-box__list">${items}</ol>
+    </aside>
+  `;
+}
+
+export function post(post: Post, spellcheck: boolean, nav: PostNav, all: Post[]): HtmlString {
   const meta = html`${time(post.date)} · ${post.readingTime} min read`;
   // Only posts that embed a widget pay for its script.
   const body_end = new HtmlString(
@@ -797,6 +821,7 @@ export function post(post: Post, spellcheck: boolean, nav: PostNav): HtmlString 
         </a>
         <span class="post-meta">${meta}</span>
       </div>
+      ${series_box(post, all)}
       ${toc_from_content(post.content)}
       <article ${
       spellcheck ? 'contentEditable="true"' : ""
