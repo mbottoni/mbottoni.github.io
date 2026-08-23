@@ -810,40 +810,46 @@ function comments_section(post: Post): HtmlString {
       <div class="giscus"></div>
       <noscript><p class="muted">Comments are powered by <a href="https://giscus.app">giscus</a> and need JavaScript.</p></noscript>
     </section>
-    <script src="https://giscus.app/client.js"
-      data-repo="${comments.repo}"
-      data-repo-id="${comments.repoId}"
-      data-category="${comments.category}"
-      data-category-id="${comments.categoryId}"
-      data-mapping="pathname"
-      data-strict="1"
-      data-reactions-enabled="1"
-      data-emit-metadata="0"
-      data-input-position="top"
-      data-theme="preferred_color_scheme"
-      data-lang="en"
-      data-loading="lazy"
-      crossorigin="anonymous"
-      async>
-    </script>
     <script>
     (function () {
-      var sync = function () {
+      // Inject giscus with the theme the site is actually using (the toggle
+      // persists in localStorage), rather than the OS preference.
+      var siteTheme = function () {
+        var t = document.documentElement.getAttribute("data-theme");
+        if (t) return t === "dark" ? "dark" : "light";
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark" : "light";
+      };
+      var s = document.createElement("script");
+      s.src = "https://giscus.app/client.js";
+      var attrs = {
+        "data-repo": "${comments.repo}",
+        "data-repo-id": "${comments.repoId}",
+        "data-category": "${comments.category}",
+        "data-category-id": "${comments.categoryId}",
+        "data-mapping": "pathname",
+        "data-strict": "1",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "top",
+        "data-theme": siteTheme(),
+        "data-lang": "en",
+        "data-loading": "lazy",
+        "crossorigin": "anonymous"
+      };
+      for (var k in attrs) s.setAttribute(k, attrs[k]);
+      s.async = true;
+      document.getElementById("comments").appendChild(s);
+
+      // Follow the dark-mode toggle after load.
+      new MutationObserver(function () {
         var frame = document.querySelector("iframe.giscus-frame");
         if (!frame) return;
-        var dark = document.documentElement.getAttribute("data-theme") === "dark";
         frame.contentWindow.postMessage(
-          { giscus: { setConfig: { theme: dark ? "dark" : "light" } } },
+          { giscus: { setConfig: { theme: siteTheme() } } },
           "https://giscus.app");
-      };
-      new MutationObserver(sync).observe(document.documentElement,
+      }).observe(document.documentElement,
         { attributes: true, attributeFilter: ["data-theme"] });
-      // Apply the current theme once the frame has loaded.
-      var tries = 0, tick = function () {
-        if (document.querySelector("iframe.giscus-frame") || tries++ > 50) sync();
-        else setTimeout(tick, 200);
-      };
-      tick();
     })();
     </script>
   `;
@@ -857,8 +863,7 @@ export function post(post: Post, spellcheck: boolean, nav: PostNav, all: Post[])
   // Only pages with a `{.run}` code block load the in-browser runner.
   if (post.runnable) scripts.push(`<script defer src="/js/runner.js"></script>`);
   scripts.push(post_scripts);
-  const body_end = new HtmlString(scripts.join("
-"));
+  const body_end = new HtmlString(scripts.join("\n"));
   return base({
     src: post.src,
     title: post.title,
