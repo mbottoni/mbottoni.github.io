@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { Post, PostNav } from "./main.ts";
+import { comments } from "./comments.ts";
 import { type ThemeConfig } from "./themes.ts";
 import { type Project } from "./projects.ts";
 import { type NewsItem } from "./news.ts";
@@ -797,6 +798,57 @@ function series_box(post: Post, all: Post[]): HtmlString {
   `;
 }
 
+function comments_section(post: Post): HtmlString {
+  if (!comments.enabled || comments.exclude.has(post.slug.toLowerCase())) {
+    return new HtmlString("");
+  }
+  // Giscus picks the discussion by pathname; theme is synced to the site's
+  // dark-mode toggle via postMessage below.
+  return html`
+    <section class="comments" id="comments">
+      <h2>Comments</h2>
+      <div class="giscus"></div>
+      <noscript><p class="muted">Comments are powered by <a href="https://giscus.app">giscus</a> and need JavaScript.</p></noscript>
+    </section>
+    <script src="https://giscus.app/client.js"
+      data-repo="${comments.repo}"
+      data-repo-id="${comments.repoId}"
+      data-category="${comments.category}"
+      data-category-id="${comments.categoryId}"
+      data-mapping="pathname"
+      data-strict="1"
+      data-reactions-enabled="1"
+      data-emit-metadata="0"
+      data-input-position="top"
+      data-theme="preferred_color_scheme"
+      data-lang="en"
+      data-loading="lazy"
+      crossorigin="anonymous"
+      async>
+    </script>
+    <script>
+    (function () {
+      var sync = function () {
+        var frame = document.querySelector("iframe.giscus-frame");
+        if (!frame) return;
+        var dark = document.documentElement.getAttribute("data-theme") === "dark";
+        frame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: dark ? "dark" : "light" } } },
+          "https://giscus.app");
+      };
+      new MutationObserver(sync).observe(document.documentElement,
+        { attributes: true, attributeFilter: ["data-theme"] });
+      // Apply the current theme once the frame has loaded.
+      var tries = 0, tick = function () {
+        if (document.querySelector("iframe.giscus-frame") || tries++ > 50) sync();
+        else setTimeout(tick, 200);
+      };
+      tick();
+    })();
+    </script>
+  `;
+}
+
 export function post(post: Post, spellcheck: boolean, nav: PostNav, all: Post[]): HtmlString {
   const meta = html`${time(post.date)} · ${post.readingTime} min read`;
   // Only posts that embed a widget pay for its script.
@@ -828,6 +880,7 @@ export function post(post: Post, spellcheck: boolean, nav: PostNav, all: Post[])
     }>\n${post.content}</article>
       ${tag_pills(post.tags)}
       ${post_nav(nav)}
+      ${comments_section(post)}
     `,
   });
 }

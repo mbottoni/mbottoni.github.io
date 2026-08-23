@@ -859,3 +859,7 @@ h4:hover .heading-anchor, .heading-anchor:focus { opacity: 1; }
 .series-box__list { margin: 0.5rem 0 0; padding-left: 1.4rem; }
 .series-box__list li { margin: 0.15rem 0; }
 .series-box__current { font-weight: 600; }
+   Comments
+   ============================================================ */
+.comments { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.comments h2 { font-size: 1.1rem; margin: 0 0 0.75rem; }
