@@ -726,24 +726,70 @@ function post_nav(nav: PostNav): HtmlString {
   return html`${related}${chrono}${inTheme}`;
 }
 
+// Reading progress bar + table-of-contents scroll-spy. Inlined only on post
+// pages; both degrade to nothing without JS.
+const post_scripts = `<script>
+(function () {
+  var bar = document.querySelector(".reading-progress__bar");
+  var article = document.querySelector("article");
+  if (bar && article) {
+    var update = function () {
+      var top = article.offsetTop;
+      var h = article.offsetHeight - window.innerHeight;
+      var p = h > 0 ? (window.scrollY - top) / h : 1;
+      bar.style.transform = "scaleX(" + Math.min(1, Math.max(0, p)) + ")";
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
+  var toc = document.querySelector(".toc");
+  if (!toc || !("IntersectionObserver" in window)) return;
+  var links = {};
+  toc.querySelectorAll("a[href^='#']").forEach(function (a) {
+    links[decodeURIComponent(a.getAttribute("href").slice(1))] = a;
+  });
+  var ids = Object.keys(links);
+  if (!ids.length) return;
+  var visible = {};
+  var setActive = function () {
+    var first = null;
+    for (var i = 0; i < ids.length; i++) {
+      if (visible[ids[i]]) { first = ids[i]; break; }
+    }
+    ids.forEach(function (id) {
+      links[id].classList.toggle("active", id === first);
+    });
+  };
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    setActive();
+  }, { rootMargin: "-10% 0px -70% 0px", threshold: 0 });
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>`;
+
 export function post(post: Post, spellcheck: boolean, nav: PostNav): HtmlString {
   const meta = html`${time(post.date)} · ${post.readingTime} min read`;
   // Only posts that embed a widget pay for its script.
-  const widget_scripts = post.widgets.length
-    ? new HtmlString(
-      post.widgets
-        .map((w) => `<script defer src="/widgets/${w}.js"></script>`)
-        .join("\n"),
-    )
-    : undefined;
+  const body_end = new HtmlString(
+    post.widgets
+      .map((w) => `<script defer src="/widgets/${w}.js"></script>`)
+      .join("\n") + "\n" + post_scripts,
+  );
   return base({
     src: post.src,
     title: post.title,
     description: post.summary,
     path: post.path,
     image: post.image,
-    body_end: widget_scripts,
+    body_end,
     content: html`
+      <div class="reading-progress" aria-hidden="true"><div class="reading-progress__bar"></div></div>
       <div class="theme-banner">
         <span>Filed under</span>
         <a class="theme-pill" href="${post.theme.path}">
