@@ -3,7 +3,7 @@
 
 ![](/assets/frontier/lottery_ticket.png)
 
-In 2019, Frankle and Carlin published a paper https://arxiv.org/abs/1803.03635 that 
+In 2019, Frankle and Carbin published a paper [@frankle2019] that 
 challenged a fundamental assumption in deep learning: that large, over-parameterized 
 networks are necessary for achieving good performance. They proposed the **Lottery 
 Ticket Hypothesis**, which states that dense, randomly initialized networks contain 
@@ -288,7 +288,7 @@ lottery_ticket_experiment()
 
 ### Late Rewinding
 
-In follow-up work https://arxiv.org/abs/1903.01611, Frankle et al. found 
+In follow-up work, Frankle et al. [@frankle2019stabilizing] found 
 that for deeper networks (ResNets, VGGs), resetting to the exact 
 initialization $\theta_0$ no longer works reliably. Instead, they 
 propose **late rewinding**: resetting to weights at iteration $k$ 
