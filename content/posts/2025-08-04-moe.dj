@@ -87,3 +87,15 @@ for i in 1..k:
 return final_output
 
 ```
+
+There is a catch the pseudocode hides. Experts run on hardware as fixed-size batches,
+so each one gets a *capacity* of roughly $C = \text{cf} \cdot kT/E$ token slots, and
+whatever a busy expert can't fit is dropped. A router that favours a few experts
+therefore wastes compute and silently skips tokens. The Switch Transformer fix is an
+auxiliary loss $\mathcal{L}_{\text{aux}} = E \sum_i f_i P_i$, where $f_i$ is the
+fraction of assignments sent to expert $i$ and $P_i$ its mean router probability. Play
+with it below.
+
+{cap="64 tokens (top) are routed by a softmax gate to their top-k experts (columns); the line opacity is the gate weight, and the token colour is its first-choice expert. Every expert has C = floor(cf · k · 64 / E) slots, filled with all first choices in token order, then all second choices. Hollow blocks above the dashed line are dropped assignments, and a crossed-out token lost every expert. 'Train router' runs gradient descent on L_aux alone (f held fixed, as in Switch); from the default start it reaches 1.00 with no drops in about 20 steps. With nothing opposing it, the router also flattens towards uniform, which is why real models weight L_aux by about 0.01."}
+::: widget-moe-routing
+:::
