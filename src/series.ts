@@ -16,7 +16,7 @@ export const series: SeriesConfig[] = [
     key: "hopfield",
     title: "Hopfield networks",
     description: "From the energy-based picture to a from-scratch implementation.",
-    posts: ["hopfield", "hopfield_from_scratch"],
+    posts: ["hopfield", "up"],
   },
   {
     key: "diffusion",

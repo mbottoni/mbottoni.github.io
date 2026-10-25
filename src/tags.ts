@@ -5,8 +5,8 @@
 const tagAssignments: Record<string, string[]> = {
   bertimbau: ["nlp", "bert", "transformers"],
   hopfield: ["hopfield", "associative-memory", "energy-based"],
-  hopfield_from_scratch: ["hopfield", "from-scratch", "energy-based"],
-  up: ["probability", "kolmogorov"],
+  hopfield_from_scratch: ["online-learning", "portfolio-theory", "information-theory"],
+  up: ["hopfield", "from-scratch", "energy-based"],
   kalman: ["kalman-filter", "bayesian", "time-series"],
   transformer: ["transformers", "attention", "architecture"],
   decoding: ["llm", "inference", "sampling"],
