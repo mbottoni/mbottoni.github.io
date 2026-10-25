@@ -7,6 +7,15 @@ One of the key techniques in diffusion models that has significantly improved th
 classifier-free guidance. In this post, we'll explore what classifier-free 
 guidance is, how it works, and implement it from scratch in PyTorch.
 
+Before any equations, here is the whole idea running in the page. The data is a
+small mixture of Gaussians with three classes, so the conditional and
+unconditional scores are known exactly and the only thing being changed is the
+guidance scale. Drag *w* and watch what happens to the samples.
+
+{cap="Classifier-free guidance with an exact score. Each class is three Gaussian components (circles are 1σ); the sampler is DDIM on 50 steps (the button switches to ancestral DDPM) using the guided score s̃ = (1+w)·s(x|c) − w·s(x), and the grey lines are trajectories from noise. As w grows the samples abandon the heavy inner mode the class shares with its neighbours, the surviving clusters tighten (mode width is the within-cluster spread in units of the true σ, so 1.0 is correct), and by w ≈ 7–10 a large fraction overshoot the data altogether. Spread is the total sample std against the true value for the class; off support means more than 3σ from every component of the class; wrong class uses the Bayes classifier on the clean data."}
+::: widget-cfg
+:::
+
 ## What is Classifier-Free Guidance?
 
 At its core, classifier-free guidance is an elegant technique that allows us to 
