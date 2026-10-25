@@ -24,6 +24,64 @@ processing text, the more its representations align with those of vision models,
 how biological brains process information, suggesting they may be discovering 
 fundamental principles about how to represent the world.
 
+## How Do You Measure "Similar"?
+
+"Represent information in similar ways" needs a number, and the paper makes it
+precise. The trick is to compare **kernels**, not features. Two models can use
+completely different coordinates, even different dimensions, and still agree on
+which inputs are close to which.
+
+A **representation** is a function $f : \mathcal{X} \to \mathbb{R}^n$ that maps
+each input (an image, a sentence) to a feature vector. Its **kernel** records
+how it measures similarity between inputs:
+
+$$
+K(x_i, x_j) = \langle f(x_i), f(x_j) \rangle .
+$$
+
+A **kernel-alignment metric** $m(K_1, K_2)$ scores how similar two kernels are,
+for example those of a vision model and a language model evaluated on the same
+inputs (or on paired inputs, like an image and its caption). The paper's main
+choice is the **mutual $k$-nearest-neighbour** metric. Take $n$ paired samples
+with features $\phi_i$ from the first model and $\psi_i$ from the second. Let
+$\mathcal{S}(\phi_i)$ be the set of indices of the $k$ nearest neighbours of
+$\phi_i$ among the other $\phi_j$, and define $\mathcal{S}(\psi_i)$ the same
+way. Then
+
+$$
+m_{\mathrm{NN}} = \frac{1}{n} \sum_{i=1}^{n} \frac{1}{k}\, \big|\mathcal{S}(\phi_i) \cap \mathcal{S}(\psi_i)\big| \in [0, 1],
+$$
+
+the average fraction of neighbours the two models agree on. The paper uses $k = 10$.
+A value of $1$ means both models induce the same neighbourhood structure. Two
+unrelated random embeddings score about $k/(n-1)$.
+
+A popular alternative, which the paper also discusses, is **centered kernel
+alignment** (CKA). Let $K$ and $L$ be the $n \times n$ kernel matrices of the two
+models on the same inputs, and let $C = I - \frac{1}{n}\mathbf{1}\mathbf{1}^\top$ be
+the centering matrix. With the Hilbert-Schmidt independence criterion
+$\mathrm{HSIC}(K, L) = \operatorname{tr}(K C L C)/(n-1)^2$,
+
+$$
+\mathrm{CKA}(K, L) = \frac{\mathrm{HSIC}(K, L)}{\sqrt{\mathrm{HSIC}(K, K)\,\mathrm{HSIC}(L, L)}} .
+$$
+
+For linear kernels and column-centered feature matrices $A \in \mathbb{R}^{n \times p}$
+and $B \in \mathbb{R}^{n \times q}$, this reduces to
+$\lVert B^\top A \rVert_F^2 / \big(\lVert A^\top A \rVert_F \,\lVert B^\top B \rVert_F\big)$.
+CKA is invariant to rotations and isotropic scaling of either feature space,
+which is exactly the freedom we want to ignore when asking whether two models
+"see" the same structure. The mutual-NN metric goes further and only looks at
+local neighbourhoods.
+
+The paper also has a candidate for *where* the kernels converge. For a
+contrastive learner trained to tell co-occurring observations apart from
+independent ones, it argues that the learned kernel approaches the pointwise
+mutual information of co-occurrence, up to a constant:
+$\langle f(x_a), f(x_b) \rangle \approx \log \frac{P_{\text{coor}}(x_a, x_b)}{P(x_a)P(x_b)} + c$.
+That kernel depends on the world's statistics, not on the modality, so it is a
+concrete version of the "ideal form" from the cave metaphor.
+
 ## Why Is This Happening?
 
 The researchers propose three key mechanisms driving this convergence:
@@ -52,3 +110,8 @@ to Plato's concept of ideal forms, but discovered through machine learning.
 The paper's central metaphor draws from Plato's Allegory of the Cave: just as Plato suggested there was an ideal reality behind 
 our sensory experiences, these researchers suggest there may be an ideal computational representation of reality that 
 different AI models are gradually discovering.
+
+## References
+
+- M. Huh, B. Cheung, T. Wang, P. Isola (2024). *The Platonic Representation Hypothesis*. [arXiv:2405.07987](https://arxiv.org/abs/2405.07987)
+- S. Kornblith, M. Norouzi, H. Lee, G. Hinton (2019). *Similarity of Neural Network Representations Revisited*. ICML. [arXiv:1905.00414](https://arxiv.org/abs/1905.00414)
