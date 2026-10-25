@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { Post, PostNav } from "./main.ts";
+import { MapData, Post, PostNav } from "./main.ts";
 import { comments } from "./comments.ts";
 import { type ThemeConfig } from "./themes.ts";
 import { type Project } from "./projects.ts";
@@ -21,6 +21,7 @@ const nav_links = [
   { href: "/projects.html", label: "Projects" },
   { href: "/news.html", label: "News" },
   { href: "/archive.html", label: "Archive" },
+  { href: "/map.html", label: "Map" },
   { href: "/about.html", label: "About" },
   { href: "/resume.pdf", label: "Resume" },
   { href: "/links.html", label: "Links" },
@@ -670,6 +671,76 @@ export const search_page = (): HtmlString => {
   });
 };
 
+export const map_page = (map: MapData): HtmlString => {
+  const byId = new Map(map.nodes.map((n) => [n.id, n]));
+  const prereqs = map.edges.filter((e) => e.type === "prereq");
+  // No-JS / screen-reader view of the same graph: each post with the posts
+  // to read first, in publication order.
+  const reading = map.nodes
+    .map((n) => ({
+      node: n,
+      first: prereqs.filter((e) => e.target === n.id).map((e) => byId.get(e.source)!),
+    }))
+    .filter((it) => it.first.length > 0);
+  const count = (type: string) => map.edges.filter((e) => e.type === type).length;
+  return base({
+    path: "/map.html",
+    title: "Concept map — mbottoni",
+    description: "An interactive map of how the posts on this blog relate.",
+    src: "/src/prereqs.ts",
+    content: html`
+      <section class="theme-page map-page">
+        <header>
+          <h1>Concept map</h1>
+          <p>How the posts relate. Arrows point from a post to the ones that
+          build on it; dashed lines join parts of a series, faint lines join
+          posts that share a tag. Hover to trace neighbours, click to open a
+          post, drag to rearrange, scroll or pinch to zoom.</p>
+        </header>
+        <div class="map-controls" hidden>
+          <div class="map-legend" role="group" aria-label="Filter by theme">${
+      map.themes.map((t) =>
+        html`<button type="button" class="widget-btn map-filter" data-theme-key="${t.key}" aria-pressed="true"><span class="map-swatch map-swatch--${t.key}"></span>${t.title}</button>`
+      )
+    }</div>
+          <div class="map-legend" role="group" aria-label="Edge types">
+            <button type="button" class="widget-btn map-edge-filter" data-edge="prereq" aria-pressed="true"><span class="map-key map-key--prereq"></span>Prerequisite <span class="muted">${count("prereq")}</span></button>
+            <button type="button" class="widget-btn map-edge-filter" data-edge="series" aria-pressed="true"><span class="map-key map-key--series"></span>Same series <span class="muted">${count("series")}</span></button>
+            <button type="button" class="widget-btn map-edge-filter" data-edge="tag" aria-pressed="false"><span class="map-key map-key--tag"></span>Shares a tag <span class="muted">${count("tag")}</span></button>
+          </div>
+        </div>
+        <figure class="map-stage" hidden>
+          <svg class="map-svg" aria-hidden="true"></svg>
+          <div class="map-zoom">
+            <button type="button" class="widget-btn" data-zoom="in" aria-label="Zoom in">+</button>
+            <button type="button" class="widget-btn" data-zoom="out" aria-label="Zoom out">−</button>
+            <button type="button" class="widget-btn" data-zoom="reset" aria-label="Reset view">⟲</button>
+          </div>
+          <div class="map-card" hidden></div>
+        </figure>
+        <section class="map-fallback" aria-labelledby="map-reading">
+          <h2 id="map-reading">Reading paths</h2>
+          <p class="muted">Every post with a suggested prerequisite, oldest first.
+          Shared tags are browsable from <a href="/tags.html">the tag index</a>.</p>
+          <ul class="related-list">
+            ${
+      reading.map((it) =>
+        html`<li>
+              <a href="${it.node.url}">${it.node.title}</a>
+              <span class="muted">read first: ${
+          it.first.map((f, i) => html`${i ? ", " : ""}<a href="${f.url}">${f.title}</a>`)
+        }</span>
+            </li>`
+      )
+    }
+          </ul>
+        </section>
+      </section>
+    `,
+    body_end: new HtmlString(`<script defer src="/js/map.js"></script>`),
+  });
+};
+
 function toc_from_content(content: HtmlString): HtmlString {
   const re =
     /<h([23])\b[^>]*>\s*<a href="#([^"]+)">([\s\S]*?)<\/a>\s*<\/h\1>/g;
@@ -724,7 +795,17 @@ function post_nav(nav: PostNav): HtmlString {
         </ul>
       </section>`
     : "";
-  return html`${related}${chrono}${inTheme}`;
+  return html`${prereq_line(nav.after, "Read next")}${related}${chrono}${inTheme}`;
+}
+
+// One-line list of prerequisite neighbours from src/prereqs.ts; renders
+// nothing when the post has none in that direction.
+function prereq_line(posts: Post[], label: string): HtmlString {
+  if (posts.length === 0) return new HtmlString("");
+  return html`<p class="prereq-line">
+      <span class="prereq-line__label">${label}</span>
+      ${posts.map((p, i) => html`${i ? ", " : ""}<a href="${p.path}">${p.title}</a>`)}
+    </p>`;
 }
 
 // Reading progress bar + table-of-contents scroll-spy. Inlined only on post
@@ -881,6 +962,7 @@ export function post(post: Post, spellcheck: boolean, nav: PostNav, all: Post[])
         <span class="post-meta">${meta}</span>
       </div>
       ${series_box(post, all)}
+      ${prereq_line(nav.before, "Before reading this")}
       ${toc_from_content(post.content)}
       <article ${
       spellcheck ? 'contentEditable="true"' : ""
