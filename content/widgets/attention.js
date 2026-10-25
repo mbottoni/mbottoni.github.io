@@ -163,7 +163,7 @@
       ".attn-seg .widget-btn{padding:.3rem .65rem}" +
       ".attn-plot{cursor:pointer}" +
       ".attn-sliders{max-width:28rem;margin-top:.2rem}" +
-      ".widget .attn-sliders .widget-slider-row>span:first-child{width:7.6em;font-size:.73rem}";
+      ".attn-sliders .widget-slider-row>span:first-child{width:6.4em}";
     document.head.appendChild(s);
   }
 
@@ -213,7 +213,7 @@
 
     var sliders = el("div", "attn-sliders", mount);
     var srow = el("div", "widget-slider-row", sliders);
-    el("span", null, srow).textContent = "softmax τ";
+    el("span", "attn-slabel", srow).textContent = "softmax τ";
     var tIn = el("input", "widget-slider", srow);
     tIn.type = "range"; tIn.min = "0"; tIn.max = "1000"; tIn.step = "1";
     var TMIN = 0.1, TMAX = 4;
