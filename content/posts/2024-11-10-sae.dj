@@ -92,6 +92,17 @@ Let's look at some typical activation patterns:
 # Only a few neurons are strongly active
 ```
 
+Why would we need a sparse dictionary in the first place? Because networks pack
+more features than they have dimensions, as long as those features are rarely
+active together. Below I train Anthropic's toy model of superposition live: five
+features squeezed through two hidden dimensions. Push the sparsity up and watch
+it go from keeping two features and dropping the rest, to antipodal pairs, to a
+pentagon. Undoing that packing is exactly the job a sparse autoencoder is for.
+
+{cap="The arrows are the five columns of W in the 2-D hidden space, trained live with Adam on x′ = ReLU(WᵀWx + b) and importance-weighted MSE (importance Iᵢ = decayⁱ, feature 1 most important). Bars show ‖Wᵢ‖; red marks a feature that interferes with others (Σⱼ (Ŵᵢ·Wⱼ)² > 0.25). Dimensions per feature is m divided by the squared Frobenius norm of W: 1 means no superposition, 0.5 antipodal pairs, ≈0.3 the pentagon. Near S ≈ 0.85 different seeds land in different phases."}
+::: widget-superposition
+:::
+
 Consider an image processing task:
 
 ```python
