@@ -88,9 +88,320 @@ property of the update rule by itself. Determinism is.
 ::: widget-diffusion
 :::
 
+## The derivations behind the pseudocode
+
+The two samplers above look like magic formulas, so in this section I want to
+derive every coefficient in them. I use the notation of the DDPM paper
+throughout. One warning before starting: the DDIM paper writes $\alpha_t$ for
+the quantity that DDPM calls $\bar\alpha_t$. I translate everything to the DDPM
+convention so the two halves of this post line up.
+
+### The forward process and its closed form
+
+Fix a variance schedule $\beta_1, \dots, \beta_T \in (0, 1)$ and define
+$\alpha_t = 1 - \beta_t$ and $\bar\alpha_t = \prod_{s=1}^{t} \alpha_s$. The
+forward (noising) process is a Markov chain that starts at a data point
+$x_0 \sim q(x_0)$ and adds a little Gaussian noise at each step:
+
+$$
+q(x_t \mid x_{t-1}) = \mathcal{N}\big(x_t;\ \sqrt{\alpha_t}\, x_{t-1},\ \beta_t I\big),
+\qquad
+q(x_{1:T} \mid x_0) = \prod_{t=1}^{T} q(x_t \mid x_{t-1}).
+$$
+
+The useful fact is that we never need to run this chain step by step: the
+marginal at any $t$ has a closed form. Write one step as
+$x_t = \sqrt{\alpha_t}\, x_{t-1} + \sqrt{1-\alpha_t}\, \epsilon_{t-1}$ with
+$\epsilon_{t-1} \sim \mathcal{N}(0, I)$, and unroll it once:
+
+$$
+x_t = \sqrt{\alpha_t \alpha_{t-1}}\, x_{t-2}
+    + \sqrt{\alpha_t (1-\alpha_{t-1})}\, \epsilon_{t-2}
+    + \sqrt{1-\alpha_t}\, \epsilon_{t-1}.
+$$
+
+The two noise terms are independent zero-mean Gaussians, so their sum is a
+Gaussian whose variance is the sum of the variances,
+$\alpha_t - \alpha_t\alpha_{t-1} + 1 - \alpha_t = 1 - \alpha_t\alpha_{t-1}$.
+The pattern is clear, and induction on $t$ gives
+
+$$
+q(x_t \mid x_0) = \mathcal{N}\big(x_t;\ \sqrt{\bar\alpha_t}\, x_0,\ (1-\bar\alpha_t) I\big),
+$$
+
+or, as a sampling recipe,
+
+$$
+x_t = \sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\, \epsilon,\qquad \epsilon \sim \mathcal{N}(0, I).
+$$
+
+Because $\bar\alpha_T \approx 0$ for a sensible schedule, $q(x_T \mid x_0)$ is
+almost exactly $\mathcal{N}(0, I)$ regardless of $x_0$, which is why sampling
+starts from pure noise.
+
+### The posterior $q(x_{t-1} \mid x_t, x_0)$
+
+The reverse conditional $q(x_{t-1} \mid x_t)$ is intractable, because it
+depends on the whole data distribution. Conditioned on $x_0$, though, it is
+an easy Gaussian. By Bayes and the Markov property,
+
+$$
+\begin{aligned}
+q(x_{t-1} \mid x_t, x_0)
+&= \frac{q(x_t \mid x_{t-1})\, q(x_{t-1} \mid x_0)}{q(x_t \mid x_0)} \\
+&\propto \exp\!\Big(-\frac{1}{2}\Big[
+\frac{\|x_t - \sqrt{\alpha_t}\, x_{t-1}\|^2}{\beta_t}
++ \frac{\|x_{t-1} - \sqrt{\bar\alpha_{t-1}}\, x_0\|^2}{1-\bar\alpha_{t-1}}
+\Big]\Big).
+\end{aligned}
+$$
+
+The exponent is quadratic in $x_{t-1}$, so we can read off the precision (the
+coefficient of $\|x_{t-1}\|^2$) and the linear term, and then complete the
+square. The precision is
+
+$$
+\frac{\alpha_t}{\beta_t} + \frac{1}{1-\bar\alpha_{t-1}}
+= \frac{\alpha_t - \bar\alpha_t + \beta_t}{\beta_t (1-\bar\alpha_{t-1})}
+= \frac{1-\bar\alpha_t}{\beta_t (1-\bar\alpha_{t-1})},
+$$
+
+using $\alpha_t (1-\bar\alpha_{t-1}) = \alpha_t - \bar\alpha_t$ and
+$\alpha_t + \beta_t = 1$. Dividing the linear term
+$\frac{\sqrt{\alpha_t}}{\beta_t} x_t + \frac{\sqrt{\bar\alpha_{t-1}}}{1-\bar\alpha_{t-1}} x_0$
+by this precision gives the mean, so
+
+$$
+q(x_{t-1} \mid x_t, x_0) = \mathcal{N}\big(x_{t-1};\ \tilde\mu_t(x_t, x_0),\ \tilde\beta_t I\big),
+$$
+
+$$
+\tilde\mu_t(x_t, x_0) = \frac{\sqrt{\bar\alpha_{t-1}}\,\beta_t}{1-\bar\alpha_t}\, x_0
+ + \frac{\sqrt{\alpha_t}\,(1-\bar\alpha_{t-1})}{1-\bar\alpha_t}\, x_t,
+\qquad
+\tilde\beta_t = \frac{1-\bar\alpha_{t-1}}{1-\bar\alpha_t}\, \beta_t.
+$$
+
+Now substitute $x_0 = (x_t - \sqrt{1-\bar\alpha_t}\,\epsilon)/\sqrt{\bar\alpha_t}$
+from the closed form. The $x_t$ coefficient collapses to
+$\frac{\beta_t + \alpha_t - \bar\alpha_t}{\sqrt{\alpha_t}(1-\bar\alpha_t)} = \frac{1}{\sqrt{\alpha_t}}$,
+and the mean becomes
+
+$$
+\tilde\mu_t = \frac{1}{\sqrt{\alpha_t}}\Big(x_t - \frac{\beta_t}{\sqrt{1-\bar\alpha_t}}\, \epsilon\Big).
+$$
+
+That is exactly the update in `sample_ddpm` above, with the true noise
+$\epsilon$ replaced by the network's guess `noise_pred`.
+
+### From the ELBO to the simple $\epsilon$-loss
+
+The model is a reverse Markov chain
+$p_\theta(x_{0:T}) = p(x_T)\prod_{t=1}^{T} p_\theta(x_{t-1} \mid x_t)$ with
+$p(x_T) = \mathcal{N}(0, I)$ and
+$p_\theta(x_{t-1} \mid x_t) = \mathcal{N}(x_{t-1};\ \mu_\theta(x_t, t),\ \sigma_t^2 I)$,
+where $\sigma_t^2$ is fixed (Ho et al. use $\sigma_t^2 = \beta_t$ or
+$\sigma_t^2 = \tilde\beta_t$). The forward chain plays the role of the
+variational posterior, so Jensen's inequality gives the usual bound
+
+$$
+-\log p_\theta(x_0) \le \mathbb{E}_{q}\Big[-\log \frac{p_\theta(x_{0:T})}{q(x_{1:T} \mid x_0)}\Big].
+$$
+
+Rewrite each forward factor for $t \ge 2$ with Bayes,
+$q(x_t \mid x_{t-1}) = q(x_t \mid x_{t-1}, x_0) = q(x_{t-1} \mid x_t, x_0)\, q(x_t \mid x_0) / q(x_{t-1} \mid x_0)$.
+The ratio $q(x_t \mid x_0)/q(x_{t-1} \mid x_0)$ telescopes across the product,
+and the bound splits into a sum of KL divergences:
+
+$$
+\mathbb{E}_q\Big[
+\underbrace{D_{\mathrm{KL}}\big(q(x_T \mid x_0)\,\|\,p(x_T)\big)}_{L_T}
++ \sum_{t=2}^{T} \underbrace{D_{\mathrm{KL}}\big(q(x_{t-1} \mid x_t, x_0)\,\|\,p_\theta(x_{t-1} \mid x_t)\big)}_{L_{t-1}}
+\underbrace{-\log p_\theta(x_0 \mid x_1)}_{L_0}
+\Big].
+$$
+
+$L_T$ has no parameters. Each $L_{t-1}$ compares two Gaussians with the same
+fixed isotropic covariance, so it is a scaled squared distance between means:
+
+$$
+L_{t-1} = \mathbb{E}_q\Big[\frac{1}{2\sigma_t^2}\,\big\|\tilde\mu_t(x_t, x_0) - \mu_\theta(x_t, t)\big\|^2\Big] + C.
+$$
+
+Since the target mean has the form $\frac{1}{\sqrt{\alpha_t}}(x_t - \frac{\beta_t}{\sqrt{1-\bar\alpha_t}}\epsilon)$
+and $x_t$ is an input to the network, the natural choice is to give
+$\mu_\theta$ the same form and let the network predict only the noise:
+$\mu_\theta(x_t, t) = \frac{1}{\sqrt{\alpha_t}}\big(x_t - \frac{\beta_t}{\sqrt{1-\bar\alpha_t}}\epsilon_\theta(x_t, t)\big)$.
+The $x_t$ terms cancel inside the norm, leaving
+
+$$
+L_{t-1} - C = \mathbb{E}_{x_0, \epsilon}\Big[
+\frac{\beta_t^2}{2\sigma_t^2\, \alpha_t\, (1-\bar\alpha_t)}\,
+\big\|\epsilon - \epsilon_\theta\big(\sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\, \epsilon,\ t\big)\big\|^2
+\Big].
+$$
+
+Ho et al. found that dropping the weight in front, and sampling $t$ uniformly,
+trains better. That gives the loss everyone actually uses:
+
+$$
+L_{\text{simple}}(\theta) = \mathbb{E}_{t \sim \mathcal{U}\{1,\dots,T\},\ x_0 \sim q,\ \epsilon \sim \mathcal{N}(0, I)}
+\Big[\big\|\epsilon - \epsilon_\theta\big(\sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\, \epsilon,\ t\big)\big\|^2\Big].
+$$
+
+Two things are worth pointing out. First, the loss only ever touches the
+marginals $q(x_t \mid x_0)$, never the joint chain. Second, $\epsilon_\theta$
+is a scaled score: by Tweedie's formula the optimal noise predictor satisfies
+$\nabla_{x_t} \log q(x_t) = -\epsilon^*(x_t, t)/\sqrt{1-\bar\alpha_t}$. Both
+facts matter for DDIM.
+
+### DDIM: a non-Markovian family with the same marginals
+
+Because $L_{\text{simple}}$ only depends on $q(x_t \mid x_0)$, any forward
+process with those marginals is trained by exactly the same objective.
+Song et al. construct a whole family of them, indexed by a vector of standard
+deviations $\sigma \in \mathbb{R}_{\ge 0}^{T}$:
+
+$$
+q_\sigma(x_{t-1} \mid x_t, x_0) = \mathcal{N}\Big(x_{t-1};\
+\sqrt{\bar\alpha_{t-1}}\, x_0 + \sqrt{1-\bar\alpha_{t-1}-\sigma_t^2}\cdot
+\frac{x_t - \sqrt{\bar\alpha_t}\, x_0}{\sqrt{1-\bar\alpha_t}},\ \sigma_t^2 I\Big).
+$$
+
+The mean is chosen so that marginals are preserved. Suppose
+$x_t = \sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\,\epsilon$. Then the
+fraction in the mean is exactly $\epsilon$, so a draw from $q_\sigma$ is
+$\sqrt{\bar\alpha_{t-1}}\, x_0 + \sqrt{1-\bar\alpha_{t-1}-\sigma_t^2}\,\epsilon + \sigma_t z$
+with independent $z \sim \mathcal{N}(0, I)$. Its variance is
+$(1-\bar\alpha_{t-1}-\sigma_t^2) + \sigma_t^2 = 1-\bar\alpha_{t-1}$. Starting
+from $q_\sigma(x_T \mid x_0) = \mathcal{N}(\sqrt{\bar\alpha_T}\, x_0, (1-\bar\alpha_T) I)$
+and inducting downwards, every marginal is
+$q_\sigma(x_t \mid x_0) = \mathcal{N}(\sqrt{\bar\alpha_t}\, x_0, (1-\bar\alpha_t) I)$,
+the same as DDPM. The forward process implied by Bayes,
+$q_\sigma(x_t \mid x_{t-1}, x_0)$, still depends on $x_0$. That is what
+"non-Markovian" means here.
+
+To generate, we replace the unknown $x_0$ with the network's prediction
+$\hat x_0 = (x_t - \sqrt{1-\bar\alpha_t}\,\epsilon_\theta(x_t, t))/\sqrt{\bar\alpha_t}$:
+
+$$
+x_{t-1} = \sqrt{\bar\alpha_{t-1}}\, \hat x_0
+ + \sqrt{1-\bar\alpha_{t-1}-\sigma_t^2}\; \epsilon_\theta(x_t, t)
+ + \sigma_t z,
+\qquad
+\sigma_t(\eta) = \eta\, \sqrt{\frac{1-\bar\alpha_{t-1}}{1-\bar\alpha_t}}\,\sqrt{1-\frac{\bar\alpha_t}{\bar\alpha_{t-1}}}.
+$$
+
+These are the three lines of `sample_ddim`. Since
+$1 - \bar\alpha_t/\bar\alpha_{t-1} = \beta_t$, at $\eta = 1$ we get
+$\sigma_t^2 = \tilde\beta_t$ and the step coincides with the DDPM posterior
+step (in its $\sigma_t^2 = \tilde\beta_t$ variant). At $\eta = 0$ the noise term
+vanishes and sampling is a deterministic map from $x_T$ to $x_0$. Since
+only the marginals matter, the same derivation holds on any increasing
+subsequence $\tau_1 < \dots < \tau_S$ of $\{1, \dots, T\}$ with $\bar\alpha$
+evaluated on the subsequence. That is where DDIM's step skipping comes from.
+
+### $\eta = 0$ is an Euler step of the probability-flow ODE
+
+Divide the deterministic update by $\sqrt{\bar\alpha_{t-1}}$ and define
+$\kappa_t = \sqrt{(1-\bar\alpha_t)/\bar\alpha_t}$ (the inverse square root of
+the signal-to-noise ratio) and the rescaled state $\bar x_t = x_t/\sqrt{\bar\alpha_t}$:
+
+$$
+\bar x_{t-1} = \bar x_t + (\kappa_{t-1} - \kappa_t)\, \epsilon_\theta(x_t, t).
+$$
+
+This is one Euler step, with step size $\kappa_{t-1} - \kappa_t$, of the ODE
+
+$$
+\frac{d\bar x}{d\kappa} = \epsilon_\theta\Big(\frac{\bar x}{\sqrt{1+\kappa^2}},\ \kappa\Big),
+$$
+
+where I used $\sqrt{\bar\alpha} = 1/\sqrt{1+\kappa^2}$ to write $x$ in terms of
+$\bar x$. To see that this is the probability-flow ODE of the continuous
+variance-preserving SDE $dx = -\tfrac12\beta(t)\, x\, dt + \sqrt{\beta(t)}\, dw$
+from Song et al. (2021), go to continuous time, where
+$d\bar\alpha/dt = -\beta(t)\,\bar\alpha$. From $\kappa^2 = 1/\bar\alpha - 1$
+we get $d\kappa/dt = \beta/(2\kappa\bar\alpha)$, and from $\bar x = x/\sqrt{\bar\alpha}$
+we get $d\bar x = dx/\sqrt{\bar\alpha} + \tfrac{\beta}{2\sqrt{\bar\alpha}}\, x\, dt$.
+Setting $d\bar x = \epsilon_\theta\, d\kappa$ and using $\kappa\sqrt{\bar\alpha} = \sqrt{1-\bar\alpha}$:
+
+$$
+\frac{dx}{dt} = -\frac{1}{2}\beta(t)\Big[x - \frac{\epsilon_\theta(x, t)}{\sqrt{1-\bar\alpha_t}}\Big]
+\approx -\frac{1}{2}\beta(t)\big[x + \nabla_x \log p_t(x)\big],
+$$
+
+where the last step uses the score identity from the previous section (exact
+when $\epsilon_\theta$ is the optimal noise predictor). The
+right-hand side is exactly the probability-flow ODE of the VP-SDE: a
+deterministic flow whose marginals match the diffusion's at every $t$.
+So DDIM with $\eta = 0$ is a first-order solver for that ODE in a clever
+reparameterization of time. This explains the two properties from the widget.
+The sample is a deterministic function of $x_T$, because an ODE has unique
+solutions, so latents interpolate. And taking fewer, larger steps is a
+discretization error, not a change of model.
+
+### Checking the identities numerically
+
+The block below checks the three facts I just derived using nothing but
+numpy. First, iterating $q(x_t \mid x_{t-1})$ three hundred times lands on the
+closed-form $q(x_t \mid x_0)$. Second, regressing $x_{t-1}$ on $x_t$ for a fixed
+$x_0$ recovers the posterior coefficients and $\tilde\beta_t$. Third, one DDIM
+step from the true marginal at $t$ produces the marginal at $t-1$ for every
+$\eta$.
+
+{.run}
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+T = 1000
+beta = np.linspace(1e-4, 0.02, T)           # linear schedule from the DDPM paper
+alpha = 1.0 - beta
+alpha_bar = np.cumprod(alpha)
+
+n, x0, t = 200_000, 1.5, 300                # t is 1-indexed: we stop at x_t
+x = np.full(n, x0)
+for s in range(t):                          # iterate q(x_s | x_{s-1}) t times
+    x_prev = x
+    x = np.sqrt(alpha[s]) * x + np.sqrt(beta[s]) * rng.standard_normal(n)
+
+ab, ab_prev = alpha_bar[t - 1], alpha_bar[t - 2]
+print("1) closed-form marginal q(x_t | x_0)")
+print(f"   mean  iterated {x.mean():.4f}   closed form {np.sqrt(ab) * x0:.4f}")
+print(f"   var   iterated {x.var():.4f}   closed form {1 - ab:.4f}")
+
+# Posterior q(x_{t-1} | x_t, x_0) is Gaussian and linear in x_t, so regressing
+# x_{t-1} on x_t (x_0 fixed) must recover its slope and residual variance.
+slope, icpt = np.polyfit(x, x_prev, 1)
+resid = x_prev - (slope * x + icpt)
+coef_xt = np.sqrt(alpha[t - 1]) * (1 - ab_prev) / (1 - ab)
+coef_x0 = np.sqrt(ab_prev) * beta[t - 1] / (1 - ab)
+beta_tilde = (1 - ab_prev) / (1 - ab) * beta[t - 1]
+print("2) posterior q(x_{t-1} | x_t, x_0)")
+print(f"   x_t coefficient  fit {slope:.4f}   formula {coef_xt:.4f}")
+print(f"   x_0 term         fit {icpt:.4f}   formula {coef_x0 * x0:.4f}")
+print(f"   variance         fit {resid.var():.6f} formula {beta_tilde:.6f}")
+
+# DDIM: for any sigma, one step of q_sigma(x_{t-1} | x_t, x_0) maps the
+# marginal at t onto the marginal at t-1.
+print("3) DDIM step keeps the DDPM marginal, for every eta")
+eps_t = (x - np.sqrt(ab) * x0) / np.sqrt(1 - ab)
+for eta in (0.0, 0.5, 1.0):
+    sig = eta * np.sqrt(beta_tilde)
+    x_ddim = (np.sqrt(ab_prev) * x0 + np.sqrt(1 - ab_prev - sig**2) * eps_t
+              + sig * rng.standard_normal(n))
+    print(f"   eta={eta:.1f}  mean {x_ddim.mean():.4f} (target {np.sqrt(ab_prev) * x0:.4f})"
+          f"   var {x_ddim.var():.4f} (target {1 - ab_prev:.4f})")
+```
+
 From a theoretical standpoint, DDPM provides stronger guarantees due to its well-defined probabilistic 
 framework. DDIM, while sacrificing some theoretical rigor, gains practical advantages in sampling speed and control. Both models can utilize 
 similar neural network architectures, such as U-Net, for the denoising function. Notably, DDIM requires 
 minimal modifications to a pre-trained DDPM model, making it an attractive upgrade option.
 
+## References
 
+- Jonathan Ho, Ajay Jain, Pieter Abbeel. [Denoising Diffusion Probabilistic Models](https://arxiv.org/abs/2006.11239). NeurIPS 2020.
+- Jiaming Song, Chenlin Meng, Stefano Ermon. [Denoising Diffusion Implicit Models](https://arxiv.org/abs/2010.02502). ICLR 2021.
+- Yang Song, Jascha Sohl-Dickstein, Diederik P. Kingma, Abhishek Kumar, Stefano Ermon, Ben Poole. [Score-Based Generative Modeling through Stochastic Differential Equations](https://arxiv.org/abs/2011.13456). ICLR 2021.

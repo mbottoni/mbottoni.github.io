@@ -49,6 +49,144 @@ The beauty of this approach is that it doesn't require training
 two separate models. Instead, we train a single model that can 
 handle both conditional and unconditional generation.
 
+## Where the Formula Comes From
+
+That equation is easy to use but it is not obvious why it works, so here is the
+derivation. I follow the notation of Ho and Salimans, which is also what the
+code below uses. A noisy latent is $z_\lambda = \alpha_\lambda x + \sigma_\lambda \epsilon$,
+where $x$ is a data point, $\epsilon \sim \mathcal{N}(0, I)$, $\lambda$ is the
+log signal-to-noise ratio $\log(\alpha_\lambda^2/\sigma_\lambda^2)$, and
+$\alpha_\lambda^2 + \sigma_\lambda^2 = 1$. The class label (or text prompt) is
+$c$, and $\varnothing$ is the special "no condition" token. All gradients below
+are with respect to $z_\lambda$.
+
+### Noise predictions are scaled scores
+
+The fact that ties everything together is that a denoiser trained with the
+$\epsilon$-prediction loss estimates the score of the noisy marginal. By
+Tweedie's formula, the optimal predictor is
+$\epsilon^*(z_\lambda) = \mathbb{E}[\epsilon \mid z_\lambda]$, and it satisfies
+
+$$
+\epsilon^*(z_\lambda) = -\sigma_\lambda\, \nabla_{z_\lambda} \log p(z_\lambda),
+\qquad
+\epsilon^*(z_\lambda, c) = -\sigma_\lambda\, \nabla_{z_\lambda} \log p(z_\lambda \mid c).
+$$
+
+So any statement about scores is also a statement about $\epsilon$-predictions,
+up to the factor $-\sigma_\lambda$. A linear combination of scores is a linear
+combination of noise predictions with the same coefficients.
+
+### Classifier guidance: Bayes on scores
+
+Before CFG, Dhariwal and Nichol steered diffusion with a separately trained
+classifier $p_\phi(c \mid z_\lambda)$ that works on noisy inputs. Bayes' rule
+gives $p(z_\lambda \mid c) = p(c \mid z_\lambda)\, p(z_\lambda) / p(c)$, and $p(c)$
+does not depend on $z_\lambda$, so it vanishes when we take the gradient:
+
+$$
+\nabla \log p(z_\lambda \mid c) = \nabla \log p(z_\lambda) + \nabla \log p(c \mid z_\lambda).
+$$
+
+Classifier guidance multiplies the classifier term by a weight. Applied to a
+conditional model with weight $w$, as in Ho and Salimans, the guided prediction
+is
+
+$$
+\tilde\epsilon(z_\lambda, c) = \epsilon_\theta(z_\lambda, c) - w\, \sigma_\lambda\, \nabla \log p_\phi(c \mid z_\lambda)
+\approx -\sigma_\lambda\, \nabla\big[\log p(z_\lambda \mid c) + w \log p_\phi(c \mid z_\lambda)\big],
+$$
+
+which is the scaled score of $\tilde p(z_\lambda \mid c) \propto p(z_\lambda \mid c)\, p_\phi(c \mid z_\lambda)^{w}$.
+
+### Removing the classifier
+
+The trick in CFG is that a conditional and an unconditional model together
+already define a classifier, through Bayes' rule in the other direction:
+
+$$
+p^{i}(c \mid z_\lambda) \propto \frac{p(z_\lambda \mid c)}{p(z_\lambda)},
+$$
+
+so its gradient needs no extra network:
+
+$$
+\nabla \log p^{i}(c \mid z_\lambda) = \nabla \log p(z_\lambda \mid c) - \nabla \log p(z_\lambda)
+= -\frac{1}{\sigma_\lambda}\big[\epsilon^*(z_\lambda, c) - \epsilon^*(z_\lambda)\big].
+$$
+
+Plug this "implicit classifier" into the classifier-guidance formula in place of
+$p_\phi$, and use the network's predictions for the exact ones:
+
+$$
+\tilde\epsilon(z_\lambda, c)
+= \epsilon_\theta(z_\lambda, c) + w\big[\epsilon_\theta(z_\lambda, c) - \epsilon_\theta(z_\lambda, \varnothing)\big]
+= (1+w)\, \epsilon_\theta(z_\lambda, c) - w\, \epsilon_\theta(z_\lambda, \varnothing).
+$$
+
+That is the formula from the previous section. One network supplies both terms
+because the condition is replaced by $\varnothing$ with probability
+$p_{\text{uncond}}$ during training (the `puncond` argument in the training
+loop below).
+
+### Which distribution it targets
+
+In score form, the guided prediction corresponds to
+
+$$
+\nabla \log p(z_\lambda \mid c) + w\, \nabla \log p^{i}(c \mid z_\lambda)
+= \nabla \log p(z_\lambda) + (1+w)\, \nabla \log p^{i}(c \mid z_\lambda),
+$$
+
+so at each noise level it is the score of the tilted density
+
+$$
+\tilde p_w(z_\lambda \mid c) \;\propto\; p(z_\lambda)\, p(c \mid z_\lambda)^{1+w}
+\;\propto\; p(z_\lambda \mid c)^{1+w}\, p(z_\lambda)^{-w}.
+$$
+
+**A note on conventions, since this trips people up.** In this post (and in Ho
+and Salimans), $w = 0$ means plain conditional sampling with no guidance, and
+the classifier exponent is $1 + w$. Many codebases, Stable Diffusion
+among them, write the same thing as
+$\tilde\epsilon = \epsilon_\theta(z, \varnothing) + s\,[\epsilon_\theta(z, c) - \epsilon_\theta(z, \varnothing)]$
+with a "guidance scale" $s = 1 + w$. There $s = 1$ means no guidance, and a
+typical $s = 7.5$ corresponds to $w = 6.5$ here.
+
+There is an important caveat. The tilted density is defined
+separately at every noise level, and the family
+$\{\tilde p_w(z_\lambda \mid c)\}_\lambda$ is in general *not* the set of noised
+marginals of a single clean distribution $p(x)\, p(c \mid x)^{1+w}$. Also, the
+difference $\epsilon_\theta(z, c) - \epsilon_\theta(z, \varnothing)$ need not be the
+gradient of any actual classifier. So "CFG samples from
+$p(x)\, p(c \mid x)^{1+w}$" is the right intuition but only an approximation. In
+practice it is a very effective heuristic, not an exact sampler.
+
+### Why large $w$ kills diversity
+
+The exponent $1 + w$ acts as an inverse temperature on the implicit classifier.
+As $w$ grows, $\tilde p_w$ puts more and more of its mass where $p(c \mid z)$ is
+largest. It rewards the inputs that are most unambiguously class $c$, not the
+typical ones. You can see this exactly in a one-dimensional Gaussian toy. Take
+$p(x \mid c) = \mathcal{N}(\mu_c, s^2)$ and an unconditional
+$p(x) = \mathcal{N}(0, s_0^2)$ that is broader, $s_0 > s$, as it typically is since it
+mixes all classes. Then $p(x \mid c)^{1+w} p(x)^{-w}$ is again Gaussian, and
+collecting the quadratic and linear terms in the exponent gives
+
+$$
+\tilde s_w^2 = \Big(\frac{1+w}{s^2} - \frac{w}{s_0^2}\Big)^{-1},
+\qquad
+\tilde\mu_w = \tilde s_w^2\, \frac{(1+w)\,\mu_c}{s^2}.
+$$
+
+The variance $\tilde s_w^2$ decreases monotonically in $w$ and goes to zero
+like $\frac{s^2}{w\,(1 - s^2/s_0^2)}$, so samples collapse onto a point. The
+mean does not stay at $\mu_c$. It is pushed away from the unconditional mean
+towards $\mu_c\, s_0^2/(s_0^2 - s^2)$, past the class centre. These two effects are
+the low-diversity and oversaturated "too much of the class" look that
+large guidance weights produce on images. That is the fidelity versus diversity
+trade-off (FID against Inception Score) that Ho and Salimans sweep over $w$.
+
 ## Implementation: A Complete Example
 
 Let's implement classifier-free guidance for a diffusion model from 
@@ -230,4 +368,8 @@ Our implementation includes several key improvements over the basic version:
    - More stable DDIM-like stepping procedure
    - Better handling of batch dimensions
 
+## References
 
+- Prafulla Dhariwal, Alex Nichol. [Diffusion Models Beat GANs on Image Synthesis](https://arxiv.org/abs/2105.05233). NeurIPS 2021.
+- Jonathan Ho, Tim Salimans. [Classifier-Free Diffusion Guidance](https://arxiv.org/abs/2207.12598). 2022.
+- Yang Song, Jascha Sohl-Dickstein, Diederik P. Kingma, Abhishek Kumar, Stefano Ermon, Ben Poole. [Score-Based Generative Modeling through Stochastic Differential Equations](https://arxiv.org/abs/2011.13456). ICLR 2021.
