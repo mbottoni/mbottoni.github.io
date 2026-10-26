@@ -7,6 +7,15 @@ Hello. It has been a while since I lasted programed
 with OpenMP and C. For refreshing my mind and keeping
 the concepts clear I was doing some tests with the
 Mandelbrot Set with OpenMP and with a single thread.
+
+Before the C code, here is the same escape-time loop running live, with every
+pixel computed in parallel by your GPU instead of by OpenMP threads. Drag and
+zoom around, and try the Julia mode.
+
+{cap="The Mandelbrot set rendered by a WebGL fragment shader, one shader invocation per pixel, iterating z ← z² + c up to the iteration cap with bailout |z| > 256. Colour is the continuous escape count n + 1 − log₂ log|zₙ|, which removes the banding of integer counts. In Julia mode c is fixed and z₀ is the pixel; c follows the mouse, read through the Mandelbrot view shown in the inset. The shader computes in float32, so somewhere around 10⁴–10⁵× zoom neighbouring pixels collapse onto the same float and the image turns blocky; the widget warns when you get there. Without WebGL it falls back to a slower float64 2-D canvas."}
+::: widget-mandelbrot
+:::
+
 Here is the code for both cases:
 
 ## Baseline
