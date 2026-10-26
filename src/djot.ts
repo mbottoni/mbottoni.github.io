@@ -476,13 +476,19 @@ function extract_math(source: string): {
   replace(/(?<!\\)\\\((.+?)(?<!\\)\\\)/g, "\\(", "\\)", false);
   replace(/(?<!\\)\$(?!\$)([^\n]+?)(?<!\\)\$(?!\$)/g, "$", "$", false);
 
-  text = text.replace(/\\\$/g, "$");
+  // A literal `\$` must not survive as a bare `$`, or KaTeX auto-render pairs
+  // it with the next one. Swap in a token that inject_math turns into a span:
+  // auto-render only scans runs of adjacent text nodes, so the element
+  // boundary isolates the sign.
+  text = text.replace(/\\\$/g, DOLLAR_TOKEN);
 
   return { text, math };
 }
 
+const DOLLAR_TOKEN = "DOLLARPHXX";
+
 function inject_math(html: string, math: MathPlaceholder[]): string {
-  let result = html;
+  let result = html.split(DOLLAR_TOKEN).join('<span class="dollar">$</span>');
   for (const placeholder of math) {
     const chunk = `${placeholder.open}${escape_html(placeholder.content)}${placeholder.close}`;
     result = result.split(placeholder.token).join(chunk);
