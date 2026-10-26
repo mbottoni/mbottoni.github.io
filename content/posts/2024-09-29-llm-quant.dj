@@ -27,6 +27,15 @@ uses calibration datasets to determine optimal scaling factors and zero-points f
 impact on model accuracy. Methods like symmetric and asymmetric quantization, per-channel scaling, and weight 
 clustering are employed to enhance performance.
 
+The difference between these choices is easiest to see on an actual tensor.
+Below I quantize a small synthetic weight matrix for real and measure what the
+round trip costs. Turn on the outlier channels and leave it per-tensor to see
+why a single absmax scale is not enough for LLMs.
+
+{cap="A 64 × 128 Laplace-distributed weight matrix quantized to int8, int4 or NF4 (the 16 NormalFloat code values from QLoRA), with absmax or zero-point mapping and one scale per tensor, per output channel, or per group of input weights. The grey histogram is the whole tensor, blue is the selected group, and red ticks are that group's quantization levels, taller where more weights landed. SQNR (bulk) leaves out the outlier rows. Bits per weight include an fp16 scale (and zero point) per group. Click the error map to inspect a different group."}
+::: widget-quantization
+:::
+
 **Quantization-Aware Training (QAT):** QAT integrates quantization operations into the training process. By simulating low-precision 
 arithmetic during forward and backward passes, the model learns to compensate for quantization errors. This results in weights 
 and activations that are more robust to precision loss, thereby preserving accuracy post-quantization.
