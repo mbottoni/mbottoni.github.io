@@ -9,6 +9,7 @@ import { news } from "./news.ts";
 import { resolveTags, tagSlug } from "./tags.ts";
 import { resolveSeries, type SeriesMembership, validateSeries } from "./series.ts";
 import { resolveRef } from "./refs.ts";
+import { resolvePrereqs, validatePrereqs } from "./prereqs.ts";
 
 async function main() {
   const params = {
@@ -195,6 +196,12 @@ async function build(params: {
     tags: post.tags,
   }));
   await update_file("out/res/search.json", JSON.stringify(search_index));
+
+  // Concept map: the page renders a no-JS edge list; content/js/map.js
+  // fetches the JSON payload and draws the interactive graph.
+  const map = compute_map(posts);
+  await update_file("out/res/map.html", templates.map_page(map).value);
+  await update_file("out/res/map.json", JSON.stringify(map));
   const nav = compute_nav(posts);
   for (const post of posts) {
     await update_file(
@@ -285,18 +292,25 @@ export type Post = {
 };
 
 // Cross-post navigation computed once all posts are known: chronological
-// neighbours, the neighbours within the same theme, and tag-similar posts.
+// neighbours, the neighbours within the same theme, tag-similar posts, and
+// the prerequisite edges from src/prereqs.ts.
 export type PostNav = {
   newer?: Post;
   older?: Post;
   themeNewer?: Post;
   themeOlder?: Post;
   related: Post[];
+  before: Post[];
+  after: Post[];
 };
+
+const post_stem = (p: Post) =>
+  `${p.year}-${pad(p.month)}-${pad(p.day)}-${p.slug}`;
 
 export function compute_nav(posts: Post[]): Map<string, PostNav> {
   // `posts` is sorted newest first.
   const nav = new Map<string, PostNav>();
+  const edges = resolvePrereqs(posts, post_stem, (p) => p.slug);
   for (let i = 0; i < posts.length; i++) {
     const post = posts[i];
     const sameTheme = posts.filter((p) => p.theme.key === post.theme.key);
@@ -323,9 +337,98 @@ export function compute_nav(posts: Post[]): Map<string, PostNav> {
       themeNewer: sameTheme[j - 1],
       themeOlder: sameTheme[j + 1],
       related,
+      before: edges.filter(([, b]) => b === post).map(([a]) => a),
+      after: edges.filter(([a]) => a === post).map(([, b]) => b),
     });
   }
   return nav;
+}
+
+// Concept map payload (/map.json). Nodes are posts; edges are typed so the
+// page can weight them: explicit prerequisites, consecutive series parts, and
+// pairs of otherwise-unlinked posts that share a tag.
+export type MapNode = {
+  id: string;
+  title: string;
+  url: string;
+  theme: string;
+  tags: string[];
+  date: string;
+  readingTime: number;
+};
+
+export type MapEdge = {
+  source: string;
+  target: string;
+  type: "prereq" | "series" | "tag";
+  tags?: string[];
+};
+
+export type MapData = {
+  themes: { key: string; title: string; path: string }[];
+  nodes: MapNode[];
+  edges: MapEdge[];
+};
+
+export function compute_map(posts: Post[]): MapData {
+  // Oldest first, so ids and fallback lists read in publication order.
+  const ordered = [...posts].reverse();
+  const nodes = ordered.map((p) => ({
+    id: post_stem(p),
+    title: p.title,
+    url: p.path,
+    theme: p.theme.key,
+    tags: p.tags,
+    date: p.date.toISOString().slice(0, 10),
+    readingTime: p.readingTime,
+  }));
+
+  const edges: MapEdge[] = [];
+  const linked = new Set<string>();
+  const pair = (a: Post, b: Post) => [post_stem(a), post_stem(b)].sort().join(" ");
+  for (const [a, b] of resolvePrereqs(ordered, post_stem, (p) => p.slug)) {
+    edges.push({ source: post_stem(a), target: post_stem(b), type: "prereq" });
+    linked.add(pair(a, b));
+  }
+  const seriesParts = new Map<string, Post[]>();
+  for (const p of ordered) {
+    if (!p.series) continue;
+    const list = seriesParts.get(p.series.series.key) ?? [];
+    list.push(p);
+    seriesParts.set(p.series.series.key, list);
+  }
+  for (const parts of seriesParts.values()) {
+    parts.sort((a, b) => a.series!.index - b.series!.index);
+    for (let i = 1; i < parts.length; i++) {
+      if (linked.has(pair(parts[i - 1], parts[i]))) continue;
+      edges.push({
+        source: post_stem(parts[i - 1]),
+        target: post_stem(parts[i]),
+        type: "series",
+      });
+      linked.add(pair(parts[i - 1], parts[i]));
+    }
+  }
+  for (let i = 0; i < ordered.length; i++) {
+    for (let j = i + 1; j < ordered.length; j++) {
+      const [a, b] = [ordered[i], ordered[j]];
+      if (linked.has(pair(a, b))) continue;
+      const shared = a.tags.filter((t) => b.tags.includes(t));
+      if (shared.length === 0) continue;
+      edges.push({
+        source: post_stem(a),
+        target: post_stem(b),
+        type: "tag",
+        tags: shared,
+      });
+    }
+  }
+
+  return {
+    themes: themes.map((t) => ({ key: t.key, title: t.title, path: t.path })),
+    nodes,
+    edges,
+  };
 }
 
 async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
@@ -410,10 +513,10 @@ async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
   }
   posts.sort((l, r) => l.path < r.path ? 1 : -1);
   if (filter === "") {
-    validateSeries(
-      posts.map((p) => `${p.year}-${pad(p.month)}-${pad(p.day)}-${p.slug}`),
-      posts.map((p) => p.slug),
-    );
+    const stems = posts.map(post_stem);
+    const slugs = posts.map((p) => p.slug);
+    validateSeries(stems, slugs);
+    validatePrereqs(stems, slugs);
   }
   ctx.collect_ms = performance.now() - start;
   return posts;

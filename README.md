@@ -41,6 +41,22 @@ with a "References" list whose entries link back to the first citation. The buil
 fails if a post cites a key that is not in `src/refs.ts`. Copy author names and IDs
 from the paper's arXiv page rather than from memory.
 
+## Concept Map and Prerequisites
+
+`src/prereqs.ts` lists "read A before B" edges between posts, using the same refs as
+series (slug, or full `YYYY-MM-DD-slug` stem when ambiguous). Each post page renders a
+"Before reading this" line under the series box and a "Read next" line above the related
+posts. The build fails on an unknown or ambiguous ref, a self-edge, or a cycle.
+
+The same edges feed `/map.html`, an interactive force-directed graph of every post:
+nodes are coloured by theme and sized by reading time; arrows are prerequisites, dashed
+lines join consecutive series parts, and faint lines (off by default) join posts that
+share a tag. Hover highlights neighbours, click opens a post (tap once to select on
+touch screens), drag moves a node, and scroll / pinch / the corner buttons zoom. The
+build writes the graph to `/map.json`; `content/js/map.js` draws it with no external
+libraries and is loaded only on that page. The page also renders the prerequisites as a
+plain list, which is what screen readers and no-JS visitors get.
+
 ## Comments
 
 Post pages embed [giscus](https://giscus.app) threads backed by GitHub Discussions
