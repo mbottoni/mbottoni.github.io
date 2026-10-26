@@ -6,6 +6,16 @@
 In summary, flow matching is a generative modeling technique that provides 
 an elegant way to transform data distributions.
 
+To make that concrete before the code, here is a flow running in the page: a
+Gaussian carried onto two moons. Nothing is trained; for a finite set of pairs
+the marginal velocity field has a closed form, so what you see is the exact
+flow, and the only thing that changes between the three options is how the
+noise and data points are paired and which path connects them.
+
+{cap="Flow matching with exact marginal velocities, from N(0, I) to 256 target points. Independent: the straight path xₜ = (1−t)x₀ + t x₁ with x₀ and x₁ independent; conditioning on x₁ = bⱼ gives N(t bⱼ, (1−t)²I), so uₜ(x) is the posterior-weighted average of (bⱼ − x)/(1−t), in closed form. VP diffusion: the same construction on the path sin(πt/2)x₁ + cos(πt/2)x₀. Minibatch OT: noise and data are paired by an exact assignment (Hungarian algorithm) inside each minibatch, and batch 256 is exact OT on the whole sample. That coupling has no closed form for a continuous source, so each of its 256 pairs is widened into a Gaussian tube of width 0.15(1−t) (a kernel estimate of the coupling) and the marginal velocity of that mixture is computed exactly. Orange lines are the ODE solved with RK4 (120 steps); dashed lines and rings are Euler with n steps. Straightness is chord over arc length (1 = straight); Euler error is the mean endpoint distance to the RK4 solution; →data is the mean distance from an endpoint to the nearest target point."}
+::: widget-flow-matching
+:::
+
 ```python
 
 import numpy as np
