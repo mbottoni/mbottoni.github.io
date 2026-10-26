@@ -1,5 +1,6 @@
 import { highlight } from "./highlight.ts";
 import { HtmlString, time } from "./templates.ts";
+import { formatAuthors, formatRef, refLink, resolveRef } from "./refs.ts";
 
 import * as djot from "djot";
 import {
@@ -49,7 +50,14 @@ type RenderCtx = {
   // Set when the document contains a `{.run}` code block, so the page can
   // load the in-browser runner script.
   runnable?: boolean;
+  // Keys cited with `[@key]`, in order of first use; a key's citation number
+  // is its index + 1. Only set for posts, so other pages leave `[@` alone.
+  citations?: string[];
 };
+
+// `[@key]` or `[@a; @b]`. Djot leaves an unmatched `[...]` as plain text, so
+// citations arrive inside `str` nodes and never inside code or math.
+const CITE_RE = /\[(@[\w:-]+(?:\s*;\s*@[\w:-]+)*)\]/g;
 
 const RUNNABLE_LANGS: Record<string, string> = {
   python: "python",
@@ -137,7 +145,9 @@ ${r.renderChildren(node)}
 `;
       }
       const result = r.renderAstNodeDefault(node);
-      if (!ctx.summary) ctx.summary = get_string_content(node);
+      if (!ctx.summary) {
+        ctx.summary = get_string_content(node).replace(/ ?\[@[^\]]*\]/g, "");
+      }
       return result;
     },
     block_quote: (node: BlockQuote, r: djot.HTMLRenderer) => {
@@ -310,6 +320,9 @@ ${pre}
       if (has_class(node, "dfn")) {
         return `<dfn>${node.text}</dfn>`;
       }
+      if (ctx.citations && node.text.includes("[@")) {
+        return render_citations(node.text, ctx.citations);
+      }
       return r.renderAstNodeDefault(node)
     },
     url: (node: Url, r: djot.HTMLRenderer) => {
@@ -318,8 +331,63 @@ ${pre}
     },
   };
 
-  const result = djot.renderHTML(doc, { overrides });
+  let result = djot.renderHTML(doc, { overrides });
+  if (ctx.citations?.length) result += render_references(ctx.citations);
   return new HtmlString(inject_math(result, math));
+}
+
+// Replaces each `[@...]` in a text run with superscript links to the
+// reference list. Only the first marker for a key is the back-link target.
+function render_citations(text: string, citations: string[]): string {
+  let out = "";
+  let last = 0;
+  for (const m of text.matchAll(CITE_RE)) {
+    // `al. [@x]` reads naturally in source; the superscript hugs the word.
+    out += escape_html(text.slice(last, m.index).replace(/ +$/, ""));
+    last = m.index! + m[0].length;
+    const links = m[1].split(";").map((it) => {
+      const key = it.trim().slice(1);
+      let n = citations.indexOf(key) + 1;
+      const first = n === 0;
+      if (first) n = citations.push(key);
+      const ref = resolveRef(key);
+      const title = ref ? ` title="${escape_html(formatRef(ref))}"` : "";
+      const id = first ? ` id="cite-${n}"` : "";
+      return `<a${id} href="#ref-${n}"${title}>${n}</a>`;
+    });
+    out += `<sup class="cite">[${links.join(", ")}]</sup>`;
+  }
+  const rest = text.slice(last);
+  if (rest.includes("[@")) {
+    throw new Error(`malformed citation: ${JSON.stringify(text)}`);
+  }
+  return out + escape_html(rest);
+}
+
+// Unknown keys render as "?" here; main.ts fails the build on them.
+function render_references(citations: string[]): string {
+  const items = citations.map((key, i) => {
+    const n = i + 1;
+    const ref = resolveRef(key);
+    if (!ref) return `<li id="ref-${n}">?</li>`;
+    const link = refLink(ref);
+    const href = link
+      ? ` <a href="${escape_html(link.href)}">${escape_html(link.label)}</a>.`
+      : "";
+    const back =
+      `<a class="ref-back" href="#cite-${n}" aria-label="Back to citation ${n}">↩</a>`;
+    return `<li id="ref-${n}">${escape_html(formatAuthors(ref.authors))} ` +
+      `<cite>${escape_html(ref.title)}</cite>. ` +
+      `${escape_html(ref.venue)}, ${ref.year}.${href} ${back}</li>`;
+  });
+  return `
+<section class="references" id="references">
+<h2><a href="#references">References</a></h2>
+<ol>
+${items.join("\n")}
+</ol>
+</section>
+`;
 }
 
 type AstTag = AstNode["tag"];
@@ -408,13 +476,19 @@ function extract_math(source: string): {
   replace(/(?<!\\)\\\((.+?)(?<!\\)\\\)/g, "\\(", "\\)", false);
   replace(/(?<!\\)\$(?!\$)([^\n]+?)(?<!\\)\$(?!\$)/g, "$", "$", false);
 
-  text = text.replace(/\\\$/g, "$");
+  // A literal `\$` must not survive as a bare `$`, or KaTeX auto-render pairs
+  // it with the next one. Swap in a token that inject_math turns into a span:
+  // auto-render only scans runs of adjacent text nodes, so the element
+  // boundary isolates the sign.
+  text = text.replace(/\\\$/g, DOLLAR_TOKEN);
 
   return { text, math };
 }
 
+const DOLLAR_TOKEN = "DOLLARPHXX";
+
 function inject_math(html: string, math: MathPlaceholder[]): string {
-  let result = html;
+  let result = html.split(DOLLAR_TOKEN).join('<span class="dollar">$</span>');
   for (const placeholder of math) {
     const chunk = `${placeholder.open}${escape_html(placeholder.content)}${placeholder.close}`;
     result = result.split(placeholder.token).join(chunk);

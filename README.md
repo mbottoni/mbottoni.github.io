@@ -25,6 +25,22 @@ reading order; every listed post renders a "Part N of M" box linking to the othe
 Refer to posts by slug, or by the full `YYYY-MM-DD-slug` stem when two posts share a
 slug. The build fails if a series references an unknown or ambiguous post.
 
+## Citations
+
+Cite papers in a post with `[@key]`, or `[@a; @b]` for several at once (keep a
+citation on one line):
+
+```
+Frankle and Carbin [@frankle2019] showed that ...
+```
+
+Entries live in `src/refs.ts`, each with a key, authors, title, year, venue and an
+optional arXiv ID, DOI or URL. Citations render as numbered superscripts `[1]` in
+order of first use, with the full reference as a hover tooltip, and the post ends
+with a "References" list whose entries link back to the first citation. The build
+fails if a post cites a key that is not in `src/refs.ts`. Copy author names and IDs
+from the paper's arXiv page rather than from memory.
+
 ## Concept Map and Prerequisites
 
 `src/prereqs.ts` lists "read A before B" edges between posts, using the same refs as

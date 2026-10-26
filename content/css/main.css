@@ -896,6 +896,20 @@ figure.code-block.runnable .run-output {
 figure.code-block.runnable .run-output .run-stderr { color: var(--accent); }
 
 /* ============================================================
+   Citations + references
+   ============================================================ */
+sup.cite { font-size: 0.75em; white-space: nowrap; }
+sup.cite a { text-decoration: none; }
+.references { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.references h2 { font-size: 1.1rem; margin: 0 0 0.75rem; }
+.references h2 a { color: inherit; text-decoration: none; }
+.references ol { padding-left: 1.6rem; font-size: 0.9em; }
+.references li { margin: 0.35rem 0; }
+.references li:target { background: var(--block-bg); }
+.references .ref-back { margin-left: 0.3ch; color: var(--muted); text-decoration: none; }
+.references .ref-back:hover { color: var(--accent); }
+
+/* ============================================================
    Concept map (/map.html) + prerequisite lines on posts
    ============================================================ */
 :root {

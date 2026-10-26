@@ -1,15 +1,450 @@
 
-# Kolmogorov-Arnold Networks 
+# Kolmogorov-Arnold Networks
 [colab]: https://colab.research.google.com/drive/1N9gmXIGNU-lRnyaCCMwCNab4AQu5NnUF?usp=sharing
 
 ![](/assets/frontier/kan.png)
 
-I have been playing with some implementations of Kolmogorov-Arnold Networks.
-Here is an easy implementation for anyone who wants to try it out.
+I have been playing with some implementations of Kolmogorov-Arnold Networks
+(KANs), the architecture Liu et al. proposed in April 2024. The pitch is
+simple and a bit provocative: take an MLP, move the nonlinearities from the
+nodes to the edges, and make them _learnable_. Every weight becomes a small
+univariate function, parameterized as a spline. The paper claimed better
+accuracy per parameter than MLPs, faster neural scaling laws, and networks you
+can read off as symbolic formulas.
 
-In general, the promising ideas showed on the original paper are not 
-so easy to replicate. I personally believe that KAN's are a promising
-research direction, but maybe the hype on the original paper created 
-an unrealistic expectation on the capabilities of KAN's for now.
+In general, the promising ideas shown in the original paper are not
+so easy to replicate. I personally believe that KANs are a promising
+research direction, but the hype around the original paper created
+an unrealistic expectation of what KANs can do for now.
 
-For more details here is the colab where I implemented the models [Link to code][colab]
+In this post I want to go through the whole thing properly: the theorem the
+name comes from, how the architecture relaxes it, how the B-spline edges
+actually work (with a widget you can drag), a from-scratch KAN in NumPy that
+runs in your browser against an MLP, and finally where I think KANs stand.
+For the original exploration, here is the colab where I implemented the
+models [Link to code][colab].
+
+---
+
+## The Kolmogorov-Arnold representation theorem
+
+In 1957 Kolmogorov, building on work by his student Arnold on Hilbert's
+13th problem, proved a remarkable statement about continuous functions of
+several variables.
+
+**Theorem (Kolmogorov-Arnold).** Let $f : [0,1]^n \to \mathbb{R}$ be
+continuous. Then there exist continuous univariate functions
+$\phi_{q,p} : [0,1] \to \mathbb{R}$ and $\Phi_q : \mathbb{R} \to \mathbb{R}$
+such that
+
+$$
+f(x_1, \dots, x_n) = \sum_{q=0}^{2n} \Phi_q\left( \sum_{p=1}^{n} \phi_{q,p}(x_p) \right).
+$$
+
+Moreover, the inner functions $\phi_{q,p}$ can be chosen once and for all,
+independently of $f$. Only the outer functions $\Phi_q$ depend on the target.
+
+Read that again, because it is strange. Every continuous multivariate function
+is a finite composition of univariate functions and addition. The only truly
+"multivariate" operation you ever need is $+$. In some sense, there are no
+genuinely multivariate continuous functions.
+
+So why didn't this become the foundation of neural networks decades ago?
+Because the catch is in the regularity. The inner functions guaranteed by the
+theorem can be extremely rough, fractal-like objects. They are not
+something you can learn with gradient descent or even write down nicely.
+Girosi and Poggio made exactly this argument in 1989, in a paper whose
+title is the whole argument: _Kolmogorov's theorem is irrelevant_. For decades
+that was the consensus.
+
+### How KANs relax the theorem
+
+The theorem has a fixed shape: $n$ inputs, a hidden layer of $2n+1$ sums,
+one output, and depth two. Liu et al. read this as a two-layer network,
+$[n, 2n+1, 1]$, where every _edge_ carries a univariate function and every
+_node_ just sums its inputs. Then they do the deep learning thing: forget
+about the exact shape and stack such layers, as wide and as deep as you like.
+
+A KAN layer with $n_l$ inputs and $n_{l+1}$ outputs is a
+matrix of $n_l \times n_{l+1}$ learnable functions
+$\phi_{j,i}$:
+
+$$
+x^{(l+1)}_j = \sum_{i=1}^{n_l} \phi^{(l)}_{j,i}\left(x^{(l)}_i\right),
+\qquad
+\text{KAN}(x) = \left(\Phi^{(L-1)} \circ \cdots \circ \Phi^{(1)} \circ \Phi^{(0)}\right)(x).
+$$
+
+Compare this with an MLP layer:
+
+$$
+x^{(l+1)} = \sigma\left(W^{(l)} x^{(l)} + b^{(l)}\right).
+$$
+
+In an MLP the edges are scalars, linear and learnable, while the nonlinearity
+$\sigma$ sits on the nodes and is _fixed_. In a KAN the edges are nonlinear and
+learnable, and the nodes only add. The bet is that with deep stacks you no
+longer need the pathological inner functions of the original theorem, and that
+smooth functions with compositional structure get _smooth_ KAN
+representations. That bet is a heuristic, not a theorem. The paper does prove
+an approximation bound, but it assumes the target already has a smooth
+KAN representation.
+
+A small observation that helped me: since every $\phi$ is a linear
+combination of fixed basis functions (next section), a KAN layer is a linear
+layer acting on a _fixed per-input feature expansion_
+$x_i \mapsto (B_0(x_i), \dots, B_{G+k-1}(x_i))$. The learnable part is still
+just a matrix. That is why the implementation below is mostly `einsum`.
+
+---
+
+## B-spline edges
+
+Each edge function is parameterized as
+
+$$
+\phi(x) = w_b \, \text{silu}(x) + \sum_{m=0}^{G+k-1} c_m B_m(x),
+\qquad
+\text{silu}(x) = \frac{x}{1 + e^{-x}}.
+$$
+
+The **grid** is a set of $G$ equal intervals on the expected input range, say
+$[-1, 1]$, with knots $t_0 < t_1 < \dots$ spaced $h = 2/G$ apart. The grid is
+extended by $k$ extra knots on each side, so that every point of $[-1,1]$
+is covered by the same number of basis functions.
+
+The **basis functions** $B_m$ are B-splines of order $k$ (the paper uses
+$k = 3$, cubic), defined by the Cox-de Boor recursion:
+
+$$
+B_{m,0}(x) = \begin{cases} 1 & t_m \le x < t_{m+1} \\ 0 & \text{otherwise} \end{cases}
+$$
+
+$$
+B_{m,p}(x) = \frac{x - t_m}{t_{m+p} - t_m} B_{m,p-1}(x)
++ \frac{t_{m+p+1} - x}{t_{m+p+1} - t_{m+1}} B_{m+1,p-1}(x).
+$$
+
+Each $B_{m,k}$ is a piecewise polynomial of degree $k$, nonzero only on the
+$k+1$ intervals $[t_m, t_{m+k+1})$, and on the grid they sum to one. Two
+properties matter for learning. **Local support**: changing $c_m$ only moves
+$\phi$ on those $k+1$ intervals, so different regions of the input are learned
+by different parameters. **Smoothness**: cubic splines are $C^2$, so the
+function and its first two derivatives are continuous and gradients behave.
+
+The **residual base term** $w_b \, \text{silu}(x)$ is the paper's version of a
+skip connection. It gives every edge a reasonable global shape from
+initialization, and it keeps the edge alive outside the grid, where every
+B-spline is zero. The original implementation also has a separate scale $w_s$
+multiplying the spline. That is redundant with the $c_m$, so I fold it in.
+
+**Grid refinement.** A trained spline on a grid of $G$ intervals can be
+transferred to a finer grid of $2G$ intervals by least squares. Because the
+coarse knots are a subset of the fine ones, the coarse spline space is a
+subspace of the fine one, and the transfer is exact on the grid. You can train
+coarse, then refine and keep training with more resolution. The paper calls
+this _grid extension_, and it is one of the genuinely nice ideas in it.
+
+Play with a single edge below. Drag the control points (they sit at the
+_Greville abscissae_, the average of each basis function's interior knots,
+which is where a spline's control polygon naturally lives), change the order,
+add the SiLU term, refine the grid, and fit a target.
+
+{cap="A single learnable KAN edge. The red curve is φ(x), the dashed polygon joins the B-spline coefficients c_m, and the strip below shows the basis functions B_m(x), with the one you are touching highlighted. Shaded regions are outside the grid: there the spline part decays to zero and only the SiLU base term survives. Try Fit sin(4x) at G = 5, then refine and fit again."}
+::: widget-kan-spline
+:::
+
+### Counting parameters
+
+Each edge has $G + k$ spline coefficients plus $w_b$, so a KAN layer has
+
+$$
+n_l \cdot n_{l+1} \cdot (G + k + 1)
+$$
+
+parameters, against $n_l \cdot n_{l+1} + n_{l+1}$ for a dense layer. With
+$G = 5$ and $k = 3$ that is roughly **9 times** more parameters per
+connection. For a stack of $L$ layers of width $N$, a KAN has
+$O(N^2 L (G + k))$ parameters versus $O(N^2 L)$ for an MLP. The whole
+argument of the paper is that KANs need a much smaller $N$ to reach the same
+accuracy, so the comparison only makes sense at _matched parameter count_,
+not matched width. That is what I do below.
+
+Concretely, the $[2, 5, 1]$ KAN in the code has $15$ edges. At $G=5$ that is
+$15 \times 9 = 135$ parameters, and after refining to $G = 10$ it is
+$15 \times 14 = 210$. The MLP I compare against, $[2, 12, 12, 1]$ with tanh,
+has $36 + 156 + 13 = 205$.
+
+---
+
+## A tiny KAN from scratch
+
+Here is a complete KAN in NumPy: the Cox-de Boor basis (and its derivative), a
+`KANLayer` with hand-written backprop, grid updates and refinement by least
+squares, and a plain MLP with the same training loop. The target is the
+example from the paper,
+
+$$
+f(x, y) = \exp\left(\sin(\pi x) + y^2\right),
+$$
+
+which a $[2, 1, 1]$ KAN can represent exactly: inner functions $\sin(\pi x)$
+and $y^2$, with $\exp$ as the outer function. Both models train with full-batch Adam on
+the same 500 points and are evaluated on 2000 fresh ones. A KAN step costs
+about three times an MLP step, so the MLP gets three times as many steps,
+which gives both models roughly the same compute budget. The gradients are
+derived by hand (I checked them against finite differences). Press _Run_. It
+takes about six seconds in the browser.
+
+{.run}
+```python
+import time
+import numpy as np
+
+rng = np.random.default_rng(0)
+
+# ---- data: f(x, y) = exp(sin(pi x) + y^2) on [-1, 1]^2 ----------------------
+def target(X):
+    return np.exp(np.sin(np.pi * X[:, 0]) + X[:, 1] ** 2)[:, None]
+
+Xtr = rng.uniform(-1, 1, (500, 2)); ytr = target(Xtr)
+Xte = rng.uniform(-1, 1, (2000, 2)); yte = target(Xte)
+
+def silu(x):  return x / (1 + np.exp(-x))
+def dsilu(x):
+    s = 1 / (1 + np.exp(-x))
+    return s * (1 + x * (1 - s))
+
+# ---- B-splines (Cox-de Boor), vectorised over samples and inputs ------------
+def knots(lo, hi, G, k):
+    """One uniform grid per input: lo, hi have shape (d,). Returns (d, G+2k+1)."""
+    h = (hi - lo) / G
+    return lo[:, None] + h[:, None] * np.arange(-k, G + k + 1)
+
+def bspline(x, t, k):
+    """x: (N, d). Returns B (N, d, G+k) of order k and B' (its derivative)."""
+    x = x[..., None]
+    B = ((x >= t[:, :-1]) & (x < t[:, 1:])).astype(float)  # order 0
+    for p in range(1, k + 1):
+        if p == k:
+            Bprev = B
+        left = (x - t[:, :-(p + 1)]) / (t[:, p:-1] - t[:, :-(p + 1)])
+        right = (t[:, p + 1:] - x) / (t[:, p + 1:] - t[:, 1:-p])
+        B = left * B[..., :-1] + right * B[..., 1:]
+    a = k / (t[:, k:-1] - t[:, :-(k + 1)])
+    b = k / (t[:, k + 1:] - t[:, 1:-k])
+    dB = a * Bprev[..., :-1] - b * Bprev[..., 1:]
+    return B, dB
+
+class KANLayer:
+    """phi_ij(x) = wb_ij * silu(x) + sum_m c_ijm B_m(x), one per edge i -> j."""
+    def __init__(self, d_in, d_out, G=5, k=3, lo=-1.0, hi=1.0):
+        self.k, self.G = k, G
+        self.t = knots(np.full(d_in, lo), np.full(d_in, hi), G, k)
+        self.p = {
+            "c": rng.normal(0, 0.1, (d_in, d_out, G + k)),
+            "wb": rng.normal(0, 1 / np.sqrt(d_in), (d_in, d_out)),
+        }
+
+    def forward(self, x):
+        if x is not getattr(self, "x", None):    # first layer: input never changes
+            self.B, self.dB = bspline(x, self.t, self.k)
+        self.x = x
+        return silu(x) @ self.p["wb"] + np.einsum("nim,ijm->nj", self.B, self.p["c"])
+
+    def backward(self, g):
+        x = self.x
+        self.g = {
+            "c": np.einsum("nim,nj->ijm", self.B, g),
+            "wb": silu(x).T @ g,
+        }
+        dphi = np.einsum("nim,ijm->nij", self.dB, self.p["c"])
+        return (g @ self.p["wb"].T) * dsilu(x) + np.einsum("nj,nij->ni", g, dphi)
+
+    def regrid(self, x, G):
+        """Grid update / refinement: new grid on the data range, refit by lstsq."""
+        lo, hi = x.min(0), x.max(0)
+        pad = 0.1 * (hi - lo)
+        lo, hi = lo - pad, hi + pad
+        B, _ = bspline(x, self.t, self.k)
+        old = np.einsum("nim,ijm->nij", B, self.p["c"])  # current spline part
+        self.G, self.t = G, knots(lo, hi, G, self.k)
+        self.x = None                             # invalidate cached basis
+        Bn, _ = bspline(x, self.t, self.k)
+        c = np.empty((x.shape[1], old.shape[2], G + self.k))
+        for i in range(x.shape[1]):
+            c[i] = np.linalg.lstsq(Bn[:, i, :], old[:, i, :], rcond=None)[0].T
+        self.p["c"] = c
+
+class Dense:
+    def __init__(self, d_in, d_out, act):
+        self.act = act
+        self.p = {"W": rng.normal(0, 1 / np.sqrt(d_in), (d_in, d_out)),
+                  "b": np.zeros(d_out)}
+    def forward(self, x):
+        self.x = x
+        self.z = x @ self.p["W"] + self.p["b"]
+        return np.tanh(self.z) if self.act else self.z
+    def backward(self, g):
+        if self.act:
+            g = g * (1 - np.tanh(self.z) ** 2)
+        self.g = {"W": self.x.T @ g, "b": g.sum(0)}
+        return g @ self.p["W"].T
+
+def n_params(layers):
+    return sum(v.size for L in layers for v in L.p.values())
+
+def predict(layers, x):
+    for L in layers:
+        x = L.forward(x)
+    return x
+
+def train(layers, steps, lr):
+    """Full-batch Adam on MSE, gradients by hand-written backprop."""
+    m = [{k: np.zeros_like(v) for k, v in L.p.items()} for L in layers]
+    v = [{k: np.zeros_like(v) for k, v in L.p.items()} for L in layers]
+    for s in range(1, steps + 1):
+        err = predict(layers, Xtr) - ytr
+        g = 2 * err / len(Xtr)
+        for L in reversed(layers):
+            g = L.backward(g)
+        for L, mi, vi in zip(layers, m, v):
+            for k in L.p:
+                mi[k] = 0.9 * mi[k] + 0.1 * L.g[k]
+                vi[k] = 0.999 * vi[k] + 0.001 * L.g[k] ** 2
+                mh, vh = mi[k] / (1 - 0.9 ** s), vi[k] / (1 - 0.999 ** s)
+                L.p[k] -= lr * mh / (np.sqrt(vh) + 1e-8)
+
+def mse(layers, X, y):
+    return float(np.mean((predict(layers, X) - y) ** 2))
+
+# ---- KAN [2, 5, 1], cubic splines ------------------------------------------
+kan = [KANLayer(2, 5, G=5), KANLayer(5, 1, G=5)]
+
+p_kan_before = n_params(kan)
+t_kan = time.time()
+# Hidden activations wander outside the second layer's initial [-1, 1] grid,
+# so every few hundred steps that grid is moved onto the range the data
+# actually occupies. Halfway through, both grids are refined G = 5 -> 10 (the
+# paper's "grid extension"). Each regrid refits the splines by least squares.
+for phase in range(8):
+    G = 5 if phase < 4 else 10
+    if phase == 4:
+        kan[0].regrid(Xtr, G)
+    kan[1].regrid(kan[0].forward(Xtr), G)
+    train(kan, 150, 1e-2)
+p_kan = n_params(kan)
+t_kan = time.time() - t_kan
+
+# ---- MLP [2, H, H, 1] with tanh, sized to match the final KAN -------------
+# A KAN step costs about 3x an MLP step, so the MLP gets 3x the steps:
+# roughly the same wall-clock budget for both.
+H = 12
+mlp = [Dense(2, H, True), Dense(H, H, True), Dense(H, 1, False)]
+t_mlp = time.time()
+train(mlp, 3600, 1e-2)
+t_mlp = time.time() - t_mlp
+
+print("target: f(x,y) = exp(sin(pi x) + y^2), 500 train / 2000 test points")
+print(f"KAN [2,5,1]  params {p_kan_before} -> {p_kan} (grid 5 -> 10), 1200 steps"
+      f"   train MSE {mse(kan, Xtr, ytr):.2e}   test MSE {mse(kan, Xte, yte):.2e}   {t_kan:.1f}s")
+print(f"MLP [2,{H},{H},1] params {n_params(mlp)}, 3600 steps"
+      f"                     train MSE {mse(mlp, Xtr, ytr):.2e}   test MSE {mse(mlp, Xte, yte):.2e}   {t_mlp:.1f}s")
+```
+
+When I ran it in Pyodide, it printed:
+
+```
+KAN [2,5,1]  params 135 -> 210 (grid 5 -> 10), 1200 steps   train MSE 2.15e-06   test MSE 7.34e-06   3.0s
+MLP [2,12,12,1] params 205, 3600 steps                     train MSE 1.39e-04   test MSE 3.11e-04   3.0s
+```
+
+(Native NumPy gives the same KAN numbers and an MLP test MSE of
+$3.6 \times 10^{-4}$. The MLP's trajectory is sensitive enough that
+floating-point differences between NumPy builds show up.)
+
+So on this problem the KAN wins by more than an order of magnitude in test MSE
+at roughly the same parameter count and compute. Changing the seed moves the
+numbers around (KAN test MSE between about $7 \times 10^{-6}$ and
+$4 \times 10^{-5}$, MLP between about $3 \times 10^{-4}$ and
+$3 \times 10^{-3}$), but not the ordering. Widening the MLP to 337
+parameters and training it for 10,000 steps (on 1000 training points) got it to about
+$5 \times 10^{-5}$, which narrows the gap but does not close it. I also tried
+a target without additive structure, $\sin(4xy)/(1+x^2)$, and the KAN still
+came out ahead.
+
+I want to be honest about what this does and doesn't show:
+
+* **This is the KAN's home turf.** A smooth, two-dimensional function that is
+  _literally_ a composition of univariate functions and a sum. It is the
+  paper's own showcase. Low-dimensional smooth regression is where splines
+  have always been excellent, KAN or not.
+* **The KAN needed babysitting.** With a fixed grid, hidden activations drift
+  outside the second layer's grid, where the splines vanish. In an early
+  version of this script, some test points landed outside the grid and test
+  MSE jumped to about $10^2$. The periodic grid updates are not optional
+  decoration.
+* **The KAN is slower.** Each step takes 3 to 4 times as long as an MLP
+  step here, and that is with a vectorized basis on a tiny network. The MLP
+  is a couple of matrix multiplies. At matched width, the KAN's matrix
+  multiply is also $G + k + 1$ times larger, on top of evaluating the basis.
+
+Edit the `target` function and try something without additive structure, or
+add noise to `ytr`. It is the quickest way to form your own opinion.
+
+---
+
+## Where KANs stand
+
+**Interpretability and symbolic regression.** This is the most distinctive
+part of the paper. After training with a sparsity penalty, you prune unused
+edges and look at each remaining $\phi$. If it looks like $\sin$ or $x^2$ or
+$\exp$, you snap it to that symbolic form (fitting an affine
+reparameterization) and continue training. On toy physics and math problems
+this recovers exact formulas, which an MLP cannot give you so directly. The
+follow-up, KAN 2.0, leans fully into this "AI for science" angle. It adds
+multiplication nodes and tools for putting domain knowledge into KANs and
+pulling formulas out. But this is interpretability of small networks on
+low-dimensional, mostly symbolic problems. A KAN with thousands of edges is no
+easier to read than an MLP.
+
+**Fair comparisons.** Yu, Yu and Wang (2024) compared KANs and MLPs at matched
+parameters and FLOPs across machine learning, vision, audio, NLP, and symbolic
+formula tasks. MLPs generally won everywhere _except_ symbolic formula
+representation. Their ablations attribute that advantage mainly to the B-spline
+activation itself, and giving an MLP B-spline activations closed most of
+that gap. They also found that KANs forget _more_ in class-incremental
+continual learning, which contradicts one of the original paper's claims. My
+toy result above is consistent with this: splines are great at smooth
+low-dimensional functions.
+
+**Training cost and speed.** The original paper is upfront that its KANs train
+about 10 times slower than MLPs with the same number of parameters.
+Evaluating a spline basis is not a single fused matrix multiply, and grid
+updates add extra machinery to training. A lot of follow-up work is about
+speed. FastKAN, for example, replaces the cubic B-splines with Gaussian
+radial basis functions (they look very similar) and observes that the result
+is a radial basis function network. That observation is a useful corrective in
+itself: a lot of the KAN design space is old ideas (splines, basis expansions,
+RBF networks, additive models) arranged in a new way.
+
+**My take.** KANs are a genuinely nice idea for small scientific problems where
+you want accuracy on smooth low-dimensional functions _and_ a formula at the
+end. As a general replacement for MLPs, the evidence just isn't there yet, and
+the original framing oversold it. That's fine. A good idea with an oversized
+launch is still a good idea, and I expect the useful parts (learnable
+activations, grid refinement, spline features) to survive in other
+architectures.
+
+---
+
+## References
+
+* Ziming Liu, Yixuan Wang, Sachin Vaidya, Fabian Ruehle, James Halverson, Marin Soljačić, Thomas Y. Hou, Max Tegmark. _KAN: Kolmogorov-Arnold Networks._ 2024. arXiv:2404.19756. <https://arxiv.org/abs/2404.19756>
+* Ziming Liu, Pingchuan Ma, Yixuan Wang, Wojciech Matusik, Max Tegmark. _KAN 2.0: Kolmogorov-Arnold Networks Meet Science._ 2024. arXiv:2408.10205. <https://arxiv.org/abs/2408.10205>
+* Runpeng Yu, Weihao Yu, Xinchao Wang. _KAN or MLP: A Fairer Comparison._ 2024. arXiv:2407.16674. <https://arxiv.org/abs/2407.16674>
+* Ziyao Li. _Kolmogorov-Arnold Networks are Radial Basis Function Networks._ 2024. arXiv:2405.06721. <https://arxiv.org/abs/2405.06721>
+* Johannes Schmidt-Hieber. _The Kolmogorov-Arnold representation theorem revisited._ 2020. arXiv:2007.15884. <https://arxiv.org/abs/2007.15884>
+* Federico Girosi, Tomaso Poggio. _Representation Properties of Networks: Kolmogorov's Theorem Is Irrelevant._ Neural Computation 1(4), 1989.
+* Andrey N. Kolmogorov. _On the representation of continuous functions of many variables by superposition of continuous functions of one variable and addition._ Doklady Akademii Nauk SSSR 114, 1957.
+* Carl de Boor. _A Practical Guide to Splines._ Springer, 1978.

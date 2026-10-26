@@ -47,6 +47,16 @@ signals from severely incomplete measurements. In fact, the findings presented i
 our previous work. At the heart of this successful approach is a fundamental principle we term the uniform uncertainty
 principle, which we will explore in detail.
 
+To get a feel for how far this goes, here is the whole experiment running in
+the browser. A random 32-dimensional message is encoded with a Gaussian matrix,
+some of the measurements are overwritten with arbitrary errors, and the
+decoder solves the ℓ₁ problem exactly as in the paper. Push the corruption up
+until it breaks, then run the phase transition to see the threshold.
+
+{cap="Decoding by linear programming with n = 32 and m = 1.5n to 4n Gaussian measurements. The decoder solves min ‖y − Ag‖₁ (an LP, solved here with ADMM to 1e-9 tolerance); least squares is shown for contrast. The size of the errors does not matter to the ℓ₁ decoder, only how many there are. The phase-transition plot solves 420 fresh random instances per redundancy level."}
+::: widget-decoding
+:::
+
 I find this idea very ellegant because it solve fundamental problem in a very simple and efficient way. For more details
 regarding the mathematical aspects of the idea you can find on the original paper linked above. Here is the implementation
 and some tests in python of the idea [Github Page](https://github.com/mbottoni/decoding-linear-programming).

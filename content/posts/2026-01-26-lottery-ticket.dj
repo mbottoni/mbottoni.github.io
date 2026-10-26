@@ -3,7 +3,7 @@
 
 ![](/assets/frontier/lottery_ticket.png)
 
-In 2019, Frankle and Carlin published a paper https://arxiv.org/abs/1803.03635 that 
+In 2019, Frankle and Carbin published a paper [@frankle2019] that 
 challenged a fundamental assumption in deep learning: that large, over-parameterized 
 networks are necessary for achieving good performance. They proposed the **Lottery 
 Ticket Hypothesis**, which states that dense, randomly initialized networks contain 
@@ -138,6 +138,14 @@ The same pruning mask with a random reinitialization (orange) degrades earlier,
 and random pruning (red) collapses quickly. This confirms the hypothesis: 
 it is the combination of structure (mask) and initialization that makes a 
 winning ticket.
+
+You can run the experiment yourself below. It's a tiny MLP on a two-arm spiral, so
+everything trains in your browser in a few seconds: iterative magnitude pruning,
+rewinding to $\theta_0$, and the same masks retrained from a fresh random init.
+
+{cap="A 2-24-24-1 ReLU MLP trained full-batch with Adam on 200 spiral points; test accuracy is on 1,000 held-out points. Each round prunes p% of the remaining weights per layer by magnitude (the output layer at p/2), then retrains the survivors from θ₀ (red) and from a fresh random init (blue). Over 12 seeds the gap only appears below about 15% of weights: at 12.7% the rewound ticket averages 93% against 85% for reinit and wins 10 of 12 runs, but above that both are near-perfect, and individual runs are noisy. Click a point on the chart to see that network's decision boundary."}
+::: widget-lottery-ticket
+:::
 
 ---
 
@@ -288,7 +296,7 @@ lottery_ticket_experiment()
 
 ### Late Rewinding
 
-In follow-up work https://arxiv.org/abs/1903.01611, Frankle et al. found 
+In follow-up work, Frankle et al. [@frankle2019stabilizing] found 
 that for deeper networks (ResNets, VGGs), resetting to the exact 
 initialization $\theta_0$ no longer works reliably. Instead, they 
 propose **late rewinding**: resetting to weights at iteration $k$ 

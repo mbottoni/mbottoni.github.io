@@ -3,7 +3,7 @@
 
 ![](/assets/foundations/coin_flip.jpg)
 
-In this paper https://arxiv.org/abs/2601.03220, Finzi et al. argue that classical information theory (Shannon entropy and Kolmogorov complexity) is insufficient for understanding modern 
+In this paper, Finzi et al. [@finzi2026] argue that classical information theory (Shannon entropy and Kolmogorov complexity) is insufficient for understanding modern 
 AI because it assumes an observer with unlimited computational power. Under classical theory, deterministic transformations cannot create new 
 information, yet empirically, processes like self-play (AlphaZero) and synthetic data generation clearly improve model capabilities.
 

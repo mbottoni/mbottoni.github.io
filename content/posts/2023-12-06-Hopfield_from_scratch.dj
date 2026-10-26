@@ -2,106 +2,412 @@
 
 ![](/assets/foundations/meme_stock_res.jpg)
 
-I always wanted to understandt the concept of a universal portfolio
-from Cover's. This topic always fascinated me since I first heard about it
-on my information theory lectures and you know what they say... The best 
-way to learn is to practice. So here's my attempt ...
+I always wanted to understand the concept of a universal portfolio from
+Cover. This topic has fascinated me since I first heard about it in my
+information theory lectures, and you know what they say... the best way to
+learn is to practice. So here's my attempt.
 
-Folowing the words from the original paper from Cover: _We exhibit
-an algorithm that ourperforms the best stock in the market_. For this
-he exhibit as a goal the wealth Sn that will outperform the 
-best stock in the market and will depend on differents weights
-alongside different stock options. This will be an online algorithm,
-this means that the portfolio will be constantly be updated
-and captures distributions shifts and drifst of the market. Besides
-that the algorithm is "model agnostic", in the sense that does not
-depend on the underlying assumption that you make about the statistics
-of the log returns. That's fantastic and seems almost too good to be true.
+Following the words of the original paper: _"We exhibit an algorithm that
+outperforms the best stock in the market"_ (to first order in the exponent, as
+we'll see). The algorithm is online: the portfolio is updated every period from
+what has happened so far, so it follows drifts and shifts of the market. And it
+is _model agnostic_: it makes no assumption at all about the statistics of the
+returns. The guarantee holds for every sequence of prices, including one chosen
+by an adversary. That's fantastic and sounds almost too good to be true, so
+let's see exactly what is being promised and why it holds.
 
 Here is the link to the original paper: [Paper](https://web.mit.edu/6.454/www/www_fall_2001/shaas/universal_portfolios.pdf).
-I'll not be entering on the math behind the paper but here is my bite-sized summary.
-Cover simply proved that, with enough time, with a LOT of time, the rebalancing effect
-across the curve would end up generating an average return across the curve in excess
-of the return of the better single asset.
 
-This is neither a simple "mean-reversion" nor a "momentum" effect. Aĺl of your portfolios
-are mean-reverting; but you're running with their momentum.
+## The setup
 
-The intuition is the arithmetic vs geometric half-variance drag and rebalancing effect. Whatever the
-two assets's true return, vol, and correlation, the rebalancing portfolios will be biased
-to having a better risk-reward than their naked equivalent all across the
-curve. Cover' s insight was proving that letting the winning (rebalancing) portfolios
-run would, in the end, guarantee performance better than the winning
-asset. In the (VERY) long-run.
+There are $m$ assets and $T$ trading periods. All that matters about period
+$t$ is the vector of _price relatives_
 
-If you don't understand the central anomaly here, ask yourself what is the probability that any
-market will be X% up before being X% down? If you want to teĺl me it's a 50:50, then the
-theoretically optimal bet is to stake a quarter of my wealth it's down :-) Yes, that's crazy; but 
-it's not wrong... market doubles or zeroes every day, buy or sell to hold? The
-same is true to diminished degrees with "fair bets" in general.
+$$
+x_t = (x_{t,1}, \dots, x_{t,m}), \qquad x_{t,i} = \frac{p_{t,i}}{p_{t-1,i}} \ge 0,
+$$
 
-Any fair investment, ie zero long-term expected return, therefore has to have
-a (SMALL) positive expected return in the short-term.
+the factor by which asset $i$'s price moves from one close to the next. A
+_portfolio_ is a point of the simplex
+$\Delta_m = \{ b \in \mathbb{R}^m : b_i \ge 0, \ \sum_i b_i = 1 \}$, the
+fraction of current wealth held in each asset. If you hold $b$ during period
+$t$, your wealth is multiplied by $b \cdot x_t = \sum_i b_i x_{t,i}$.
 
-Cover' s "Universal Portfolio" is simply an algorithm that exploits this
-effect it's "proof" is simply that , with infinite time, the rebalancing gains
-across the spectrum of weights will end up surpassing the performance differential
-between the sample assets.
+A _constant-rebalanced portfolio_ (CRP) uses the same $b$ every period. That
+is not buy-and-hold: as prices move the weights drift, and each period you
+trade back to $b$, selling some of what went up and buying some of what went
+down. Starting from one dollar, its wealth after $T$ periods is
 
-That's the logic (and proven, assuming traditional assumptions
-with respect to normality hold true).
-and a pseudocode that implements the main idea:
+$$
+S_T(b) = \prod_{t=1}^{T} b \cdot x_t .
+$$
 
+The vertices of the simplex are CRPs too: $b = e_i$ is simply "hold asset $i$".
+The benchmark is the _best CRP in hindsight_,
+
+$$
+b^* = \arg\max_{b \in \Delta_m} S_T(b), \qquad S_T^* = S_T(b^*) \ \ge\ \max_i S_T(e_i),
+$$
+
+so beating $S_T^*$ means beating the best single stock as well. Of course
+$b^*$ depends on the whole future, so nobody can actually play it. The question
+is how close a strategy that only sees the past can get.
+
+## Volatility pumping: money from assets that go nowhere
+
+The reason rebalancing can beat every stock is the gap between arithmetic and
+geometric growth. Wealth compounds multiplicatively, so what matters is
+$\mathbb{E} \log(b \cdot x)$, and for small log-returns with mean $\mu$ and
+variance $\sigma^2$ the growth rate of a single asset is roughly $\mu$ while
+its arithmetic mean return is $\mu + \sigma^2/2$. That half-variance is drag
+you pay for volatility. Mixing assets and rebalancing reduces the variance of
+the portfolio below that of its components (as long as they are not perfectly
+correlated), so it recovers part of the drag.
+
+The classic example makes this stark. Take cash ($x_{t,1} = 1$ always) and a
+stock that doubles, then halves, then doubles, forever:
+
+$$
+x_1 = (1, 2), \quad x_2 = (1, \tfrac12), \quad x_3 = (1, 2), \quad \dots
+$$
+
+Both assets stagnate: after every pair of periods the stock is back where it
+started, and cash never moves. Now rebalance to half and half. In an up period
+wealth is multiplied by $\tfrac12 \cdot 1 + \tfrac12 \cdot 2 = \tfrac32$, in a
+down period by $\tfrac12 + \tfrac12 \cdot \tfrac12 = \tfrac34$, so every pair of
+periods multiplies wealth by $\tfrac32 \cdot \tfrac34 = \tfrac98$. Over $T$
+periods that is $(9/8)^{T/2}$: exponential growth from two assets that each
+end where they started. More generally, with weight $b$ on the stock, each pair
+of periods gives $(1+b)(1-b/2) = 1 + b/2 - b^2/2$, which is maximised at
+$b^* = \tfrac12$, so $\tfrac98$ is the best a CRP can do here.
+
+This is neither a "mean-reversion" nor a "momentum" bet. Every CRP is
+mean-reverting at the level of trades (it sells winners), but you then let the
+CRPs that happen to suit the market run, which is the momentum part, and that
+is exactly what Cover's algorithm does.
+
+Real data shows the same thing. In Cover's 1991 paper, Iroquois Brands and Kin
+Ark, two volatile NYSE stocks, grew by factors of 8.92 and 4.13 over 22 years
+ending in 1985. The best CRP in hindsight, $b^* = (0.55, 0.45)$, grew by 73.6,
+and the universal portfolio below, which never saw the future, grew by 38.7.
+
+## The universal portfolio
+
+We cannot know $b^*$, but we can hedge over all of them. Put a prior $\mu$ on the
+simplex (uniform, to start with) and at time $t+1$ hold the wealth-weighted
+average of all CRPs:
+
+$$
+\hat b_{t+1} = \frac{\int_{\Delta_m} b \, S_t(b) \, d\mu(b)}{\int_{\Delta_m} S_t(b) \, d\mu(b)}, \qquad \hat b_1 = \int b \, d\mu(b), \qquad S_0 \equiv 1 .
+$$
+
+A CRP's weight is proportional to how much money it has made so far, so this is a
+Bayesian posterior mean, with $S_t(b)$ playing the role of the likelihood. No
+step size, no window, no tuning.
+
+The wealth of this strategy has a closed form. Since
+$\hat b_{t+1} \cdot x_{t+1} = \int S_t(b) \, (b \cdot x_{t+1}) \, d\mu / \int S_t \, d\mu = \int S_{t+1} \, d\mu / \int S_t \, d\mu$,
+the product telescopes:
+
+$$
+\hat S_T = \prod_{t=1}^{T} \hat b_t \cdot x_t = \int_{\Delta_m} S_T(b) \, d\mu(b).
+$$
+
+So the universal portfolio's wealth is _the average wealth of all CRPs_. That
+gives a second, more physical description: split your dollar among a continuum
+of fund managers, manager $b$ getting $d\mu(b)$, let each run CRP $b$ forever,
+and never move money between them. This buy-and-hold over CRPs is the same
+strategy, period by period.
+
+Now the trick is visible. An average is at least as large as the contribution
+of the best region, and $S_T(b)$ grows exponentially, so the average is
+dominated by the CRPs near $b^*$. What we lose is only the prior mass that sits
+close enough to $b^*$, and that turns out to be polynomial in $T$, not
+exponential.
+
+## The regret bound
+
+Define the regret as the log-wealth gap, $R_T = \log S_T^* - \log \hat S_T$.
+
+*Theorem* (Cover and Ordentlich 1996). With the uniform prior on $\Delta_m$,
+for every $T$ and every sequence $x_1, \dots, x_T$,
+
+$$
+\frac{S_T^*}{\hat S_T} \le \binom{T+m-1}{m-1} \le (T+1)^{m-1},
+\qquad\text{so}\qquad
+R_T \le (m-1) \log(T+1).
+$$
+
+The regret grows only logarithmically, so the per-period regret
+$R_T / T \le (m-1)\log(T+1)/T \to 0$: the universal portfolio has the same
+exponential growth rate as the best CRP in hindsight, on every sequence. It
+does not say that $\hat S_T \ge S_T^*$, or even that it beats the best stock in
+any given finite window, only that it falls short by a factor that grows
+polynomially while $S_T^*$ itself can grow exponentially.
+
+### Proof for two assets
+
+Write $b$ for the weight on asset 1, so the prior is uniform on $[0,1]$ and
+$S_T(b) = \prod_t \big(b \, x_{t,1} + (1-b) \, x_{t,2}\big)$. Expand the product:
+choosing one term from each factor gives a sum over all $2^T$ sequences
+$j = (j_1, \dots, j_T) \in \{1,2\}^T$,
+
+$$
+S_T(b) = \sum_{j} b^{k(j)} (1-b)^{T-k(j)} \, x(j), \qquad x(j) = \prod_{t=1}^{T} x_{t, j_t} \ge 0,
+$$
+
+where $k(j)$ is the number of 1s in $j$. Integrating term by term with the beta
+integral $\int_0^1 b^k (1-b)^{T-k} db = \frac{k!\,(T-k)!}{(T+1)!}$,
+
+$$
+\hat S_T = \sum_j x(j) \, \frac{k!\,(T-k)!}{(T+1)!},
+\qquad
+S_T^* = \sum_j x(j) \, (b^*)^{k} (1-b^*)^{T-k}.
+$$
+
+Both are sums of nonnegative terms with the same weights $x(j)$, and a ratio of
+two such sums is at least the smallest termwise ratio (terms whose
+denominator vanishes only help). For each $k$, bound the
+denominator by its maximum over $b$, which is attained at $b = k/T$:
+
+$$
+\begin{aligned}
+\frac{k!\,(T-k)!/(T+1)!}{(b^*)^k (1-b^*)^{T-k}}
+&\ge \frac{k!\,(T-k)!}{(T+1)! \, (k/T)^k \, (1-k/T)^{T-k}} \\
+&= \frac{1}{(T+1) \, \binom{T}{k} \left(\frac{k}{T}\right)^{k} \left(1-\frac{k}{T}\right)^{T-k}}
+\ \ge\ \frac{1}{T+1}.
+\end{aligned}
+$$
+
+The last step is that $\binom{T}{k} p^k (1-p)^{T-k}$ is a binomial probability
+and so at most 1. Hence $\hat S_T \ge S_T^* / (T+1)$, that is $R_T \le \log(T+1)$,
+for every market sequence. $\blacksquare$
+
+For $m$ assets the same argument works: expand into sequences with counts
+$n_1, \dots, n_m$, use the Dirichlet integral
+$\int_{\Delta_m} \prod_i b_i^{n_i} \, d\mu(b) = (m-1)! \prod_i n_i! / (T+m-1)!$,
+and bound a multinomial probability by 1. This gives
+$\binom{T+m-1}{m-1} = \prod_{i=1}^{m-1} \frac{T+i}{i} \le (T+1)^{m-1}$.
+
+The proof shows something else: the bound does not depend on $b^*$ or on the
+size of the price moves. The only properties used are that wealth is a product
+of linear functions of $b$ and that the prior is uniform.
+
+### Where the log T comes from, and a better prior
+
+The Laplace method shows where the logarithm comes from. Write
+$\log S_T(b) = T \, W_T(b)$ with $W_T(b) = \frac{1}{T}\sum_t \log(b \cdot x_t)$,
+a concave function. If $b^*$ is in the interior and
+$J = -W_T''(b^*) > 0$, then near the peak
+$S_T(b) \approx S_T^* \, e^{-T J (b-b^*)^2/2}$, a bump of width $1/\sqrt{TJ}$,
+so
+
+$$
+\hat S_T = \int_0^1 S_T(b) \, db \approx S_T^* \sqrt{\frac{2\pi}{T J}},
+\qquad R_T \approx \tfrac12 \log T + \tfrac12 \log \frac{J}{2\pi}.
+$$
+
+This is the content of Cover's 1991 main theorem. Under regularity conditions
+(price relatives bounded away from 0 and $\infty$, $b^*$ interior, a strictly
+concave limit $W$), he showed
+$\hat S_T / S_T^* \sim (m-1)! \, (2\pi/T)^{(m-1)/2} / |J|^{1/2}$, which is
+half a $\log T$ per degree of freedom.
+
+So why does the theorem say $(m-1)\log(T+1)$ and not half of it? Because of the
+boundary. If one asset dominates, $b^*$ is a vertex, $W_T$ falls off
+_linearly_ away from it, the bump has width $1/T$ instead of $1/\sqrt T$, and
+the uniform prior gives it only $1/T$ of its mass. The bound is then nearly
+attained: if asset 1 doubles every period and asset 2 is flat, then
+$\hat S_T = \int_0^1 (1+b)^T db = (2^{T+1}-1)/(T+1)$ and
+$R_T \approx \log\frac{T+1}{2}$.
+
+The fix is to put more prior mass near the boundary. Cover and Ordentlich use the
+Dirichlet$(\tfrac12, \dots, \tfrac12)$ prior, density
+$\propto \prod_i b_i^{-1/2}$, and prove
+
+$$
+\frac{S_T^*}{\hat S_T} \le 2\,(T+1)^{(m-1)/2},
+\qquad\text{so}\qquad
+R_T \le \frac{m-1}{2}\log(T+1) + \log 2 ,
+$$
+
+which is $\frac{m-1}{2}\log T + O(1)$, uniformly over all sequences. They also show
+both bounds are essentially tight, so the Dirichlet(1/2) weighting has the
+better worst case. It has to be said that this is a worst-case statement: on a
+market with an interior $b^*$, the uniform prior is often slightly better (you
+can see it in the code below).
+
+## Connections: Kelly betting and universal coding
+
+_Kelly / log-optimal growth._ If the $x_t$ are i.i.d. from some distribution
+$F$, Kelly's log-optimal portfolio maximises $W(b) = \mathbb{E}_F \log(b \cdot x)$,
+and the best constant portfolio has growth rate $W^* = \max_b W(b)$. Knowing
+$F$, you would play the maximiser $b_F$ and by the law of large numbers
+$\frac1T \log S_T(b_F) \to W^*$. But $S_T^* \ge S_T(b_F)$ on every sample path,
+so
+
+$$
+\frac1T \log \hat S_T \ \ge\ \frac1T \log S_T(b_F) - \frac{(m-1)\log(T+1)}{T} \ \longrightarrow\ W^* \quad \text{a.s.}
+$$
+
+The universal portfolio reaches Kelly's growth rate without knowing $F$, and
+without even assuming that a distribution exists.
+
+_Universal coding._ Take a "horse race" market where in each period exactly one
+asset pays off, $x_t = e_{j_t}$. Then $S_T(b) = \prod_i b_i^{n_i}$ is the
+probability that the i.i.d. distribution $b$ assigns to the sequence
+$j_1, \dots, j_T$, the best CRP is the maximum-likelihood distribution, and
+$\hat S_T = \int \prod_i b_i^{n_i} \, d\mu(b)$ is the Bayesian mixture
+probability. Regret is then exactly the code length, in nats, that the mixture code
+loses against the best i.i.d. code chosen in hindsight. The portfolio update
+becomes a sequential predictor. With the uniform prior it is Laplace's rule
+$\hat b_{t+1,i} = (n_i + 1)/(t + m)$. With the Dirichlet(1/2) prior it is
+$\hat b_{t+1,i} = (n_i + \tfrac12)/(t + \tfrac m2)$, the
+Krichevsky–Trofimov estimator, whose redundancy of $\frac{m-1}{2}\log T + O(1)$
+is the classic universal-coding result. Cover and Ordentlich show that this
+horse-race market is the least favourable case: the general bounds are exactly the
+worst-case redundancies of these mixture codes. Investing well and compressing
+well are the same problem.
+
+## Try it
+
+Below, two stocks with independent, roughly driftless log-returns. The top plot
+is the final wealth $S_T(b)$ of every CRP. Its two endpoints are the stocks
+themselves, and the hump in between is the rebalancing bonus. The dashed line is the
+universal portfolio, which is just the average height of that curve. Raise the
+volatility and the hump grows, roughly like $T\sigma^2/4$ in log-wealth for an
+even split. Raise $T$ and watch the regret: it creeps up like $\log T$ while
+the wealth itself moves exponentially. Then press _New market_ a few
+times. Quite often one stock simply runs away, $b^*$ lands at 0 or 1, and the
+universal portfolio trails it. At these settings a stock's random walk
+($\sigma\sqrt T \approx 1.3$ in log-wealth) is larger than the rebalancing
+bonus ($T\sigma^2/4 \approx 0.45$). The guarantee still holds in every case,
+because it is a promise about the gap to the best CRP, not about winning.
+
+{cap="Wealth of every constant-rebalanced portfolio on a randomly generated two-stock market (log scale), with the best one in hindsight, b*, and the universal portfolio's wealth, which is the average of the curve under a uniform prior. The lower plot replays the same market over time. The regret meter is measured against the guaranteed ceiling log(T+1)."}
+::: widget-universal-portfolio
+:::
+
+## The code
+
+Here is the whole algorithm for two assets, with the integral over $b$
+replaced by a fine midpoint grid on $[0,1]$. It runs four markets: the
+double-or-halve example, a random two-stock market with the uniform and the
+Dirichlet(1/2) prior, and the boundary case where the uniform bound is nearly
+tight. It also checks the telescoping identity: the wealth obtained by actually
+trading $\hat b_t$ period by period matches the prior average of $S_T(b)$.
+
+{.run}
 ```python
-# Initialize portfolio weights
-initialize_portfolio(weights)  # All weights start with an equal distribution
+import numpy as np
 
-# Initialize wealth and wealth history
-wealth = 1.0
-wealth_history = []
+K = 2000
+grid = (np.arange(K) + 0.5) / K   # midpoints of [0,1]: b = weight on asset 1
 
-# Define the set of available assets
-assets = [asset1, asset2, ..., assetN]
+def crp_log_wealth(x, grid):
+    """log S_t(b) for every t and every b on the grid, shape (T, K)."""
+    per_step = np.log(np.outer(x[:, 0], grid) + np.outer(x[:, 1], 1 - grid))
+    return np.cumsum(per_step, axis=0)
 
-# Define the number of time steps
-T = number_of_time_steps
+def universal(x, grid, prior):
+    """Play Cover's portfolio day by day; return log wealth and the b_hat path."""
+    logS = crp_log_wealth(x, grid)
+    prev = np.zeros(len(grid))            # log S_0(b) = 0 for every b
+    log_wealth, path = 0.0, []
+    for t in range(len(x)):
+        w = prior * np.exp(prev - prev.max())   # posterior weight ~ prior * S_{t-1}(b)
+        b_hat = (grid * w).sum() / w.sum()      # wealth-weighted average of all CRPs
+        path.append(b_hat)
+        log_wealth += np.log(b_hat * x[t, 0] + (1 - b_hat) * x[t, 1])
+        prev = logS[t]
+    return log_wealth, np.array(path), logS
 
-# Main loop for T time steps
-for t in range(T):
-    # Observe returns for all assets at time t
-    observe_returns(returns)
+def report(name, x, prior=None, bound=None):
+    T = len(x)
+    prior = np.ones(K) if prior is None else prior
+    prior = prior / prior.sum()
+    log_up, path, logS = universal(x, grid, prior)
+    # best CRP in hindsight: grid search, plus the two endpoints b = 0, 1
+    cands = np.concatenate([[0.0], grid, [1.0]])
+    final = np.concatenate([[np.log(x[:, 1]).sum()], logS[-1],
+                            [np.log(x[:, 0]).sum()]])
+    i = np.argmax(final)
+    b_star, log_star = cands[i], final[i]
+    # telescoping check: wealth of the played strategy = prior-average of S_T(b)
+    m = logS[-1].max()
+    log_mix = m + np.log((prior * np.exp(logS[-1] - m)).sum())
+    print(f"--- {name}  (T = {T})")
+    print(f"  asset 1 buy-and-hold : {np.prod(x[:, 0]):10.4g}")
+    print(f"  asset 2 buy-and-hold : {np.prod(x[:, 1]):10.4g}")
+    print(f"  best CRP  b* = {b_star:.3f} : {np.exp(log_star):10.4g}")
+    print(f"  universal portfolio  : {np.exp(log_up):10.4g}"
+          f"   (mixture of CRPs: {np.exp(log_mix):.4g})")
+    regret = log_star - log_up
+    if bound is None:
+        bound = np.log(T + 1)
+    print(f"  regret log S* - log S_up = {regret:.3f}  <=  bound {bound:.3f}")
+    print(f"  per-period regret       = {regret / T:.5f}")
+    print(f"  final b_hat = {path[-1]:.3f}")
 
-    # Calculate the total wealth in the portfolio at time t
-    total_wealth = sum(wealth * weight for weight in weights)
+# 1) Cash plus a stock that doubles, then halves, forever. Both are flat.
+T = 40
+stock = np.where(np.arange(T) % 2 == 0, 2.0, 0.5)
+x = np.column_stack([stock, np.ones(T)])
+report("cash + double/halve stock", x)
 
-    # Calculate the regret for each asset
-    regrets = []
-    for asset in assets:
-        asset_wealth = wealth * weights[assets.index(asset)]
-        best_asset_wealth = wealth * max(weights)
-        regret = best_asset_wealth - asset_wealth
-        regrets.append(regret)
+# 2) Two volatile, driftless, independent stocks.
+rng = np.random.default_rng(1991)
+T = 1000
+logret = rng.normal([0.0, 0.0], [0.08, 0.08], size=(T, 2))
+x = np.exp(logret)                       # price relatives x_t = p_t / p_{t-1}
+report("two random stocks, uniform prior", x)
 
-    # Update portfolio weights using exponential weights
-    total_regret = sum(regrets)
-    for asset in assets:
-        weight = weights[assets.index(asset)]
-        asset_regret = regrets[assets.index(asset)]
-        weight *= (1 + asset_regret) / (1 + total_regret)
-        weights[assets.index(asset)] = weight
+# 3) Same market with the Dirichlet(1/2, 1/2) prior of Cover & Ordentlich.
+jeffreys = 1 / np.sqrt(grid * (1 - grid))
+report("two random stocks, Dirichlet(1/2) prior", x, prior=jeffreys,
+       bound=0.5 * np.log(T + 1) + np.log(2))
 
-    # Normalize portfolio weights to sum up to 1
-    total_weight = sum(weights)
-    weights = [weight / total_weight for weight in weights]
-
-    # Update the portfolio's wealth at time t
-    new_wealth = sum(wealth * weight * (1 + asset_return) for weight, asset_return in zip(weights, returns))
-    wealth = new_wealth
-
-    # Append the wealth at time t to the wealth history
-    wealth_history.append(wealth)
-
-# After T time steps, you have the final portfolio weights in 'weights'
+# 4) Worst case for the uniform prior: asset 1 beats asset 2 every single day,
+#    so b* = 1 sits on the boundary and the bound is almost attained.
+T = 1000
+x = np.column_stack([np.full(T, 2.0), np.ones(T)])
+report("asset 1 always doubles, asset 2 flat", x)
 ```
 
-Here is the colab where I tested the ideas: [colab](https://colab.research.google.com/drive/14i_T9KRUh05b9EaTbksWOap6RvJgB27l?usp=sharing)
+What to expect: in the double-or-halve market both assets end at 1.0 and the
+best CRP ($b^* = 0.5$) at $(9/8)^{20} \approx 10.5$, while the universal
+portfolio reaches about 6.0 with no knowledge of the pattern. On the random
+market (seed 1991) the two stocks end at about 4.0 and 2.2, and the universal
+portfolio at about 8.6 beats both, with a regret of 0.41 nats against a ceiling of
+6.9. In the last market the regret is 6.22, close to the ceiling of 6.91 and
+to the exact value $\log\frac{T+1}{2} \approx 6.22$.
+
+## Caveats
+
+- _Computation._ The update is an integral over an $(m-1)$-dimensional simplex.
+  A grid is fine for two or three assets but grows exponentially with $m$. Kalai
+  and Vempala (2002) showed how to sample from the wealth-weighted distribution
+  over CRPs with a random walk, which gives an implementation polynomial in $m$
+  and $T$. This works because $S_t(b)$ is log-concave in $b$.
+- _Transaction costs._ All of the above assumes free rebalancing. Every CRP
+  trades every period, and a real implementation has to pay for that.
+- _Time scale._ $R_T / T \to 0$ is a statement about exponents. With $m$
+  assets the uniform prior can cost a factor of up to $(T+1)^{m-1}$, which is
+  enormous for moderate $m$ and $T$. The rebalancing bonus has to be large
+  compared to that before the universal portfolio gets ahead of the best
+  stock. In practice it pays off with a few volatile, weakly correlated assets
+  over long horizons.
+- _The benchmark._ "Universal" is relative to the class of CRPs. It is a
+  strong benchmark (the best CRP beats the best stock, and is Kelly-optimal for
+  i.i.d. markets), but it is not the best possible strategy for a market with
+  structure, say, trends that a predictive model could exploit.
+
+Here is the colab where I first tested the ideas: [colab](https://colab.research.google.com/drive/14i_T9KRUh05b9EaTbksWOap6RvJgB27l?usp=sharing)
+
+## References
+
+- T. M. Cover. Universal Portfolios. _Mathematical Finance_, 1(1):1–29, 1991. [doi:10.1111/j.1467-9965.1991.tb00002.x](https://doi.org/10.1111/j.1467-9965.1991.tb00002.x)
+- T. M. Cover and E. Ordentlich. Universal Portfolios with Side Information. _IEEE Transactions on Information Theory_, 42(2):348–363, 1996.
+- A. Kalai and S. Vempala. Efficient Algorithms for Universal Portfolios. _Journal of Machine Learning Research_, 3:423–440, 2002.
+- J. L. Kelly, Jr. A New Interpretation of Information Rate. _Bell System Technical Journal_, 35(4):917–926, 1956.
+- R. Krichevsky and V. Trofimov. The Performance of Universal Encoding. _IEEE Transactions on Information Theory_, 27(2):199–207, 1981.

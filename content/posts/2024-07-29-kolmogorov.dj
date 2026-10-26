@@ -68,3 +68,124 @@ function generatePrograms():
     return programs
 
 ```
+
+## Making it precise
+
+The bullet points above are the intuition. Here is the formal version: the
+definition, why the choice of computer doesn't matter, why the pseudocode above
+can never actually be finished, and how it connects to Shannon.
+
+### Definition
+
+Fix a universal **prefix-free** Turing machine $U$. Prefix-free means no valid
+program is a prefix of another valid program, so programs are self-delimiting.
+Programs are binary strings $p \in \{0,1\}^*$ and $|p|$ is the length in bits.
+The (prefix) Kolmogorov complexity of a binary string $x$ is
+
+$$
+K_U(x) = \min \{\, |p| \;:\; U(p) = x \,\}.
+$$
+
+The conditional complexity $K_U(x \mid y)$ is the same, except that $U$ also
+receives $y$ as an auxiliary input. Two easy facts follow:
+
+- **Upper bound.** $K(x) \le |x| + 2\log_2 |x| + c$ for a constant $c$. The program "print the following $|x|$ bits" spends about $2\log_2|x|$ bits on a self-delimiting encoding of the length and then $|x|$ bits on $x$ itself.
+- **Most strings are incompressible.** There are $2^n$ strings of length $n$ but only $2^n - 1$ programs shorter than $n$ bits. So at least one string of length $n$ has $K(x) \ge n$, and the fraction with $K(x) < n - c$ is less than $2^{-c}$. This is the formal version of "random means incompressible".
+
+### The invariance theorem
+
+The definition depends on $U$, which seems to make it arbitrary. It isn't.
+
+**Theorem (invariance).** For any two universal machines $U$ and $V$ there is a
+constant $c_{U,V}$, independent of $x$, such that for every $x$
+
+$$
+|K_U(x) - K_V(x)| \le c_{U,V}.
+$$
+
+*Proof sketch.* Since $U$ is universal, there is a finite program
+$\langle V \rangle$, an interpreter for $V$ written for $U$, such that
+$U(\langle V\rangle p) = V(p)$ for every $p$. Take the shortest $V$-program for
+$x$ and prepend the interpreter. This gives
+$K_U(x) \le K_V(x) + |\langle V \rangle|$. Swap the roles of $U$ and $V$ for the
+other direction. $\square$
+
+So complexity is well defined up to an additive constant. That is why people
+just write $K(x)$, and why the theory is about asymptotic statements. The constant can be large,
+so $K$ of one short string on its own doesn't mean much.
+
+### Why $K$ is not computable
+
+This is the Berry paradox ("the smallest number not definable in under sixty
+letters") made rigorous.
+
+Suppose some program computes $K(x)$ for every $x$. For each $m$, build the
+program $B_m$: *enumerate all strings in length-lexicographic order and output
+the first $x$ with $K(x) \ge m$.* Such an $x$ exists by the counting argument
+above. $B_m$ is a fixed piece of code plus the number $m$, so
+
+$$
+|B_m| \le c + 2\log_2 m.
+$$
+
+Its output $x_m$ satisfies $K(x_m) \ge m$ by construction, and also
+$K(x_m) \le |B_m| \le c + 2\log_2 m$. For large enough $m$ we have
+$c + 2\log_2 m < m$, a contradiction. So no such program exists.
+
+This is also where the `EstimateKolmogorovComplexity` pseudocode above breaks.
+To try programs in order of length you have to run them, and some of them never
+halt. You can interleave their execution (dovetailing) and record every time one
+of them prints $x$. This gives an estimate that only ever decreases and
+converges to $K(x)$. In other words, $K$ is *upper semi-computable*. What you
+can never know is whether you have reached the true minimum, because a shorter
+program might still be running and halt later. If you could decide that, you
+could solve the halting problem.
+
+### Relation to Shannon entropy
+
+Let $P$ be a computable probability distribution over strings with Shannon
+entropy $H(P) = -\sum_x P(x)\log_2 P(x)$. Then
+
+$$
+0 \;\le\; \sum_x P(x)\, K(x) - H(P) \;\le\; K(P) + c ,
+$$
+
+where $K(P)$ is the length of the shortest program that computes $P$ and $c$
+is a constant that depends only on $U$.
+
+- The **lower bound** holds because prefix-free programs form a prefix code. Kraft's inequality, $\sum_x 2^{-K(x)} \le 1$, then implies that no prefix code has expected length below $H(P)$. That is Shannon's source coding theorem.
+- The **upper bound** comes from writing a program that knows $P$ and decodes a Shannon-Fano codeword of length $\lceil -\log_2 P(x)\rceil$. Its length is $K(P) + \lceil -\log_2 P(x) \rceil + O(1)$. Take the expectation over $P$.
+
+So for a simple distribution, expected Kolmogorov complexity *is* entropy up to
+a constant. The difference between the bullets above ("entropy is about
+ensembles, $K$ is about individual strings") is real, but on average the two
+agree.
+
+### MDL: a computable stand-in
+
+Since $K$ is uncomputable, we restrict the "programs" to a model class we can
+actually search. The **Minimum Description Length** principle, in its two-part
+form, picks the hypothesis $\mathcal{M}$ from a class $\mathcal{H}$ that
+minimises the total code length of model plus data:
+
+$$
+\hat{\mathcal{M}} = \arg\min_{\mathcal{M} \in \mathcal{H}} \Big[\, L(\mathcal{M}) + L(D \mid \mathcal{M}) \,\Big], \qquad L(D \mid \mathcal{M}) = -\log_2 P(D \mid \mathcal{M}) .
+$$
+
+Here $D$ is the data, $L(\mathcal{M})$ is the number of bits to describe the
+model (its structure and its parameters at some precision), and
+$L(D\mid\mathcal{M})$ is the Shannon code length of the data under that model.
+A complex model fits better (smaller second term) but costs more to describe
+(larger first term), so MDL is Occam's razor with a unit of measurement. If
+$\mathcal{H}$ were all programs, this would be the two-part version of $K$. With a
+restricted $\mathcal{H}$ it is computable. A cruder proxy is a real compressor:
+`gzip` length is an upper bound on $K(x)$ up to a constant. That is the idea
+behind the *normalized compression distance* of Cilibrasi and Vitányi.
+
+## References
+
+- A. N. Kolmogorov (1965). *Three approaches to the quantitative definition of information*. Problems of Information Transmission 1(1), 1--7.
+- M. Li, P. Vitányi (2008). *An Introduction to Kolmogorov Complexity and Its Applications*, 3rd ed. Springer.
+- P. Grünwald, P. Vitányi (2004). *Shannon Information and Kolmogorov Complexity*. [arXiv:cs/0410002](https://arxiv.org/abs/cs/0410002)
+- P. Grünwald (2004). *A tutorial introduction to the minimum description length principle*. [arXiv:math/0406077](https://arxiv.org/abs/math/0406077)
+- R. Cilibrasi, P. Vitányi (2003). *Clustering by compression*. [arXiv:cs/0312044](https://arxiv.org/abs/cs/0312044)

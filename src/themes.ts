@@ -84,8 +84,8 @@ const themeAssignments: Record<ThemeKey, string[]> = {
   ],
   foundations: [
     "hopfield",
-    "hopfield_from_scratch",
-    "up",
+    "hopfield_from_scratch", // Cover's universal portfolio (filename predates the post)
+    "up", // Hopfield network from scratch
     "kalman",
     "mandelbrot",
     "kolmogorov",

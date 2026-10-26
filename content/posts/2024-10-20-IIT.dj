@@ -27,9 +27,65 @@ As the theory unfolds, it presents a nuanced view of consciousness as a spectrum
 implies that consciousness, to varying degrees, may be a fundamental feature of reality, potentially extending beyond 
 biological systems to any entity capable of integrating information in specific ways.
 
+## What Φ actually measures
+
+I don't want to go too deep into the formalism, because it changed a lot between
+versions of the theory (IIT 2.0, 3.0 and 4.0 all define Φ differently). The core
+idea is simple, though, and it is clearest in the discrete version of Balduzzi
+and Tononi (2008): **Φ is the information the whole system generates over and
+above its parts, measured across the cut that loses the least.**
+
+Take a system of $n$ elements with joint state $X$, and a known mechanism
+$p(x_1 \mid x_0)$ that maps the state at one time step to the next. Suppose we
+observe the current state $x_1$.
+
+- The **a priori repertoire** $p^{\max}(X_0)$ is the uniform distribution over past states. It means "I know nothing about the past", and it is what you get by perturbing the system into every state with equal probability.
+- The **a posteriori repertoire** $p(X_0 \mid x_1)$ is the distribution over past states that could have produced $x_1$, obtained from the mechanism with Bayes' rule and the uniform prior.
+
+The effective information of the whole is how much observing $x_1$ narrows down
+the past: $\mathrm{ei}(x_1) = D_{\mathrm{KL}}\big(p(X_0 \mid x_1) \,\|\, p^{\max}(X_0)\big)$.
+
+Now cut the system. Let $\mathcal{P} = \{M^1, \dots, M^k\}$ be a partition of
+the elements into disjoint parts. For each part, compute its own a posteriori
+repertoire $p(M^k_0 \mid m^k_1)$, treating every input that crosses the cut as
+independent noise. The information lost by the cut is
+
+$$
+\mathrm{ei}(x_1 / \mathcal{P}) = D_{\mathrm{KL}}\Big( p(X_0 \mid x_1) \;\Big\|\; \prod_{k} p(M^k_0 \mid m^k_1) \Big),
+$$
+
+i.e. how much the whole system's account of its past exceeds what the parts can
+account for separately. Integrated information is this quantity at the
+**minimum information partition**, the cut that loses the least:
+
+$$
+\Phi(x_1) = \mathrm{ei}(x_1 / \mathcal{P}^{\mathrm{MIP}}), \qquad
+\mathcal{P}^{\mathrm{MIP}} = \arg\min_{\mathcal{P}} \frac{\mathrm{ei}(x_1 / \mathcal{P})}{N_{\mathcal{P}}} .
+$$
+
+The normaliser $N_{\mathcal{P}} = (k - 1)\,\min_k H^{\max}(M^k_0)$ is the
+entropy of the smallest part's a priori repertoire times the number of other
+parts. It stops the minimisation from always preferring to chop off a single
+element.
+
+Two consequences match the intuition in the text above. If the system splits
+into two halves that don't interact, cutting between them loses nothing, so
+$\Phi = 0$, however much information each half processes on its own. And
+because of the minimum over partitions, Φ is a "weakest link" measure: one
+cheap cut is enough to make the whole system count as not integrated. The
+same minimum is also the practical problem. The number of partitions of $n$
+elements is the Bell number $B_n$, which grows faster than exponentially, so exact
+Φ is only computable for tiny systems.
+
 One big problem with this theory is the lack of empirical validation. Nevertheless, I believe that 
 an initial functional theory of consciousness is a good starting point to build models more closely
 related to AGI. As the perceptron is a model that simplifies a lot the human brain, but is a good starting point
 and you can build marvelous things with it, I think that the same way of thinking can be applied to consciousness
 theories. We could start with this simple functional theory and then build more complex ones, but with these simpler
 theories we may already be capable to build marvelous things.
+
+## References
+
+- G. Tononi (2004). *An information integration theory of consciousness*. BMC Neuroscience 5, 42.
+- D. Balduzzi, G. Tononi (2008). *Integrated Information in Discrete Dynamical Systems: Motivation and Theoretical Framework*. PLoS Computational Biology 4(6), e1000091.
+- M. Oizumi, L. Albantakis, G. Tononi (2014). *From the Phenomenology to the Mechanisms of Consciousness: Integrated Information Theory 3.0*. PLoS Computational Biology 10(5), e1003588.

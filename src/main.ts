@@ -8,6 +8,7 @@ import { projects } from "./projects.ts";
 import { news } from "./news.ts";
 import { resolveTags, tagSlug } from "./tags.ts";
 import { resolveSeries, type SeriesMembership, validateSeries } from "./series.ts";
+import { resolveRef } from "./refs.ts";
 import { resolvePrereqs, validatePrereqs } from "./prereqs.ts";
 
 async function main() {
@@ -461,6 +462,7 @@ async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
       title: undefined,
       widgets: new Set<string>(),
       runnable: false,
+      citations: [] as string[],
     };
     const html = djot.render(parsed.doc, render_ctx, parsed.math);
     ctx.render_ms += performance.now() - t;
@@ -472,6 +474,15 @@ async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
         fatal(
           `${entry.name}: embeds '::: widget-${widget}' but ` +
             `content/widgets/${widget}.js does not exist`,
+        );
+      }
+    }
+
+    // Likewise for a citation with no bibliography entry.
+    for (const key of render_ctx.citations) {
+      if (!resolveRef(key)) {
+        fatal(
+          `${entry.name}: cites '[@${key}]' but src/refs.ts has no entry '${key}'`,
         );
       }
     }

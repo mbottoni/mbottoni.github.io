@@ -196,6 +196,8 @@ export const base = (
     function unwrapPlainSpans(root) {
       for (const span of root.querySelectorAll("span")) {
         if (!(span instanceof HTMLElement)) continue;
+        // Widgets build their own DOM and style their spans.
+        if (span.closest(".widget")) continue;
         if (span.attributes.length === 0 && span.childElementCount === 0) {
           span.replaceWith(document.createTextNode(span.textContent || ""));
         }
@@ -743,7 +745,7 @@ export const map_page = (map: MapData): HtmlString => {
 
 function toc_from_content(content: HtmlString): HtmlString {
   const re =
-    /<h([23])\b[^>]*>\s*<a href="#([^"]+)">([\s\S]*?)<\/a>\s*<\/h\1>/g;
+    /<h([23])\b[^>]*>\s*<a href="#([^"]+)">([\s\S]*?)<\/a>(?:<a class="heading-anchor"[^>]*>#<\/a>)?\s*<\/h\1>/g;
   const entries: { level: number; id: string; text: string }[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(content.value)) !== null) {
@@ -752,7 +754,11 @@ function toc_from_content(content: HtmlString): HtmlString {
   }
   if (entries.length < 2) return new HtmlString("");
   const items = entries.map((e) =>
-    html`<li class="toc-l${e.level}"><a href="#${e.id}">${e.text}</a></li>`
+    // `text` is already-rendered heading HTML with the tags stripped, so it
+    // may hold entities like &rsquo; that must not be escaped again.
+    html`<li class="toc-l${e.level}"><a href="#${e.id}">${
+      new HtmlString(e.text)
+    }</a></li>`
   );
   return html`
     <details class="toc" open>
