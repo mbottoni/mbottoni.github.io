@@ -383,15 +383,16 @@ time { color: var(--muted); font-family: "Open Sans", sans-serif; font-size: 1re
   border: 1px solid var(--border); border-left: 3px solid var(--accent);
   border-radius: 6px; background: var(--block-bg);
   padding: 0.5rem 1rem; margin-bottom: 1.5rem;
+  font-size: 0.9rem; line-height: 1.35;
 }
 .toc summary {
   font-family: "Open Sans", sans-serif; font-size: 0.9rem; font-weight: 600;
   cursor: pointer; color: var(--accent-dark);
 }
 .toc ul { list-style: none; margin: 0.5rem 0 0; padding: 0; }
-.toc li { margin: 0.2rem 0; }
-.toc li.toc-l3 { margin-left: 1.5rem; font-size: 0.95em; }
-.toc a { color: var(--fg); text-decoration: none; font-size: 0.95rem; }
+.toc li { margin: 0.3rem 0; }
+.toc li.toc-l3 { margin-left: 1.2rem; font-size: 0.95em; }
+.toc a { color: var(--fg); text-decoration: none; }
 .toc a:hover { color: var(--link); }
 
 /* ============================================================
@@ -767,7 +768,7 @@ figure.code-block { position: relative; }
 
   /* table of contents: tighter so long headings fit */
   .toc { padding: 0.4rem 0.85rem; }
-  .toc a { font-size: 0.9rem; }
+  .toc { font-size: 0.85rem; }
   .toc li.toc-l3 { margin-left: 0.9rem; }
 
   /* wide tables scroll horizontally instead of breaking the layout */
@@ -786,8 +787,14 @@ figure.code-block { position: relative; }
 .related { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
 .related h2 { font-size: 1.1rem; margin: 0 0 0.5rem; }
 .related-list { list-style: none; margin: 0; padding: 0; }
-.related-list li { margin: 0.35rem 0; display: flex; flex-wrap: wrap; gap: 0 0.75rem; align-items: baseline; }
-.related-list .muted { font-size: 0.85rem; }
+.related-list li { margin: 0 0 0.7rem; line-height: 1.3; }
+.related-list li > a { text-decoration: none; }
+.related-list li > a:hover { text-decoration: underline; }
+.related-list .muted {
+  display: block; margin-top: 0.1rem;
+  font-family: "Open Sans", sans-serif; font-size: 0.68rem; letter-spacing: 0.01em;
+}
+.related-list .muted time { font-size: inherit; }
 
 .post-nav {
   display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
@@ -834,17 +841,36 @@ h2:hover .heading-anchor, h3:hover .heading-anchor,
 h4:hover .heading-anchor, .heading-anchor:focus { opacity: 1; }
 .heading-anchor:hover { color: var(--accent); }
 
-.toc a.active { color: var(--accent); font-weight: 600; }
+.toc a.active { color: var(--accent); }
 
-/* On wide viewports the TOC docks to the left margin and follows the reader. */
-@media (min-width: 1280px) {
+/* On wide viewports the TOC docks to the left margin and follows the reader,
+   as a quiet sans-serif outline rather than a second column of body text.
+   The box keeps the body font size so `ch` here matches the text column;
+   the smaller type is set on its children. */
+@media (min-width: 1400px) {
   .toc {
-    position: fixed; top: 6rem; width: 16rem;
-    left: calc(50% - 40ch - 2ch - 17.5rem);
+    position: fixed; top: 6rem; left: auto;
+    right: calc(50% + 40ch + 1rem);
+    width: min(15rem, calc(50% - 40ch - 2rem));
     max-height: calc(100vh - 8rem); overflow-y: auto;
-    margin-bottom: 0; font-size: 0.85em;
+    margin-bottom: 0; padding: 0;
+    background: none; border: none; border-radius: 0;
+    font-family: "Open Sans", sans-serif; font-size: 1rem; line-height: 1.45;
   }
+  .toc summary { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+  .toc ul { margin-top: 0.6rem; border-left: 1px solid var(--border); font-size: 0.62rem; }
+  .toc li { margin: 0; }
+  .toc li.toc-l3 { margin-left: 0; font-size: 1em; }
+  .toc a {
+    display: block; padding: 0.22rem 0 0.22rem 0.75rem; margin-left: -1px;
+    border-left: 2px solid transparent; color: var(--muted);
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .toc li.toc-l3 a { padding-left: 1.5rem; }
+  .toc a:hover { color: var(--fg); }
+  .toc a.active { color: var(--accent); border-left-color: var(--accent); }
 }
+
 
 /* ============================================================
    Series box
@@ -903,8 +929,17 @@ sup.cite a { text-decoration: none; }
 .references { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
 .references h2 { font-size: 1.1rem; margin: 0 0 0.75rem; }
 .references h2 a { color: inherit; text-decoration: none; }
-.references ol { padding-left: 1.6rem; font-size: 0.9em; }
-.references li { margin: 0.35rem 0; }
+.references ol { padding-left: 1.6rem; font-size: 0.85em; line-height: 1.4; }
+.references li { margin: 0 0 0.55rem; padding-left: 0.2rem; }
+
+/* Hand-written "References" lists in posts get the same compact treatment. */
+article section#References > ul,
+article section#References > ol { font-size: 0.8em; line-height: 1.4; }
+article section#References > ul { list-style: none; padding-left: 0; margin-left: 0; }
+article section#References > ul > li { margin: 0 0 0.55rem; }
+article section#References > ol > li { margin: 0 0 0.55rem; }
+article section#References a[href^="http"] { color: var(--muted); word-break: normal; overflow-wrap: break-word; }
+article section#References a[href^="http"]:hover { color: var(--link); }
 .references li:target { background: var(--block-bg); }
 .references .ref-back { margin-left: 0.3ch; color: var(--muted); text-decoration: none; }
 .references .ref-back:hover { color: var(--accent); }
@@ -930,7 +965,10 @@ sup.cite a { text-decoration: none; }
   border: 1px solid var(--border); border-left: 3px solid var(--accent-blue);
   border-radius: 6px; background: var(--block-bg);
 }
-article ~ .prereq-line { margin: 1.5rem 0 0; }
+article ~ .prereq-line { margin: 1.75rem 0 0; }
+.prereq-line a { text-decoration: none; }
+.prereq-line a:hover { text-decoration: underline; }
+.prereq-line__sep { margin: 0 0.45rem; color: var(--muted); }
 .prereq-line__label {
   margin-right: 0.5rem;
   font-family: "Open Sans", sans-serif; font-size: 0.75rem; font-weight: 600;
