@@ -38,6 +38,15 @@ stack. The encoder processes the input sequence, and the decoder generates the o
 sequence, one token at a time. The decoder also uses masked attention to prevent future tokens from
 being used in the prediction of the current token.
 
+The heart of all this is the attention matrix, so here is a small one you can
+poke at. Every number is computed live: seeded random embeddings for eight
+tokens, real projections, and softmax(QKᵀ/√dₖ) per head. Try switching the
+positional encoding off and look at the two "the" rows.
+
+{cap="Scaled dot-product attention over an eight-token sentence with d = 16. Rows are queries and columns are keys; each row sums to one. Splitting into more heads shrinks dₖ per head, the causal mask hides future keys, and the temperature divides the logits before the softmax. Hover or tap a row to read off its weights."}
+::: widget-attention
+:::
+
 ### Implementing the Forward Pass:
 
 The forward pass of the Transformer involves processing the input sequence through the encoder
