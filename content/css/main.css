@@ -812,6 +812,9 @@ figure.code-block { position: relative; }
   .post-nav { grid-template-columns: 1fr; }
   .post-nav__link--empty { display: none; }
   .post-nav__next { text-align: left; align-items: flex-start; }
+}
+
+/* ============================================================
    Reading progress + heading anchors + sticky TOC
    ============================================================ */
 .reading-progress {
@@ -842,6 +845,8 @@ h4:hover .heading-anchor, .heading-anchor:focus { opacity: 1; }
     margin-bottom: 0; font-size: 0.85em;
   }
 }
+
+/* ============================================================
    Series box
    ============================================================ */
 .series-box {
@@ -859,10 +864,14 @@ h4:hover .heading-anchor, .heading-anchor:focus { opacity: 1; }
 .series-box__list { margin: 0.5rem 0 0; padding-left: 1.4rem; }
 .series-box__list li { margin: 0.15rem 0; }
 .series-box__current { font-weight: 600; }
+
+/* ============================================================
    Comments
    ============================================================ */
 .comments { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
 .comments h2 { font-size: 1.1rem; margin: 0 0 0.75rem; }
+
+/* ============================================================
    Runnable code blocks
    ============================================================ */
 figure.code-block.runnable .run-bar {
@@ -885,3 +894,17 @@ figure.code-block.runnable .run-output {
   border-left: 3px solid var(--accent-blue);
 }
 figure.code-block.runnable .run-output .run-stderr { color: var(--accent); }
+
+/* ============================================================
+   Citations + references
+   ============================================================ */
+sup.cite { font-size: 0.75em; white-space: nowrap; }
+sup.cite a { text-decoration: none; }
+.references { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.references h2 { font-size: 1.1rem; margin: 0 0 0.75rem; }
+.references h2 a { color: inherit; text-decoration: none; }
+.references ol { padding-left: 1.6rem; font-size: 0.9em; }
+.references li { margin: 0.35rem 0; }
+.references li:target { background: var(--block-bg); }
+.references .ref-back { margin-left: 0.3ch; color: var(--muted); text-decoration: none; }
+.references .ref-back:hover { color: var(--accent); }

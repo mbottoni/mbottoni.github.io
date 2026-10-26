@@ -3,7 +3,7 @@
 
 ![](/assets/frontier/h_neurons.png)
 
-Gao et al. https://arxiv.org/abs/2512.01797 present a compelling investigation 
+Gao et al. [@gao2025] present a compelling investigation 
 into the microscopic mechanisms of hallucination in LLMs. The central thesis is that 
 hallucinations are not diffuse phenomena spread across millions of parameters, but 
 are instead driven by a remarkably sparse subset of neurons -- fewer than 0.1% of the 
@@ -24,7 +24,7 @@ a critical assessment of the claims.
 
 The foundation of the paper is a way to measure how much each individual neuron 
 contributes to the model's output at each token position. They adopt the CETT 
-(Contribution Estimation via Token-level Tracking) metric from Zhang et al. (2024).
+(Contribution Estimation via Token-level Tracking) metric from Zhang et al. [@zhang2024relu2].
 
 Consider a transformer block processing token $t$ with hidden representation 
 $x_t \in \mathbb{R}^d$. Inside the FFN (feed-forward network), the input is 
@@ -320,7 +320,7 @@ with thousands of neurons per layer across 80+ layers, this is a
 non-trivial computational pipeline that may not scale to rapid iteration.
 
 **6. Missing comparison with SAE-based approaches.** Sparse autoencoders 
-(Lindsey et al., 2025; Ferrando et al., 2025) decompose activations into 
+[@lindsey2025; @ferrando2025] decompose activations into 
 interpretable features rather than raw neurons. The paper acknowledges this 
 work but does not compare against it. SAE features are typically more 
 monosemantic than individual neurons, so it is plausible that 
