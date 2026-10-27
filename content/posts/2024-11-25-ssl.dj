@@ -463,15 +463,15 @@ that needs almost none.
 
 ## References
 
-- Bahri, D., Jiang, H., Tay, Y., Metzler, D. (2021). SCARF: Self-Supervised Contrastive Learning using Random Feature Corruption. ICLR 2022. https://arxiv.org/abs/2106.15147
-- van den Oord, A., Li, Y., Vinyals, O. (2018). Representation Learning with Contrastive Predictive Coding. https://arxiv.org/abs/1807.03748
-- Poole, B., Ozair, S., van den Oord, A., Alemi, A. A., Tucker, G. (2019). On Variational Bounds of Mutual Information. ICML 2019. https://arxiv.org/abs/1905.06922
-- McAllester, D., Stratos, K. (2018). Formal Limitations on the Measurement of Mutual Information. https://arxiv.org/abs/1811.04251
-- Tschannen, M., Djolonga, J., Rubenstein, P. K., Gelly, S., Lucic, M. (2019). On Mutual Information Maximization for Representation Learning. ICLR 2020. https://arxiv.org/abs/1907.13625
-- Wang, F., Liu, H. (2020). Understanding the Behaviour of Contrastive Loss. CVPR 2021. https://arxiv.org/abs/2012.09740
-- Chen, T., Kornblith, S., Norouzi, M., Hinton, G. (2020). A Simple Framework for Contrastive Learning of Visual Representations. ICML 2020. https://arxiv.org/abs/2002.05709
-- Grill, J.-B., et al. (2020). Bootstrap your own latent: A new approach to self-supervised Learning. https://arxiv.org/abs/2006.07733
-- Chen, X., He, K. (2020). Exploring Simple Siamese Representation Learning. https://arxiv.org/abs/2011.10566
-- Bardes, A., Ponce, J., LeCun, Y. (2021). VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning. ICLR 2022. https://arxiv.org/abs/2105.04906
-- Caron, M., Touvron, H., Misra, I., Jégou, H., Mairal, J., Bojanowski, P., Joulin, A. (2021). Emerging Properties in Self-Supervised Vision Transformers. https://arxiv.org/abs/2104.14294
-- Wang, T., Isola, P. (2020). Understanding Contrastive Representation Learning through Alignment and Uniformity on the Hypersphere. ICML 2020. https://arxiv.org/abs/2005.10242
+- Bahri, D., Jiang, H., Tay, Y., Metzler, D. (2021). SCARF: Self-Supervised Contrastive Learning using Random Feature Corruption. ICLR 2022. <https://arxiv.org/abs/2106.15147>
+- van den Oord, A., Li, Y., Vinyals, O. (2018). Representation Learning with Contrastive Predictive Coding. <https://arxiv.org/abs/1807.03748>
+- Poole, B., Ozair, S., van den Oord, A., Alemi, A. A., Tucker, G. (2019). On Variational Bounds of Mutual Information. ICML 2019. <https://arxiv.org/abs/1905.06922>
+- McAllester, D., Stratos, K. (2018). Formal Limitations on the Measurement of Mutual Information. <https://arxiv.org/abs/1811.04251>
+- Tschannen, M., Djolonga, J., Rubenstein, P. K., Gelly, S., Lucic, M. (2019). On Mutual Information Maximization for Representation Learning. ICLR 2020. <https://arxiv.org/abs/1907.13625>
+- Wang, F., Liu, H. (2020). Understanding the Behaviour of Contrastive Loss. CVPR 2021. <https://arxiv.org/abs/2012.09740>
+- Chen, T., Kornblith, S., Norouzi, M., Hinton, G. (2020). A Simple Framework for Contrastive Learning of Visual Representations. ICML 2020. <https://arxiv.org/abs/2002.05709>
+- Grill, J.-B., et al. (2020). Bootstrap your own latent: A new approach to self-supervised Learning. <https://arxiv.org/abs/2006.07733>
+- Chen, X., He, K. (2020). Exploring Simple Siamese Representation Learning. <https://arxiv.org/abs/2011.10566>
+- Bardes, A., Ponce, J., LeCun, Y. (2021). VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning. ICLR 2022. <https://arxiv.org/abs/2105.04906>
+- Caron, M., Touvron, H., Misra, I., Jégou, H., Mairal, J., Bojanowski, P., Joulin, A. (2021). Emerging Properties in Self-Supervised Vision Transformers. <https://arxiv.org/abs/2104.14294>
+- Wang, T., Isola, P. (2020). Understanding Contrastive Representation Learning through Alignment and Uniformity on the Hypersphere. ICML 2020. <https://arxiv.org/abs/2005.10242>

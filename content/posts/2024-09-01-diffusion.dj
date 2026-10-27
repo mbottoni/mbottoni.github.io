@@ -442,15 +442,15 @@ difference between an autoencoder and a generative model, and it is exactly the 
 
 ## References
 
-- Sohl-Dickstein, J., Weiss, E. A., Maheswaranathan, N., Ganguli, S. (2015). Deep Unsupervised Learning using Nonequilibrium Thermodynamics. ICML 2015. https://arxiv.org/abs/1503.03585
-- Ho, J., Jain, A., Abbeel, P. (2020). Denoising Diffusion Probabilistic Models. NeurIPS 2020. https://arxiv.org/abs/2006.11239
-- Kingma, D. P., Salimans, T., Poole, B., Ho, J. (2021). Variational Diffusion Models. NeurIPS 2021. https://arxiv.org/abs/2107.00630
-- Kingma, D. P., Gao, R. (2023). Understanding Diffusion Objectives as the ELBO with Simple Data Augmentation. https://arxiv.org/abs/2303.00848
-- Nichol, A., Dhariwal, P. (2021). Improved Denoising Diffusion Probabilistic Models. https://arxiv.org/abs/2102.09672
-- Vincent, P. (2011). A Connection Between Score Matching and Denoising Autoencoders. Neural Computation 23(7), 1661-1674. https://doi.org/10.1162/NECO_a_00142
-- Efron, B. (2011). Tweedie's Formula and Selection Bias. Journal of the American Statistical Association 106(496), 1602-1614. https://doi.org/10.1198/jasa.2011.tm11181
-- Song, Y., Ermon, S. (2019). Generative Modeling by Estimating Gradients of the Data Distribution. NeurIPS 2019. https://arxiv.org/abs/1907.05600
-- Song, Y., Sohl-Dickstein, J., Kingma, D. P., Kumar, A., Ermon, S., Poole, B. (2020). Score-Based Generative Modeling through Stochastic Differential Equations. ICLR 2021. https://arxiv.org/abs/2011.13456
-- Luo, C. (2022). Understanding Diffusion Models: A Unified Perspective. https://arxiv.org/abs/2208.11970
-- Rombach, R., Blattmann, A., Lorenz, D., Esser, P., Ommer, B. (2021). High-Resolution Image Synthesis with Latent Diffusion Models. CVPR 2022. https://arxiv.org/abs/2112.10752
-- Dieleman, S. (2024). Diffusion is spectral autoregression. Blog post. https://sander.ai/2024/09/02/spectral-autoregression.html
+- Sohl-Dickstein, J., Weiss, E. A., Maheswaranathan, N., Ganguli, S. (2015). Deep Unsupervised Learning using Nonequilibrium Thermodynamics. ICML 2015. <https://arxiv.org/abs/1503.03585>
+- Ho, J., Jain, A., Abbeel, P. (2020). Denoising Diffusion Probabilistic Models. NeurIPS 2020. <https://arxiv.org/abs/2006.11239>
+- Kingma, D. P., Salimans, T., Poole, B., Ho, J. (2021). Variational Diffusion Models. NeurIPS 2021. <https://arxiv.org/abs/2107.00630>
+- Kingma, D. P., Gao, R. (2023). Understanding Diffusion Objectives as the ELBO with Simple Data Augmentation. <https://arxiv.org/abs/2303.00848>
+- Nichol, A., Dhariwal, P. (2021). Improved Denoising Diffusion Probabilistic Models. <https://arxiv.org/abs/2102.09672>
+- Vincent, P. (2011). A Connection Between Score Matching and Denoising Autoencoders. Neural Computation 23(7), 1661-1674. <https://doi.org/10.1162/NECO_a_00142>
+- Efron, B. (2011). Tweedie's Formula and Selection Bias. Journal of the American Statistical Association 106(496), 1602-1614. <https://doi.org/10.1198/jasa.2011.tm11181>
+- Song, Y., Ermon, S. (2019). Generative Modeling by Estimating Gradients of the Data Distribution. NeurIPS 2019. <https://arxiv.org/abs/1907.05600>
+- Song, Y., Sohl-Dickstein, J., Kingma, D. P., Kumar, A., Ermon, S., Poole, B. (2020). Score-Based Generative Modeling through Stochastic Differential Equations. ICLR 2021. <https://arxiv.org/abs/2011.13456>
+- Luo, C. (2022). Understanding Diffusion Models: A Unified Perspective. <https://arxiv.org/abs/2208.11970>
+- Rombach, R., Blattmann, A., Lorenz, D., Esser, P., Ommer, B. (2021). High-Resolution Image Synthesis with Latent Diffusion Models. CVPR 2022. <https://arxiv.org/abs/2112.10752>
+- Dieleman, S. (2024). Diffusion is spectral autoregression. Blog post. <https://sander.ai/2024/09/02/spectral-autoregression.html>

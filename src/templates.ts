@@ -810,7 +810,13 @@ function prereq_line(posts: Post[], label: string): HtmlString {
   if (posts.length === 0) return new HtmlString("");
   return html`<p class="prereq-line">
       <span class="prereq-line__label">${label}</span>
-      ${posts.map((p, i) => html`${i ? ", " : ""}<a href="${p.path}">${p.title}</a>`)}
+      ${
+    posts.map((p, i) =>
+      html`${
+        i ? new HtmlString(`<span class="prereq-line__sep" aria-hidden="true">·</span>`) : ""
+      }<a href="${p.path}">${p.title}</a>`
+    )
+  }
     </p>`;
 }
 
