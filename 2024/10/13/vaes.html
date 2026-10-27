@@ -1,0 +1,608 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A comprehensive list of different types of VAEs</title>
+  <meta name="description" content="VAE (Vanilla VAE): The original VAE architecture consists of an encoder that 
+maps input data to a latent space, and a decoder that reconstructs the 
+input from the latent representation. It uses a variational inference 
+approach to learn the latent space distribution.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="A comprehensive list of different types of VAEs">
+  <meta property="og:description" content="VAE (Vanilla VAE): The original VAE architecture consists of an encoder that 
+maps input data to a latent space, and a decoder that reconstructs the 
+input from the latent representation. It uses a variational inference 
+approach to learn the latent space distribution.">
+  <meta property="og:url" content="https://mbottoni.github.io/2024/10/13/vaes.html">
+  <meta property="og:image" content="/assets/generative/vaes.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="A comprehensive list of different types of VAEs">
+  <meta name="twitter:description" content="VAE (Vanilla VAE): The original VAE architecture consists of an encoder that 
+maps input data to a latent space, and a decoder that reconstructs the 
+input from the latent representation. It uses a variational inference 
+approach to learn the latent space distribution.">
+  <meta name="twitter:image" content="/assets/generative/vaes.png">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/10/13/vaes.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/map.html">Map</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="reading-progress" aria-hidden="true"><div class="reading-progress__bar"></div></div>
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/generative.html">
+          Diffusion &amp; Generative Modeling
+        </a>
+        <span class="post-meta"><time datetime="2024-10-13">Oct 13, 2024</time> · 7 min read</span>
+      </div>
+      
+      <p class="prereq-line">
+      <span class="prereq-line__label">Before reading this</span>
+      <a href="/2024/09/17/divergences.html">Some common divergences</a>
+    </p>
+      
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <ul><li class="toc-l2"><a href="#The-math-every-variant-above-builds-on">The math every variant above builds on</a></li><li class="toc-l3"><a href="#The-ELBO-via-the-Jensen-inequality">The ELBO via the Jensen inequality</a></li><li class="toc-l3"><a href="#The-ELBO-via-the-KL-gap">The ELBO via the KL gap</a></li><li class="toc-l3"><a href="#The-reparameterization-trick">The reparameterization trick</a></li><li class="toc-l3"><a href="#The-KL-term-in-closed-form">The KL term in closed form</a></li><li class="toc-l3"><a href="#$\beta$-VAE">$\beta$-VAE</a></li><li class="toc-l2"><a href="#References">References</a></li></ul>
+    </details>
+  
+      <article >
+
+    <h1 id="A-comprehensive-list-of-different-types-of-VAEs">
+    <a href="#A-comprehensive-list-of-different-types-of-VAEs"><span>A comprehensive list of different types of VAEs</span> <time datetime="2024-10-13">Oct 13, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/generative/vaes.png">
+</figure>
+<ol>
+<li>
+<p><strong><strong><span>VAE</span></strong></strong><span> (Vanilla VAE): The original VAE architecture consists of an encoder that </span>
+<span>maps input data to a latent space, and a decoder that reconstructs the </span>
+<span>input from the latent representation. It uses a variational inference </span>
+<span>approach to learn the latent space distribution.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Conditional VAE</span></strong></strong><span>: This VAE variant incorporates additional conditioning </span>
+<span>information into both the encoder and decoder networks. The conditioning </span>
+<span>allows the model to generate samples conditioned on specific attributes or classes.</span></p>
+</li>
+<li>
+<p><strong><strong><span>WAE - MMD</span></strong></strong><span> (with RBF Kernel): Wasserstein Autoencoders use Maximum Mean Discrepancy (MMD) with </span>
+<span>a Radial Basis Function (RBF) kernel to minimize the distance between the encoded </span>
+<span>distribution and a prior distribution, aiming for better-quality reconstructions.</span></p>
+</li>
+<li>
+<p><strong><strong><span>WAE - MMD</span></strong></strong><span> (with IMQ Kernel): Similar to the RBF kernel version, but uses an Inverse MultiQuadric (IMQ) kernel </span>
+<span>for the MMD calculation, which can provide different regularization properties.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Beta-VAE</span></strong></strong><span>: This architecture introduces a hyperparameter β to control the trade-off between </span>
+<span>reconstruction quality and the disentanglement of latent representations, allowing for </span>
+<span>more interpretable latent spaces.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Disentangled Beta-VAE</span></strong></strong><span>: An improved version of Beta-VAE that aims to achieve better disentanglement </span>
+<span>of latent factors by modifying the training objective and architecture slightly.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Beta-TC-VAE</span></strong></strong><span>: This variant decomposes the KL divergence term in the VAE objective into three </span>
+<span>components, with a β parameter applied to the total correlation term to </span>
+<span>encourage disentanglement.</span></p>
+</li>
+<li>
+<p><strong><strong><span>IWAE</span></strong></strong><span> (Importance Weighted Autoencoder): IWAE uses multiple samples </span>
+<span>from the encoder to compute </span>
+<span>a tighter lower bound on the marginal likelihood, potentially leading </span>
+<span>to better generative models.</span></p>
+</li>
+<li>
+<p><strong><strong><span>MIWAE</span></strong></strong><span> (Multiply Importance Weighted Autoencoder): An extension of IWAE that uses multiple </span>
+<span>importance-weighted samples during both training and inference to improve performance.</span></p>
+</li>
+<li>
+<p><strong><strong><span>DFCVAE</span></strong></strong><span> (Deep Feature Consistent VAE): This VAE incorporates perceptual losses based on features from </span>
+<span>pre-trained neural networks to improve the quality and consistency of generated images.</span></p>
+</li>
+<li>
+<p><strong><strong><span>MSSIM VAE</span></strong></strong><span> (Multi-Scale Structural Similarity VAE): This architecture uses a multi-scale </span>
+<span>structural similarity index as part of its loss function </span>
+<span>to improve the perceptual quality of reconstructed images.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Categorical VAE</span></strong></strong><span>: A VAE variant designed to work with </span>
+<span>categorical latent variables, often using the Gumbel-Softmax </span>
+<span>trick for differentiable sampling from discrete distributions.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Joint VAE</span></strong></strong><span>: This model combines continuous and discrete latent variables in </span>
+<span>a single framework, allowing for representation of both continuous </span>
+<span>and categorical factors.</span></p>
+</li>
+<li>
+<p><strong><strong><span>Info VAE</span></strong></strong><span>: InfoVAE modifies the objective function to maximize the mutual information </span>
+<span>between inputs and latent variables, aiming for more informative </span>
+<span>latent representations.</span></p>
+</li>
+<li>
+<p><strong><strong><span>LogCosh VAE</span></strong></strong><span>: This VAE uses the log-cosh loss function </span>
+<span>instead of mean squared error for reconstruction, potentially </span>
+<span>providing robustness to outliers.</span></p>
+</li>
+<li>
+<p><strong><strong><span>SWAE</span></strong></strong><span> (Sliced-Wasserstein Autoencoder): SWAE uses the sliced Wasserstein distance to </span>
+<span>measure the discrepancy between the encoded distribution and the prior, offering </span>
+<span>an alternative to KL divergence.</span></p>
+</li>
+<li>
+<p><strong><strong><span>VQ-VAE</span></strong></strong><span> (Vector Quantized VAE): This architecture uses vector quantization </span>
+<span>in the latent space, mapping continuous encodings to discrete codes from a </span>
+<span>codebook, useful for generating high-quality images and audio.</span></p>
+</li>
+<li>
+<p><strong><strong><span>DIP VAE</span></strong></strong><span> (Disentangled Inferred Prior VAE): DIP-VAE modifies the VAE objective to encourage </span>
+<span>the aggregate posterior to match the prior, aiming for better disentanglement </span>
+<span>of latent factors.</span></p>
+</li>
+</ol>
+<section id="The-math-every-variant-above-builds-on">
+
+    <h2>
+    <a href="#The-math-every-variant-above-builds-on"><span>The math every variant above builds on</span> </a><a class="heading-anchor" href="#The-math-every-variant-above-builds-on" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Every model in this list modifies one object, the evidence lower bound (ELBO).</span>
+<span>So I think it is worth deriving it carefully once. Here is the setup. Data</span>
+<span>$x$ is generated from a latent $z$ by a decoder $p_\theta(x \mid z)$ with</span>
+<span>prior $p(z)$, usually $\mathcal{N}(0, I)$. The true posterior</span>
+<span>$p_\theta(z \mid x) = p_\theta(x \mid z)\, p(z)/p_\theta(x)$ is intractable,</span>
+<span>because the evidence $p_\theta(x) = \int p_\theta(x \mid z)\, p(z)\, dz$ is.</span>
+<span>So we introduce an encoder $q_\phi(z \mid x)$ that approximates it. Here</span>
+<span>$\theta$ are the decoder parameters and $\phi$ the encoder parameters.</span></p>
+<section id="The-ELBO-via-the-Jensen-inequality">
+
+    <h3>
+    <a href="#The-ELBO-via-the-Jensen-inequality"><span>The ELBO via the Jensen inequality</span> </a><a class="heading-anchor" href="#The-ELBO-via-the-Jensen-inequality" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Multiply and divide by $q_\phi$ inside the integral, then use the concavity</span>
+<span>of $\log$ (Jensen: $\log \mathbb{E}[Y] \ge \mathbb{E}[\log Y]$):</span></p>
+<p><span>$$\begin{aligned}
+\log p_\theta(x) &amp;= \log \int q_\phi(z \mid x)\, \frac{p_\theta(x, z)}{q_\phi(z \mid x)}\, dz
+= \log \mathbb{E}_{q_\phi(z \mid x)}\Big[\frac{p_\theta(x, z)}{q_\phi(z \mid x)}\Big] \\
+&amp;\ge \mathbb{E}_{q_\phi(z \mid x)}\Big[\log \frac{p_\theta(x, z)}{q_\phi(z \mid x)}\Big]
+=: \mathcal{L}(\theta, \phi; x).
+\end{aligned}$$</span></p>
+<p><span>Splitting $p_\theta(x, z) = p_\theta(x \mid z)\, p(z)$ gives the familiar</span>
+<span>two-term form:</span></p>
+<p><span>$$\mathcal{L}(\theta, \phi; x) = \underbrace{\mathbb{E}_{q_\phi(z \mid x)}\big[\log p_\theta(x \mid z)\big]}_{\text{reconstruction}}
+- \underbrace{D_{\mathrm{KL}}\big(q_\phi(z \mid x)\,\|\,p(z)\big)}_{\text{regularizer}}.$$</span></p>
+<p><span>(IWAE in the list above tightens exactly this Jensen step. It averages $K$</span>
+<span>importance weights inside the $\log$ before applying the inequality.)</span></p>
+</section>
+<section id="The-ELBO-via-the-KL-gap">
+
+    <h3>
+    <a href="#The-ELBO-via-the-KL-gap"><span>The ELBO via the KL gap</span> </a><a class="heading-anchor" href="#The-ELBO-via-the-KL-gap" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Jensen tells us that the bound holds but not how loose it is. The second</span>
+<span>derivation answers that. Because $\log p_\theta(x)$ does not depend on $z$, it</span>
+<span>equals its own expectation under $q_\phi$. Then use</span>
+<span>$p_\theta(x) = p_\theta(x, z)/p_\theta(z \mid x)$:</span></p>
+<p><span>$$\log p_\theta(x)
+= \mathbb{E}_{q_\phi}\Big[\log \frac{p_\theta(x, z)}{p_\theta(z \mid x)}\Big]
+= \mathbb{E}_{q_\phi}\Big[\log \frac{p_\theta(x, z)}{q_\phi(z \mid x)}\Big]
++ \mathbb{E}_{q_\phi}\Big[\log \frac{q_\phi(z \mid x)}{p_\theta(z \mid x)}\Big],$$</span></p>
+<p><span>that is,</span></p>
+<p><span>$$\log p_\theta(x) = \mathcal{L}(\theta, \phi; x) + D_{\mathrm{KL}}\big(q_\phi(z \mid x)\,\|\,p_\theta(z \mid x)\big).$$</span></p>
+<p><span>The gap is exactly the KL divergence from the encoder to the true posterior.</span>
+<span>Since it is non-negative, we recover the bound. Moreover, because</span>
+<span>$\log p_\theta(x)$ does not depend on $\phi$, maximizing $\mathcal{L}$ over</span>
+<span>$\phi$ is the same as minimizing that KL. One objective trains the decoder</span>
+<span>(push up the evidence) and turns the encoder into a better posterior</span>
+<span>approximation.</span></p>
+</section>
+<section id="The-reparameterization-trick">
+
+    <h3>
+    <a href="#The-reparameterization-trick"><span>The reparameterization trick</span> </a><a class="heading-anchor" href="#The-reparameterization-trick" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>The reconstruction term is an expectation under a distribution that depends</span>
+<span>on $\phi$, so we cannot simply move $\nabla_\phi$ inside a Monte Carlo</span>
+<span>average. With a diagonal Gaussian encoder</span>
+<span>$q_\phi(z \mid x) = \mathcal{N}\big(z;\ \mu_\phi(x),\ \operatorname{diag}\sigma_\phi^2(x)\big)$,</span>
+<span>write the sample as a deterministic, differentiable function of parameter-free</span>
+<span>noise:</span></p>
+<p><span>$$z = \mu_\phi(x) + \sigma_\phi(x) \odot \epsilon,\qquad \epsilon \sim \mathcal{N}(0, I),$$</span></p>
+<p><span>where $\odot$ is element-wise multiplication. Now the randomness no longer</span>
+<span>depends on $\phi$, and the gradient passes through the sample:</span></p>
+<p><span>$$\nabla_\phi\, \mathbb{E}_{q_\phi(z \mid x)}\big[f(z)\big]
+= \mathbb{E}_{\epsilon \sim \mathcal{N}(0, I)}\big[\nabla_\phi f\big(\mu_\phi(x) + \sigma_\phi(x) \odot \epsilon\big)\big].$$</span></p>
+<p><span>A single sample of $\epsilon$ per data point already gives a low-variance,</span>
+<span>unbiased estimate. The alternative score-function (REINFORCE) estimator,</span>
+<span>$\mathbb{E}_{q_\phi}[f(z)\, \nabla_\phi \log q_\phi(z \mid x)]$, is also</span>
+<span>unbiased, but its variance is typically far higher. The Categorical VAE in the</span>
+<span>list needs the Gumbel-Softmax relaxation precisely because a discrete sample</span>
+<span>cannot be reparameterized this way.</span></p>
+</section>
+<section id="The-KL-term-in-closed-form">
+
+    <h3>
+    <a href="#The-KL-term-in-closed-form"><span>The KL term in closed form</span> </a><a class="heading-anchor" href="#The-KL-term-in-closed-form" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>With a diagonal Gaussian encoder and a standard normal prior, the regularizer</span>
+<span>needs no sampling. The KL factorizes over the $J$ latent dimensions, and for a</span>
+<span>single dimension, with $z \sim \mathcal{N}(\mu, \sigma^2)$,</span></p>
+<p><span>$$\begin{aligned}
+D_{\mathrm{KL}}\big(\mathcal{N}(\mu, \sigma^2)\,\|\,\mathcal{N}(0, 1)\big)
+&amp;= \mathbb{E}\Big[-\tfrac12\log(2\pi\sigma^2) - \frac{(z-\mu)^2}{2\sigma^2} + \tfrac12\log(2\pi) + \frac{z^2}{2}\Big] \\
+&amp;= -\tfrac12\log\sigma^2 - \tfrac12 + \tfrac12(\mu^2 + \sigma^2),
+\end{aligned}$$</span></p>
+<p><span>using $\mathbb{E}[(z-\mu)^2] = \sigma^2$ and $\mathbb{E}[z^2] = \mu^2 + \sigma^2$.</span>
+<span>Summing over dimensions:</span></p>
+<p><span>$$D_{\mathrm{KL}}\big(q_\phi(z \mid x)\,\|\,\mathcal{N}(0, I)\big)
+= \frac{1}{2}\sum_{j=1}^{J}\big(\mu_j^2 + \sigma_j^2 - \log\sigma_j^2 - 1\big).$$</span></p>
+<p><span>Each summand is zero exactly when $\mu_j = 0$ and $\sigma_j = 1$. For the</span>
+<span>reconstruction term, a Gaussian decoder with fixed variance turns</span>
+<span>$-\log p_\theta(x \mid z)$ into a scaled squared error, and a Bernoulli decoder</span>
+<span>turns it into binary cross-entropy. That is why VAE code looks like</span>
+&ldquo;<span>MSE + KL</span>&rdquo;<span>.</span></p>
+</section>
+<section id="$\beta$-VAE">
+
+    <h3>
+    <a href="#$\beta$-VAE"><span>$\beta$-VAE</span> </a><a class="heading-anchor" href="#$\beta$-VAE" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>$\beta$-VAE puts a single weight $\beta$ on the regularizer:</span></p>
+<p><span>$$\mathcal{L}_\beta(\theta, \phi; x) = \mathbb{E}_{q_\phi(z \mid x)}\big[\log p_\theta(x \mid z)\big]
+- \beta\, D_{\mathrm{KL}}\big(q_\phi(z \mid x)\,\|\,p(z)\big).$$</span></p>
+<p><span>For $\beta = 1$ this is the ELBO. For $\beta &gt; 1$ it is still a lower bound on</span>
+<span>$\log p_\theta(x)$, only looser, since the KL is non-negative. For $\beta &lt; 1$</span>
+<span>it is not a bound at all. To see what the extra pressure does, average the KL</span>
+<span>over the data distribution $p_{\text{data}}(x)$. Insert the aggregate posterior</span>
+<span>$q_\phi(z) = \mathbb{E}_{p_{\text{data}}(x)}[q_\phi(z \mid x)]$ into the log</span>
+<span>ratio:</span></p>
+<p><span>$$\mathbb{E}_{p_{\text{data}}(x)}\Big[D_{\mathrm{KL}}\big(q_\phi(z \mid x)\,\|\,p(z)\big)\Big]
+= I_q(x; z) + D_{\mathrm{KL}}\big(q_\phi(z)\,\|\,p(z)\big),$$</span></p>
+<p><span>where $I_q(x; z)$ is the mutual information between $x$ and $z$ under the</span>
+<span>encoder</span>&rsquo;<span>s joint $p_{\text{data}}(x)\, q_\phi(z \mid x)$. Raising $\beta$</span>
+<span>therefore does two things. It limits how much information the code carries</span>
+<span>about the input, which acts as a bottleneck. And it pushes the aggregate</span>
+<span>posterior towards the factorized prior, which is the pressure towards</span>
+<span>disentanglement. The price is blurrier reconstructions. Burgess et al. make the</span>
+<span>bottleneck explicit with a capacity target $C$ that is increased during</span>
+<span>training, $\mathbb{E}[\log p_\theta(x \mid z)] - \gamma\,\big|D_{\mathrm{KL}}(q_\phi(z \mid x)\,\|\,p(z)) - C\big|$.</span>
+<span>Beta-TC-VAE in the list goes one step further. It splits the</span>
+<span>$D_{\mathrm{KL}}(q_\phi(z)\,\|\,p(z))$ term again and penalizes only the</span>
+<span>total-correlation part.</span></p>
+</section>
+</section>
+<section id="References">
+
+    <h2>
+    <a href="#References"><span>References</span> </a><a class="heading-anchor" href="#References" aria-label="Link to this section">#</a>
+    </h2>
+<ul>
+<li>
+<span>Diederik P. Kingma, Max Welling. </span><a href="https://arxiv.org/abs/1312.6114"><span>Auto-Encoding Variational Bayes</span></a><span>. ICLR 2014.</span>
+</li>
+<li>
+<span>Danilo Jimenez Rezende, Shakir Mohamed, Daan Wierstra. </span><a href="https://arxiv.org/abs/1401.4082"><span>Stochastic Backpropagation and Approximate Inference in Deep Generative Models</span></a><span>. ICML 2014.</span>
+</li>
+<li>
+<span>Christopher P. Burgess, Irina Higgins, Arka Pal, Loic Matthey, Nick Watters, Guillaume Desjardins, Alexander Lerchner. </span><a href="https://arxiv.org/abs/1804.03599"><span>Understanding disentangling in β-VAE</span></a><span>. 2018.</span>
+</li>
+</ul>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/vae.html">#vae</a><a class="tag" href="/tags/generative.html">#generative</a><a class="tag" href="/tags/latent-variable.html">#latent-variable</a></div>
+      <p class="prereq-line">
+      <span class="prereq-line__label">Read next</span>
+      <a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a>
+    </p><section class="related">
+        <h2>Related posts</h2>
+        <ul class="related-list">
+          <li>
+              <a href="/2024/12/15/cfg.html">Classifier free diffusion guidance</a>
+              <span class="muted"><time datetime="2024-12-15">Dec 15, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li><li>
+              <a href="/2024/12/07/timeseries-diffusion.html">Diffusion models for time series</a>
+              <span class="muted"><time datetime="2024-12-07">Dec 7, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li><li>
+              <a href="/2024/12/01/flow.html">Flow Matching, a short overview</a>
+              <span class="muted"><time datetime="2024-12-01">Dec 1, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li>
+        </ul>
+      </section><nav class="post-nav" aria-label="Chronological">
+        <a class="post-nav__link post-nav__prev" href="/2024/09/29/llm-quant.html">
+          <span class="post-nav__label">← Older</span>
+          <span class="post-nav__title">Quantization of LLMs</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/10/20/IIT.html">
+          <span class="post-nav__label">Newer →</span>
+          <span class="post-nav__title">Integrated Information Theory (IIT)</span>
+        </a>
+      </nav><nav class="post-nav post-nav--theme" aria-label="Same theme">
+        <a class="post-nav__link post-nav__prev" href="/2024/09/09/ddim_ddpm.html">
+          <span class="post-nav__label">← Older in theme</span>
+          <span class="post-nav__title">DDIM vs DDPM</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/12/01/flow.html">
+          <span class="post-nav__label">Newer in theme →</span>
+          <span class="post-nav__title">Flow Matching, a short overview</span>
+        </a>
+      </nav>
+      
+    <section class="comments" id="comments">
+      <h2>Comments</h2>
+      <div class="giscus"></div>
+      <noscript><p class="muted">Comments are powered by <a href="https://giscus.app">giscus</a> and need JavaScript.</p></noscript>
+    </section>
+    <script>
+    (function () {
+      // Inject giscus with the theme the site is actually using (the toggle
+      // persists in localStorage), rather than the OS preference.
+      var siteTheme = function () {
+        var t = document.documentElement.getAttribute("data-theme");
+        if (t) return t === "dark" ? "dark" : "light";
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark" : "light";
+      };
+      var s = document.createElement("script");
+      s.src = "https://giscus.app/client.js";
+      var attrs = {
+        "data-repo": "mbottoni/mbottoni.github.io",
+        "data-repo-id": "R_kgDOKv71Lg",
+        "data-category": "General",
+        "data-category-id": "DIC_kwDOKv71Ls4DEBYr",
+        "data-mapping": "pathname",
+        "data-strict": "1",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "top",
+        "data-theme": siteTheme(),
+        "data-lang": "en",
+        "data-loading": "lazy",
+        "crossorigin": "anonymous"
+      };
+      for (var k in attrs) s.setAttribute(k, attrs[k]);
+      s.async = true;
+      document.getElementById("comments").appendChild(s);
+
+      // Follow the dark-mode toggle after load.
+      new MutationObserver(function () {
+        var frame = document.querySelector("iframe.giscus-frame");
+        if (!frame) return;
+        frame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: siteTheme() } } },
+          "https://giscus.app");
+      }).observe(document.documentElement,
+        { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+    </script>
+  
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-10-13-vaes.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        // Widgets build their own DOM and style their spans.
+        if (span.closest(".widget")) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  <script>
+(function () {
+  var bar = document.querySelector(".reading-progress__bar");
+  var article = document.querySelector("article");
+  if (bar && article) {
+    var update = function () {
+      var top = article.offsetTop;
+      var h = article.offsetHeight - window.innerHeight;
+      var p = h > 0 ? (window.scrollY - top) / h : 1;
+      bar.style.transform = "scaleX(" + Math.min(1, Math.max(0, p)) + ")";
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
+  var toc = document.querySelector(".toc");
+  if (!toc || !("IntersectionObserver" in window)) return;
+  var links = {};
+  toc.querySelectorAll("a[href^='#']").forEach(function (a) {
+    links[decodeURIComponent(a.getAttribute("href").slice(1))] = a;
+  });
+  var ids = Object.keys(links);
+  if (!ids.length) return;
+  var visible = {};
+  var setActive = function () {
+    var first = null;
+    for (var i = 0; i < ids.length; i++) {
+      if (visible[ids[i]]) { first = ids[i]; break; }
+    }
+    ids.forEach(function (id) {
+      links[id].classList.toggle("active", id === first);
+    });
+  };
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    setActive();
+  }, { rootMargin: "-10% 0px -70% 0px", threshold: 0 });
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>
+</body>
+
+</html>

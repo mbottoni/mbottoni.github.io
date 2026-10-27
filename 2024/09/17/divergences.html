@@ -1,0 +1,775 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Some common divergences</title>
+  <meta name="description" content="Hey. usually on machine learning we have to consider distances between different probability distributions.
+This is in fact a hard problem and there is a misconception that the most common way to do this is using the
+kl divergence. I believe that this is not true.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Some common divergences">
+  <meta property="og:description" content="Hey. usually on machine learning we have to consider distances between different probability distributions.
+This is in fact a hard problem and there is a misconception that the most common way to do this is using the
+kl divergence. I believe that this is not true.">
+  <meta property="og:url" content="https://mbottoni.github.io/2024/09/17/divergences.html">
+  <meta property="og:image" content="/assets/foundations/divergences.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Some common divergences">
+  <meta name="twitter:description" content="Hey. usually on machine learning we have to consider distances between different probability distributions.
+This is in fact a hard problem and there is a misconception that the most common way to do this is using the
+kl divergence. I believe that this is not true.">
+  <meta name="twitter:image" content="/assets/foundations/divergences.png">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/09/17/divergences.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/map.html">Map</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="reading-progress" aria-hidden="true"><div class="reading-progress__bar"></div></div>
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/foundations.html">
+          Math, Physics &amp; Foundations
+        </a>
+        <span class="post-meta"><time datetime="2024-09-17">Sep 17, 2024</time> · 8 min read</span>
+      </div>
+      
+      <p class="prereq-line">
+      <span class="prereq-line__label">Before reading this</span>
+      <a href="/2024/12/23/prob.html">Probability Paradigms</a>
+    </p>
+      
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <ul><li class="toc-l2"><a href="#One-family-behind-most-of-these-f-divergences">One family behind most of these: f-divergences</a></li><li class="toc-l3"><a href="#Definition">Definition</a></li><li class="toc-l3"><a href="#The-usual-suspects-as-instances">The usual suspects as instances</a></li><li class="toc-l3"><a href="#Non-negativity-from-Jensen">Non-negativity, from Jensen</a></li><li class="toc-l3"><a href="#Forward-vs-reverse-KL-covering-vs-seeking-modes">Forward vs reverse KL: covering vs seeking modes</a></li><li class="toc-l3"><a href="#The-variational-representation-and-f-GAN">The variational representation, and f-GAN</a></li><li class="toc-l2"><a href="#References">References</a></li></ul>
+    </details>
+  
+      <article >
+
+    <h1 id="Some-common-divergences">
+    <a href="#Some-common-divergences"><span>Some common divergences</span> <time datetime="2024-09-17">Sep 17, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/foundations/divergences.png">
+</figure>
+<p><span>Hey. usually on machine learning we have to consider distances between different probability distributions.</span>
+<span>This is in fact a hard problem and there is a misconception that the most common way to do this is using the</span>
+<span>kl divergence. I believe that this is not true.</span></p>
+<p><span>In fact, the KL divergence is not a metric, because it is not symmetric. It have nice properties that makes it useful</span>
+<span>but there are other metrics that are more useful in specific scenarios. Sadly these metrics are not taught on introductory</span>
+<span>courses in machine learning but there is a research trend on using these metrics on common architectures where you usually use </span>
+<span>the KL divergence on the loss, suck as the VAE</span>&rsquo;<span>s and DDPMs.</span></p>
+<p><span>The asymmetry is easier to believe when you can move the distributions around</span>
+<span>yourself. Drag </span><code>P</code><span> and </span><code>Q</code><span> below: the two KL numbers are computed from the same</span>
+<span>pair and they disagree, while the three symmetric measures underneath do not</span>
+<span>care which distribution you call which. Try </span><strong><span>Same mean</span></strong><span> </span>&mdash;<span> two distributions</span>
+<span>centred identically, one narrow and one wide </span>&mdash;<span> and watch </span><code>KL(P‖Q)</code><span> and</span>
+<code>KL(Q‖P)</code><span> differ by more than a nat. That gap is the whole reason the</span>
+<span>mode-seeking and mass-covering behaviours of a VAE depend on which way round you</span>
+<span>write the loss.</span></p>
+
+<figure class="widget" data-widget="divergences">
+<div class="widget-mount"></div>
+<noscript><p class="widget-fallback">This figure is interactive and needs JavaScript.</p></noscript>
+<figcaption class="title">KL in both directions, plus Jensen-Shannon, Hellinger and total variation, computed live from the two distributions. The shaded region is the mass P and Q share; total variation is one minus its area. Note that KL is unbounded while the symmetric measures saturate at 1 (JS at ln 2).</figcaption>
+</figure>
+<p><span>For example, here is code for some common divergences. The block below</span>
+<span>actually runs in your browser (Python via Pyodide, with NumPy): press </span><strong><span>Run</span></strong><span>, or</span>
+<strong><span>Edit</span></strong><span> to try your own distributions.</span></p>
+
+<figure class="code-block runnable" data-lang="python">
+
+
+<pre><code><span class="line"><span class="hl-keyword">import</span> numpy <span class="hl-keyword">as</span> np</span>
+<span class="line"><span class="hl-keyword">from</span> scipy.spatial.distance <span class="hl-keyword">import</span> cosine, euclidean</span>
+<span class="line"><span class="hl-keyword">from</span> numpy.linalg <span class="hl-keyword">import</span> inv</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">kl_divergence</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Kullback-Leibler divergence D_KL(P || Q)</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    p = np.asarray(p, dtype=np.float64)</span>
+<span class="line">    q = np.asarray(q, dtype=np.float64)</span>
+<span class="line">    epsilon = <span class="hl-number">1e-10</span></span>
+<span class="line">    p = np.clip(p, epsilon, <span class="hl-number">1</span>)</span>
+<span class="line">    q = np.clip(q, epsilon, <span class="hl-number">1</span>)</span>
+<span class="line">    <span class="hl-keyword">return</span> np.<span class="hl-built_in">sum</span>(p * np.log(p / q))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">js_divergence</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Jensen-Shannon divergence between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    m = <span class="hl-number">0.5</span> * (p + q)</span>
+<span class="line">    <span class="hl-keyword">return</span> <span class="hl-number">0.5</span> * kl_divergence(p, m) + <span class="hl-number">0.5</span> * kl_divergence(q, m)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">hellinger_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Hellinger distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">return</span> np.sqrt(np.<span class="hl-built_in">sum</span>((np.sqrt(p) - np.sqrt(q))**<span class="hl-number">2</span>)) / np.sqrt(<span class="hl-number">2</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">total_variation_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Total Variation distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">return</span> <span class="hl-number">0.5</span> * np.<span class="hl-built_in">sum</span>(np.<span class="hl-built_in">abs</span>(p - q))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">bhattacharyya_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Bhattacharyya distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    bc = np.<span class="hl-built_in">sum</span>(np.sqrt(p * q))</span>
+<span class="line">    <span class="hl-keyword">return</span> -np.log(bc)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">cosine_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Cosine distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">return</span> cosine(p, q)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">euclidean_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Euclidean distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">return</span> euclidean(p, q)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">chi_squared_distance</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Chi-Squared distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    epsilon = <span class="hl-number">1e-10</span></span>
+<span class="line">    p = np.asarray(p, dtype=np.float64) + epsilon</span>
+<span class="line">    q = np.asarray(q, dtype=np.float64) + epsilon</span>
+<span class="line">    <span class="hl-keyword">return</span> <span class="hl-number">0.5</span> * np.<span class="hl-built_in">sum</span>(((p - q)**<span class="hl-number">2</span>) / (p + q))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">kolmogorov_smirnov_statistic</span>(<span class="hl-params">p, q</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Kolmogorov-Smirnov statistic between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    cdf_p = np.cumsum(p)</span>
+<span class="line">    cdf_q = np.cumsum(q)</span>
+<span class="line">    <span class="hl-keyword">return</span> np.<span class="hl-built_in">max</span>(np.<span class="hl-built_in">abs</span>(cdf_p - cdf_q))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">mahalanobis_distance</span>(<span class="hl-params">p, q, cov=<span class="hl-literal">None</span></span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">    Compute the Mahalanobis distance between distributions P and Q</span></span>
+<span class="line"><span class="hl-string">    &quot;&quot;&quot;</span></span>
+<span class="line">    diff = p - q</span>
+<span class="line">    <span class="hl-keyword">if</span> cov <span class="hl-keyword">is</span> <span class="hl-literal">None</span>:</span>
+<span class="line">        cov = np.cov(np.stack([p, q], axis=<span class="hl-number">0</span>).T)</span>
+<span class="line">    cov_inv = inv(cov)</span>
+<span class="line">    <span class="hl-keyword">return</span> np.sqrt(np.dot(np.dot(diff.T, cov_inv), diff))</span>
+<span class="line"></span>
+<span class="line">p = np.array([<span class="hl-number">0.1</span>, <span class="hl-number">0.2</span>, <span class="hl-number">0.3</span>, <span class="hl-number">0.4</span>])</span>
+<span class="line">q = np.array([<span class="hl-number">0.4</span>, <span class="hl-number">0.3</span>, <span class="hl-number">0.2</span>, <span class="hl-number">0.1</span>])</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">for</span> name, f <span class="hl-keyword">in</span> [(<span class="hl-string">&quot;KL(P||Q)&quot;</span>, kl_divergence), (<span class="hl-string">&quot;KL(Q||P)&quot;</span>, <span class="hl-keyword">lambda</span> a, b: kl_divergence(b, a)),</span>
+<span class="line">                (<span class="hl-string">&quot;Jensen-Shannon&quot;</span>, js_divergence), (<span class="hl-string">&quot;Hellinger&quot;</span>, hellinger_distance),</span>
+<span class="line">                (<span class="hl-string">&quot;Total variation&quot;</span>, total_variation_distance),</span>
+<span class="line">                (<span class="hl-string">&quot;Bhattacharyya&quot;</span>, bhattacharyya_distance), (<span class="hl-string">&quot;Cosine&quot;</span>, cosine_distance),</span>
+<span class="line">                (<span class="hl-string">&quot;Euclidean&quot;</span>, euclidean_distance),</span>
+<span class="line">                (<span class="hl-string">&quot;Chi-squared&quot;</span>, chi_squared_distance), (<span class="hl-string">&quot;KS statistic&quot;</span>, kolmogorov_smirnov_statistic)]:</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;<span class="hl-subst">{name:16s}</span> <span class="hl-subst">{f(p, q):<span class="hl-number">.4</span>f}</span>&quot;</span>)</span></code></pre>
+
+<textarea class="run-source" hidden spellcheck="false">import numpy as np
+from scipy.spatial.distance import cosine, euclidean
+from numpy.linalg import inv
+
+def kl_divergence(p, q):
+    &quot;&quot;&quot;
+    Compute the Kullback-Leibler divergence D_KL(P || Q)
+    &quot;&quot;&quot;
+    p = np.asarray(p, dtype=np.float64)
+    q = np.asarray(q, dtype=np.float64)
+    epsilon = 1e-10
+    p = np.clip(p, epsilon, 1)
+    q = np.clip(q, epsilon, 1)
+    return np.sum(p * np.log(p / q))
+
+def js_divergence(p, q):
+    &quot;&quot;&quot;
+    Compute the Jensen-Shannon divergence between distributions P and Q
+    &quot;&quot;&quot;
+    m = 0.5 * (p + q)
+    return 0.5 * kl_divergence(p, m) + 0.5 * kl_divergence(q, m)
+
+def hellinger_distance(p, q):
+    &quot;&quot;&quot;
+    Compute the Hellinger distance between distributions P and Q
+    &quot;&quot;&quot;
+    return np.sqrt(np.sum((np.sqrt(p) - np.sqrt(q))**2)) / np.sqrt(2)
+
+def total_variation_distance(p, q):
+    &quot;&quot;&quot;
+    Compute the Total Variation distance between distributions P and Q
+    &quot;&quot;&quot;
+    return 0.5 * np.sum(np.abs(p - q))
+
+def bhattacharyya_distance(p, q):
+    &quot;&quot;&quot;
+    Compute the Bhattacharyya distance between distributions P and Q
+    &quot;&quot;&quot;
+    bc = np.sum(np.sqrt(p * q))
+    return -np.log(bc)
+
+def cosine_distance(p, q):
+    &quot;&quot;&quot;
+    Compute the Cosine distance between distributions P and Q
+    &quot;&quot;&quot;
+    return cosine(p, q)
+
+def euclidean_distance(p, q):
+    &quot;&quot;&quot;
+    Compute the Euclidean distance between distributions P and Q
+    &quot;&quot;&quot;
+    return euclidean(p, q)
+
+def chi_squared_distance(p, q):
+    &quot;&quot;&quot;
+    Compute the Chi-Squared distance between distributions P and Q
+    &quot;&quot;&quot;
+    epsilon = 1e-10
+    p = np.asarray(p, dtype=np.float64) + epsilon
+    q = np.asarray(q, dtype=np.float64) + epsilon
+    return 0.5 * np.sum(((p - q)**2) / (p + q))
+
+def kolmogorov_smirnov_statistic(p, q):
+    &quot;&quot;&quot;
+    Compute the Kolmogorov-Smirnov statistic between distributions P and Q
+    &quot;&quot;&quot;
+    cdf_p = np.cumsum(p)
+    cdf_q = np.cumsum(q)
+    return np.max(np.abs(cdf_p - cdf_q))
+
+def mahalanobis_distance(p, q, cov=None):
+    &quot;&quot;&quot;
+    Compute the Mahalanobis distance between distributions P and Q
+    &quot;&quot;&quot;
+    diff = p - q
+    if cov is None:
+        cov = np.cov(np.stack([p, q], axis=0).T)
+    cov_inv = inv(cov)
+    return np.sqrt(np.dot(np.dot(diff.T, cov_inv), diff))
+
+p = np.array([0.1, 0.2, 0.3, 0.4])
+q = np.array([0.4, 0.3, 0.2, 0.1])
+
+for name, f in [(&quot;KL(P||Q)&quot;, kl_divergence), (&quot;KL(Q||P)&quot;, lambda a, b: kl_divergence(b, a)),
+                (&quot;Jensen-Shannon&quot;, js_divergence), (&quot;Hellinger&quot;, hellinger_distance),
+                (&quot;Total variation&quot;, total_variation_distance),
+                (&quot;Bhattacharyya&quot;, bhattacharyya_distance), (&quot;Cosine&quot;, cosine_distance),
+                (&quot;Euclidean&quot;, euclidean_distance),
+                (&quot;Chi-squared&quot;, chi_squared_distance), (&quot;KS statistic&quot;, kolmogorov_smirnov_statistic)]:
+    print(f&quot;{name:16s} {f(p, q):.4f}&quot;)
+</textarea>
+<div class="run-bar">
+<button type="button" class="widget-btn run-btn">Run</button>
+<button type="button" class="widget-btn run-edit">Edit</button>
+<span class="run-status muted"></span>
+</div>
+<pre class="run-output" hidden></pre>
+<noscript><p class="widget-fallback">This snippet can be run in the browser with JavaScript enabled.</p></noscript>
+</figure>
+<section id="One-family-behind-most-of-these-f-divergences">
+
+    <h2>
+    <a href="#One-family-behind-most-of-these-f-divergences"><span>One family behind most of these: f-divergences</span> </a><a class="heading-anchor" href="#One-family-behind-most-of-these-f-divergences" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Most of the functions above look like unrelated formulas, but KL in both</span>
+<span>directions, Jensen-Shannon, total variation, Hellinger and $\chi^2$ are all the</span>
+<span>same object with a different convex function plugged in.</span></p>
+<section id="Definition">
+
+    <h3>
+    <a href="#Definition"><span>Definition</span> </a><a class="heading-anchor" href="#Definition" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Let $P$ and $Q$ be distributions with densities (or probability mass functions)</span>
+<span>$p$ and $q$, and assume $P$ is absolutely continuous with respect to $Q$: $q(x) = 0$</span>
+<span>implies $p(x) = 0$. Let $f : (0, \infty) \to \mathbb{R}$ be </span><strong><strong><span>convex</span></strong></strong><span> with</span>
+<span>$f(1) = 0$. The $f$-divergence is</span></p>
+<p><span>$$D_f(P \,\|\, Q) = \mathbb{E}_{x \sim Q}\!\left[ f\!\left(\frac{p(x)}{q(x)}\right) \right]
+= \int q(x)\, f\!\left(\frac{p(x)}{q(x)}\right) dx .$$</span></p>
+<p><span>It measures how far the likelihood ratio $p/q$ is from $1$, averaged under $Q$</span>
+<span>and weighted by how much $f$ penalises each deviation.</span></p>
+</section>
+<section id="The-usual-suspects-as-instances">
+
+    <h3>
+    <a href="#The-usual-suspects-as-instances"><span>The usual suspects as instances</span> </a><a class="heading-anchor" href="#The-usual-suspects-as-instances" aria-label="Link to this section">#</a>
+    </h3>
+<table>
+<tr>
+<th><span>Divergence</span></th>
+<th><span>$f(t)$</span></th>
+<th><span>$D_f(P \,\|\, Q)$</span></th>
+</tr>
+<tr>
+<td><span>KL</span></td>
+<td><span>$t \log t$</span></td>
+<td><span>$\int p \log \frac{p}{q}$</span></td>
+</tr>
+<tr>
+<td><span>Reverse KL</span></td>
+<td><span>$-\log t$</span></td>
+<td><span>$\int q \log \frac{q}{p}$</span></td>
+</tr>
+<tr>
+<td><span>Pearson $\chi^2$</span></td>
+<td><span>$(t-1)^2$</span></td>
+<td><span>$\int \frac{(p - q)^2}{q}$</span></td>
+</tr>
+<tr>
+<td><span>Total variation</span></td>
+<td><span>$\frac{1}{2}\lvert t - 1\rvert$</span></td>
+<td><span>$\frac{1}{2}\int \lvert p - q \rvert$</span></td>
+</tr>
+<tr>
+<td><span>Squared Hellinger</span></td>
+<td><span>$\frac{1}{2}(\sqrt{t} - 1)^2$</span></td>
+<td><span>$\frac{1}{2}\int (\sqrt{p} - \sqrt{q})^2$</span></td>
+</tr>
+<tr>
+<td><span>Jensen-Shannon</span></td>
+<td><span>$\frac{1}{2}\left[t \log t - (1 + t)\log\frac{1+t}{2}\right]$</span></td>
+<td><span>$\frac{1}{2}\mathrm{KL}(P \,\|\, M) + \frac{1}{2}\mathrm{KL}(Q \,\|\, M)$</span></td>
+</tr>
+</table>
+<p><span>In the last row $M = \frac{1}{2}(P + Q)$. To check it, multiply $f(p/q)$ by $q$:</span>
+<span>$\frac{1}{2}\left[p \log\frac{p}{q} - (p+q)\log\frac{p+q}{2q}\right] = \frac{1}{2}\left[p\log\frac{p}{m} + q \log\frac{q}{m}\right]$</span>
+<span>with $m = \frac{1}{2}(p+q)$. The Hellinger normalisation matches</span>
+<code>hellinger_distance</code><span> in the code, which returns the square root of this</span>
+<span>quantity. Note that </span><code>chi_squared_distance</code><span> above is the </span><strong><span>symmetric</span></strong><span> chi-squared</span>
+<span>$\frac{1}{2}\sum (p-q)^2/(p+q)$, a cousin of Pearson</span>&rsquo;<span>s $\chi^2$ and not the same</span>
+<span>number. Two more facts: swapping $P$ and $Q$ corresponds to using</span>
+<span>$t f(1/t)$ in place of $f(t)$, so a divergence is symmetric when the two agree</span>
+<span>(TV, Hellinger and JS do). And adding $c(t-1)$ to $f$ never changes $D_f$,</span>
+<span>because $\mathbb{E}_Q[p/q - 1] = 0$.</span></p>
+</section>
+<section id="Non-negativity-from-Jensen">
+
+    <h3>
+    <a href="#Non-negativity-from-Jensen"><span>Non-negativity, from Jensen</span> </a><a class="heading-anchor" href="#Non-negativity-from-Jensen" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Since $f$ is convex, Jensen</span>&rsquo;<span>s inequality gives</span></p>
+<p><span>$$D_f(P \,\|\, Q) = \mathbb{E}_Q\!\left[f\!\left(\frac{p}{q}\right)\right]
+\ge f\!\left(\mathbb{E}_Q\!\left[\frac{p}{q}\right]\right) = f\!\left(\int q \frac{p}{q}\right) = f(1) = 0 .$$</span></p>
+<p><span>If $f$ is strictly convex at $1$, equality holds only when $p/q$ is constant</span>
+<span>$Q$-almost everywhere, i.e. $P = Q$. So every member of the family is a valid</span>
+&ldquo;<span>divergence</span>&rdquo;<span>: non-negative and zero exactly at equality. None of them needs to be</span>
+<span>symmetric or satisfy the triangle inequality, which is my point about KL not</span>
+<span>being a metric. (TV and the square root of Hellinger are true metrics. So is the</span>
+<span>square root of JS.)</span></p>
+</section>
+<section id="Forward-vs-reverse-KL-covering-vs-seeking-modes">
+
+    <h3>
+    <a href="#Forward-vs-reverse-KL-covering-vs-seeking-modes"><span>Forward vs reverse KL: covering vs seeking modes</span> </a><a class="heading-anchor" href="#Forward-vs-reverse-KL-covering-vs-seeking-modes" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>This is the gap you saw in the widget. Suppose $P$ is the data distribution and</span>
+<span>$Q_\theta$ is a model we fit by minimising a KL.</span></p>
+<p><strong><strong><span>Forward KL</span></strong></strong><span>, $\mathrm{KL}(P \,\|\, Q_\theta) = \mathbb{E}_P[\log p - \log q_\theta]$.</span>
+<span>The expectation is under $P$, so the cost blows up wherever $p(x) &gt; 0$ but</span>
+<span>$q_\theta(x) \to 0$. The model is forced to put mass everywhere the data lives.</span>
+<span>If $P$ is bimodal and $Q_\theta$ is a single Gaussian, the optimum stretches</span>
+<span>across both modes and puts a lot of mass in the empty valley between them. This</span>
+<span>is </span><strong><strong><span>mass-covering</span></strong></strong><span> (or mean-seeking). Maximum likelihood is exactly this</span>
+<span>direction, since $\mathrm{KL}(P\,\|\,Q_\theta) = -\mathbb{E}_P[\log q_\theta] + \text{const}$.</span></p>
+<p><strong><strong><span>Reverse KL</span></strong></strong><span>, $\mathrm{KL}(Q_\theta \,\|\, P) = \mathbb{E}_{Q_\theta}[\log q_\theta - \log p]$.</span>
+<span>Now the expectation is under the model. Putting mass where $p \approx 0$ is very</span>
+<span>expensive, while ignoring a region where $p &gt; 0$ costs nothing. The same single</span>
+<span>Gaussian now locks onto one mode and ignores the other. This is</span>
+<strong><strong><span>mode-seeking</span></strong></strong><span>. Variational inference uses this direction: the gap in the</span>
+<span>ELBO of a VAE is $\mathrm{KL}(q_\phi(z \mid x) \,\|\, p(z \mid x))$. That is one</span>
+<span>reason variational posteriors tend to underestimate uncertainty.</span></p>
+</section>
+<section id="The-variational-representation-and-f-GAN">
+
+    <h3>
+    <a href="#The-variational-representation-and-f-GAN"><span>The variational representation, and f-GAN</span> </a><a class="heading-anchor" href="#The-variational-representation-and-f-GAN" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Neither direction can be computed directly when all we have are samples from</span>
+<span>$P$ and $Q$, because we never get to evaluate $p/q$. The trick is convex duality.</span>
+<span>The </span><strong><strong><span>Fenchel conjugate</span></strong></strong><span> of $f$ is $f^*(u) = \sup_{t} \{ u t - f(t) \}$. For</span>
+<span>convex, lower semicontinuous $f$ we have $f = f^{**}$, i.e.</span>
+<span>$f(t) = \sup_u \{ u t - f^*(u) \}$. Plug that into the definition. Taking the</span>
+<span>supremum pointwise in $x$ with a function $T(x)$ in place of $u$, and noting that</span>
+<span>any particular $T$ gives a lower bound:</span></p>
+<p><span>$$D_f(P \,\|\, Q) = \int q(x) \sup_{u}\left\{ u \frac{p(x)}{q(x)} - f^*(u) \right\} dx
+\;\ge\; \sup_{T} \Big( \mathbb{E}_{x \sim P}[T(x)] - \mathbb{E}_{x \sim Q}[f^*(T(x))] \Big).$$</span></p>
+<p><span>The supremum is over functions $T$ from the sample space to the domain of</span>
+<span>$f^*$. The bound is tight, with $T^*(x) = f'\big(p(x)/q(x)\big)$, when the</span>
+<span>function class is rich enough. Both expectations on the right need only</span>
+<strong><span>samples</span></strong><span>. For KL, $f(t) = t\log t$ gives $f^*(u) = e^{u-1}$, so</span></p>
+<p><span>$$\mathrm{KL}(P \,\|\, Q) = \sup_T \; \mathbb{E}_P[T] - \mathbb{E}_Q\big[e^{T - 1}\big],$$</span></p>
+<p><span>which is the Nguyen-Wainwright-Jordan estimator. </span><strong><strong><span>f-GAN</span></strong></strong><span> turns the</span>
+<span>bound into a game. A generator $Q_\theta$ and a critic $T_\omega$ play</span></p>
+<p><span>$$\min_\theta \max_\omega \; \mathbb{E}_{x \sim P}[T_\omega(x)] - \mathbb{E}_{x \sim Q_\theta}[f^*(T_\omega(x))] .$$</span></p>
+<p><span>The critic tightens the lower bound on $D_f$, and the generator pushes it down.</span>
+<span>Choosing $f$ picks the divergence the GAN minimises. The original GAN objective</span>
+<span>is the case $f(t) = t\log t - (1+t)\log(1+t)$, which equals $2\,\mathrm{JS}(P\,\|\,Q) - \log 4$.</span></p>
+<p><span>Anyway, for more details here is the colab where I implemented some of these metrics and more </span><a href="https://colab.research.google.com/drive/11WsBPSsF00E0w6FsRsU-bT_gm-KjCvGr?usp=sharing"><span>Link to code</span></a></p>
+</section>
+</section>
+<section id="References">
+
+    <h2>
+    <a href="#References"><span>References</span> </a><a class="heading-anchor" href="#References" aria-label="Link to this section">#</a>
+    </h2>
+<ul>
+<li>
+<ol start="19" type="A">
+<li>
+<ol start="13" type="A">
+<li>
+<span>Ali, S. D. Silvey (1966). </span><strong><span>A General Class of Coefficients of Divergence of One Distribution from Another</span></strong><span>. Journal of the Royal Statistical Society, Series B 28(1), 131</span>&ndash;<span>142.</span>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>
+<ol start="9" type="A">
+<li>
+<span>Csiszár (1967). </span><strong><span>Information-type measures of difference of probability distributions and indirect observations</span></strong><span>. Studia Scientiarum Mathematicarum Hungarica 2, 299</span>&ndash;<span>318.</span>
+</li>
+</ol>
+</li>
+<li>
+<ol start="20" type="A">
+<li>
+<span>Minka (2005). </span><strong><span>Divergence measures and message passing</span></strong><span>. Microsoft Research Technical Report MSR-TR-2005-173.</span>
+</li>
+</ol>
+</li>
+<li>
+<ol start="24" type="A">
+<li>
+<span>Nguyen, M. J. Wainwright, M. I. Jordan (2010). </span><strong><span>Estimating divergence functionals and the likelihood ratio by convex risk minimization</span></strong><span>. IEEE Transactions on Information Theory 56(11). </span><a href="https://arxiv.org/abs/0809.0853"><span>arXiv:0809.0853</span></a>
+</li>
+</ol>
+</li>
+<li>
+<ol start="19" type="A">
+<li>
+<span>Nowozin, B. Cseke, R. Tomioka (2016). </span><strong><span>f-GAN: Training Generative Neural Samplers using Variational Divergence Minimization</span></strong><span>. NeurIPS. </span><a href="https://arxiv.org/abs/1606.00709"><span>arXiv:1606.00709</span></a>
+</li>
+</ol>
+</li>
+</ul>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/information-theory.html">#information-theory</a><a class="tag" href="/tags/probability.html">#probability</a></div>
+      <p class="prereq-line">
+      <span class="prereq-line__label">Read next</span>
+      <a href="/2024/10/13/vaes.html">A comprehensive list of different types of VAEs</a><span class="prereq-line__sep" aria-hidden="true">·</span><a href="/2026/01/25/epiplexity.html">From Entropy to Epiplexity</a>
+    </p><section class="related">
+        <h2>Related posts</h2>
+        <ul class="related-list">
+          <li>
+              <a href="/2026/01/25/epiplexity.html">From Entropy to Epiplexity</a>
+              <span class="muted"><time datetime="2026-01-25">Jan 25, 2026</time> · Math, Physics &amp; Foundations</span>
+            </li><li>
+              <a href="/2024/12/23/prob.html">Probability Paradigms</a>
+              <span class="muted"><time datetime="2024-12-23">Dec 23, 2024</time> · Math, Physics &amp; Foundations</span>
+            </li><li>
+              <a href="/2024/10/20/IIT.html">Integrated Information Theory (IIT)</a>
+              <span class="muted"><time datetime="2024-10-20">Oct 20, 2024</time> · Math, Physics &amp; Foundations</span>
+            </li>
+        </ul>
+      </section><nav class="post-nav" aria-label="Chronological">
+        <a class="post-nav__link post-nav__prev" href="/2024/09/09/ddim_ddpm.html">
+          <span class="post-nav__label">← Older</span>
+          <span class="post-nav__title">DDIM vs DDPM</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/09/21/kan.html">
+          <span class="post-nav__label">Newer →</span>
+          <span class="post-nav__title">Kolmogorov-Arnold Networks</span>
+        </a>
+      </nav><nav class="post-nav post-nav--theme" aria-label="Same theme">
+        <a class="post-nav__link post-nav__prev" href="/2024/07/29/kolmogorov.html">
+          <span class="post-nav__label">← Older in theme</span>
+          <span class="post-nav__title">Kolmogorov Complexity</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/10/20/IIT.html">
+          <span class="post-nav__label">Newer in theme →</span>
+          <span class="post-nav__title">Integrated Information Theory (IIT)</span>
+        </a>
+      </nav>
+      
+    <section class="comments" id="comments">
+      <h2>Comments</h2>
+      <div class="giscus"></div>
+      <noscript><p class="muted">Comments are powered by <a href="https://giscus.app">giscus</a> and need JavaScript.</p></noscript>
+    </section>
+    <script>
+    (function () {
+      // Inject giscus with the theme the site is actually using (the toggle
+      // persists in localStorage), rather than the OS preference.
+      var siteTheme = function () {
+        var t = document.documentElement.getAttribute("data-theme");
+        if (t) return t === "dark" ? "dark" : "light";
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark" : "light";
+      };
+      var s = document.createElement("script");
+      s.src = "https://giscus.app/client.js";
+      var attrs = {
+        "data-repo": "mbottoni/mbottoni.github.io",
+        "data-repo-id": "R_kgDOKv71Lg",
+        "data-category": "General",
+        "data-category-id": "DIC_kwDOKv71Ls4DEBYr",
+        "data-mapping": "pathname",
+        "data-strict": "1",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "top",
+        "data-theme": siteTheme(),
+        "data-lang": "en",
+        "data-loading": "lazy",
+        "crossorigin": "anonymous"
+      };
+      for (var k in attrs) s.setAttribute(k, attrs[k]);
+      s.async = true;
+      document.getElementById("comments").appendChild(s);
+
+      // Follow the dark-mode toggle after load.
+      new MutationObserver(function () {
+        var frame = document.querySelector("iframe.giscus-frame");
+        if (!frame) return;
+        frame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: siteTheme() } } },
+          "https://giscus.app");
+      }).observe(document.documentElement,
+        { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+    </script>
+  
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-09-17-divergences.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        // Widgets build their own DOM and style their spans.
+        if (span.closest(".widget")) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  <script defer src="/widgets/divergences.js"></script>
+<script defer src="/js/runner.js"></script>
+<script>
+(function () {
+  var bar = document.querySelector(".reading-progress__bar");
+  var article = document.querySelector("article");
+  if (bar && article) {
+    var update = function () {
+      var top = article.offsetTop;
+      var h = article.offsetHeight - window.innerHeight;
+      var p = h > 0 ? (window.scrollY - top) / h : 1;
+      bar.style.transform = "scaleX(" + Math.min(1, Math.max(0, p)) + ")";
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
+  var toc = document.querySelector(".toc");
+  if (!toc || !("IntersectionObserver" in window)) return;
+  var links = {};
+  toc.querySelectorAll("a[href^='#']").forEach(function (a) {
+    links[decodeURIComponent(a.getAttribute("href").slice(1))] = a;
+  });
+  var ids = Object.keys(links);
+  if (!ids.length) return;
+  var visible = {};
+  var setActive = function () {
+    var first = null;
+    for (var i = 0; i < ids.length; i++) {
+      if (visible[ids[i]]) { first = ids[i]; break; }
+    }
+    ids.forEach(function (id) {
+      links[id].classList.toggle("active", id === first);
+    });
+  };
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    setActive();
+  }, { rootMargin: "-10% 0px -70% 0px", threshold: 0 });
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>
+</body>
+
+</html>

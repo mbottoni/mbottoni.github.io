@@ -1,0 +1,718 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flow Matching, a short overview</title>
+  <meta name="description" content="In summary, flow matching is a generative modeling technique that provides 
+an elegant way to transform data distributions.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Flow Matching, a short overview">
+  <meta property="og:description" content="In summary, flow matching is a generative modeling technique that provides 
+an elegant way to transform data distributions.">
+  <meta property="og:url" content="https://mbottoni.github.io/2024/12/01/flow.html">
+  <meta property="og:image" content="/assets/generative/flow.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Flow Matching, a short overview">
+  <meta name="twitter:description" content="In summary, flow matching is a generative modeling technique that provides 
+an elegant way to transform data distributions.">
+  <meta name="twitter:image" content="/assets/generative/flow.png">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/12/01/flow.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/map.html">Map</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="reading-progress" aria-hidden="true"><div class="reading-progress__bar"></div></div>
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/generative.html">
+          Diffusion &amp; Generative Modeling
+        </a>
+        <span class="post-meta"><time datetime="2024-12-01">Dec 1, 2024</time> · 10 min read</span>
+      </div>
+      
+    <aside class="series-box">
+      <div class="series-box__head">
+        <span class="series-box__label">Series</span>
+        <span class="series-box__title">Diffusion and flows</span>
+        <span class="muted">Part 4 of 5</span>
+      </div>
+      <p class="muted">Diffusion models, samplers, guidance, and their flow-matching cousins.</p>
+      <ol class="series-box__list"><li><a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a></li><li><a href="/2024/09/09/ddim_ddpm.html">DDIM vs DDPM</a></li><li><a href="/2024/12/15/cfg.html">Classifier free diffusion guidance</a></li><li class="series-box__current" aria-current="page">Flow Matching, a short overview</li><li><a href="/2024/12/07/timeseries-diffusion.html">Diffusion models for time series</a></li></ol>
+    </aside>
+  
+      <p class="prereq-line">
+      <span class="prereq-line__label">Before reading this</span>
+      <a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a>
+    </p>
+      
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <ul><li class="toc-l2"><a href="#The-math-behind-the-code">The math behind the code</a></li><li class="toc-l3"><a href="#Continuous-normalizing-flows">Continuous normalizing flows</a></li><li class="toc-l3"><a href="#The-flow-matching-objective">The flow-matching objective</a></li><li class="toc-l3"><a href="#Conditional-flow-matching-with-the-linear-path">Conditional flow matching with the linear path</a></li><li class="toc-l3"><a href="#Why-the-CFM-gradient-equals-the-FM-gradient">Why the CFM gradient equals the FM gradient</a></li><li class="toc-l3"><a href="#Rectified-flow-and-straightness">Rectified flow and straightness</a></li><li class="toc-l2"><a href="#References">References</a></li></ul>
+    </details>
+  
+      <article >
+
+    <h1 id="Flow-Matching-a-short-overview">
+    <a href="#Flow-Matching-a-short-overview"><span>Flow Matching, a short overview</span> <time datetime="2024-12-01">Dec 1, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/generative/flow.png">
+</figure>
+<p><span>In summary, flow matching is a generative modeling technique that provides </span>
+<span>an elegant way to transform data distributions.</span></p>
+<p><span>To make that concrete before the code, here is a flow running in the page: a</span>
+<span>Gaussian carried onto two moons. Nothing is trained; for a finite set of pairs</span>
+<span>the marginal velocity field has a closed form, so what you see is the exact</span>
+<span>flow, and the only thing that changes between the three options is how the</span>
+<span>noise and data points are paired and which path connects them.</span></p>
+
+<figure class="widget" data-widget="flow-matching">
+<div class="widget-mount"></div>
+<noscript><p class="widget-fallback">This figure is interactive and needs JavaScript.</p></noscript>
+<figcaption class="title">Flow matching with exact marginal velocities, from N(0, I) to 256 target points. Independent: the straight path xₜ = (1−t)x₀ + t x₁ with x₀ and x₁ independent; conditioning on x₁ = bⱼ gives N(t bⱼ, (1−t)²I), so uₜ(x) is the posterior-weighted average of (bⱼ − x)/(1−t), in closed form. VP diffusion: the same construction on the path sin(πt/2)x₁ + cos(πt/2)x₀. Minibatch OT: noise and data are paired by an exact assignment (Hungarian algorithm) inside each minibatch, and batch 256 is exact OT on the whole sample. That coupling has no closed form for a continuous source, so each of its 256 pairs is widened into a Gaussian tube of width 0.15(1−t) (a kernel estimate of the coupling) and the marginal velocity of that mixture is computed exactly. Orange lines are the ODE solved with RK4 (120 steps); dashed lines and rings are Euler with n steps. Straightness is chord over arc length (1 = straight); Euler error is the mean endpoint distance to the RK4 solution; →data is the mean distance from an endpoint to the nearest target point.</figcaption>
+</figure>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"></span>
+<span class="line"><span class="hl-keyword">import</span> numpy <span class="hl-keyword">as</span> np</span>
+<span class="line"><span class="hl-keyword">import</span> torch</span>
+<span class="line"><span class="hl-keyword">import</span> torch.nn <span class="hl-keyword">as</span> nn</span>
+<span class="line"><span class="hl-keyword">import</span> torch.optim <span class="hl-keyword">as</span> optim</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">class</span> <span class="hl-title class_">FlowMatchingModel</span>:</span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">__init__</span>(<span class="hl-params">self, input_dim, hidden_dim</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">        Initialize Flow Matching Model</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Args:</span></span>
+<span class="line"><span class="hl-string">            input_dim (int): Dimension of input data</span></span>
+<span class="line"><span class="hl-string">            hidden_dim (int): Dimension of hidden layers</span></span>
+<span class="line"><span class="hl-string">        &quot;&quot;&quot;</span></span>
+<span class="line">        self.base_distribution = <span class="hl-literal">None</span>  <span class="hl-comment"># Initial data distribution</span></span>
+<span class="line">        self.target_distribution = <span class="hl-literal">None</span>  <span class="hl-comment"># Target data distribution</span></span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Neural network to learn the flow</span></span>
+<span class="line">        self.flow_network = nn.Sequential(</span>
+<span class="line">            nn.Linear(input_dim + <span class="hl-number">1</span>, hidden_dim),  <span class="hl-comment"># +1 for time conditioning</span></span>
+<span class="line">            nn.ReLU(),</span>
+<span class="line">            nn.Linear(hidden_dim, hidden_dim),</span>
+<span class="line">            nn.ReLU(),</span>
+<span class="line">            nn.Linear(hidden_dim, input_dim)</span>
+<span class="line">        )</span>
+<span class="line">        </span>
+<span class="line">        self.optimizer = optim.Adam(self.flow_network.parameters())</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">sample_base_distribution</span>(<span class="hl-params">self, num_samples</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">        Sample from the base (initial) distribution</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Args:</span></span>
+<span class="line"><span class="hl-string">            num_samples (int): Number of samples to generate</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Returns:</span></span>
+<span class="line"><span class="hl-string">            torch.Tensor: Samples from base distribution</span></span>
+<span class="line"><span class="hl-string">        &quot;&quot;&quot;</span></span>
+<span class="line">        <span class="hl-comment"># Example: Gaussian distribution</span></span>
+<span class="line">        <span class="hl-keyword">return</span> torch.randn(num_samples, self.input_dim)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">probability_flow_ode</span>(<span class="hl-params">self, x, t</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">        Compute the probability flow ODE</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Args:</span></span>
+<span class="line"><span class="hl-string">            x (torch.Tensor): Current data point</span></span>
+<span class="line"><span class="hl-string">            t (torch.Tensor): Time variable</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Returns:</span></span>
+<span class="line"><span class="hl-string">            torch.Tensor: Flow direction</span></span>
+<span class="line"><span class="hl-string">        &quot;&quot;&quot;</span></span>
+<span class="line">        <span class="hl-comment"># Combine input and time as network input</span></span>
+<span class="line">        network_input = torch.cat([x, t], dim=<span class="hl-number">1</span>)</span>
+<span class="line">        <span class="hl-keyword">return</span> self.flow_network(network_input)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">conditional_vector_field</span>(<span class="hl-params">self, x0, x1, t</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">        Compute the conditional vector field</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Args:</span></span>
+<span class="line"><span class="hl-string">            x0 (torch.Tensor): Initial data point</span></span>
+<span class="line"><span class="hl-string">            x1 (torch.Tensor): Target data point</span></span>
+<span class="line"><span class="hl-string">            t (torch.Tensor): Time variable</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Returns:</span></span>
+<span class="line"><span class="hl-string">            torch.Tensor: Conditional vector field</span></span>
+<span class="line"><span class="hl-string">        &quot;&quot;&quot;</span></span>
+<span class="line">        <span class="hl-comment"># Interpolate between source and target</span></span>
+<span class="line">        x_t = x0 * (<span class="hl-number">1</span> - t) + x1 * t</span>
+<span class="line">        vector_field = x1 - x0</span>
+<span class="line">        <span class="hl-keyword">return</span> vector_field</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">loss_function</span>(<span class="hl-params">self, x0, x1</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">        Compute the flow matching loss</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Args:</span></span>
+<span class="line"><span class="hl-string">            x0 (torch.Tensor): Initial data points</span></span>
+<span class="line"><span class="hl-string">            x1 (torch.Tensor): Target data points</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Returns:</span></span>
+<span class="line"><span class="hl-string">            torch.Tensor: Training loss</span></span>
+<span class="line"><span class="hl-string">        &quot;&quot;&quot;</span></span>
+<span class="line">        batch_size = x0.shape[<span class="hl-number">0</span>]</span>
+<span class="line">        t = torch.rand(batch_size, <span class="hl-number">1</span>)  <span class="hl-comment"># Random time sampling</span></span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Compute vector field</span></span>
+<span class="line">        true_vector_field = self.conditional_vector_field(x0, x1, t)</span>
+<span class="line">        predicted_vector_field = self.probability_flow_ode(x0, t)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Compute MSE loss between true and predicted vector fields</span></span>
+<span class="line">        loss = torch.mean((predicted_vector_field - true_vector_field) ** <span class="hl-number">2</span>)</span>
+<span class="line">        <span class="hl-keyword">return</span> loss</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">train</span>(<span class="hl-params">self, dataloader, epochs</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">        Train the Flow Matching Model</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Args:</span></span>
+<span class="line"><span class="hl-string">            dataloader (torch.utils.data.DataLoader): Training data</span></span>
+<span class="line"><span class="hl-string">            epochs (int): Number of training epochs</span></span>
+<span class="line"><span class="hl-string">        &quot;&quot;&quot;</span></span>
+<span class="line">        <span class="hl-keyword">for</span> epoch <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(epochs):</span>
+<span class="line">            <span class="hl-keyword">for</span> batch_x0, batch_x1 <span class="hl-keyword">in</span> dataloader:</span>
+<span class="line">                self.optimizer.zero_grad()</span>
+<span class="line">                loss = self.loss_function(batch_x0, batch_x1)</span>
+<span class="line">                loss.backward()</span>
+<span class="line">                self.optimizer.step()</span>
+<span class="line">            </span>
+<span class="line">            <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;Epoch <span class="hl-subst">{epoch+<span class="hl-number">1</span>}</span>/<span class="hl-subst">{epochs}</span>, Loss: <span class="hl-subst">{loss.item()}</span>&quot;</span>)</span>
+<span class="line">    </span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">generate_samples</span>(<span class="hl-params">self, num_samples</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;</span></span>
+<span class="line"><span class="hl-string">        Generate new samples using the learned flow</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Args:</span></span>
+<span class="line"><span class="hl-string">            num_samples (int): Number of samples to generate</span></span>
+<span class="line"><span class="hl-string">        </span></span>
+<span class="line"><span class="hl-string">        Returns:</span></span>
+<span class="line"><span class="hl-string">            torch.Tensor: Generated samples</span></span>
+<span class="line"><span class="hl-string">        &quot;&quot;&quot;</span></span>
+<span class="line">        <span class="hl-comment"># Start from base distribution and follow the learned flow</span></span>
+<span class="line">        x0 = self.sample_base_distribution(num_samples)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-comment"># Perform sampling through ODE solving</span></span>
+<span class="line">        x_generated = x0  <span class="hl-comment"># Starting point</span></span>
+<span class="line">        time_steps = torch.linspace(<span class="hl-number">0</span>, <span class="hl-number">1</span>, <span class="hl-number">100</span>)</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-keyword">for</span> t <span class="hl-keyword">in</span> time_steps[<span class="hl-number">1</span>:]:</span>
+<span class="line">            vector_field = self.probability_flow_ode(x_generated, t)</span>
+<span class="line">            x_generated += vector_field * (time_steps[<span class="hl-number">1</span>] - time_steps[<span class="hl-number">0</span>])</span>
+<span class="line">        </span>
+<span class="line">        <span class="hl-keyword">return</span> x_generated</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">main</span>():</span>
+<span class="line">    <span class="hl-comment"># Hyperparameters</span></span>
+<span class="line">    input_dim = <span class="hl-number">10</span></span>
+<span class="line">    hidden_dim = <span class="hl-number">64</span></span>
+<span class="line">    num_epochs = <span class="hl-number">100</span></span>
+<span class="line">    </span>
+<span class="line">    flow_matching = FlowMatchingModel(input_dim, hidden_dim)</span>
+<span class="line">    flow_matching.train(dataloader, num_epochs)</span>
+<span class="line">    generated_samples = flow_matching.generate_samples(<span class="hl-number">1000</span>)</span></code></pre>
+
+</figure>
+<section id="The-math-behind-the-code">
+
+    <h2>
+    <a href="#The-math-behind-the-code"><span>The math behind the code</span> </a><a class="heading-anchor" href="#The-math-behind-the-code" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>The code above is short, but each line rests on a derivation. In this section I</span>
+<span>want to go through them in order. I follow the convention of Lipman et al. and</span>
+<span>of the code: time runs from $t = 0$ to $t = 1$, $x_0 \sim p_0$ is a sample from</span>
+<span>a simple source (a standard Gaussian), and $x_1 \sim q$ is a data sample. All</span>
+<span>vectors live in $\mathbb{R}^d$.</span></p>
+<section id="Continuous-normalizing-flows">
+
+    <h3>
+    <a href="#Continuous-normalizing-flows"><span>Continuous normalizing flows</span> </a><a class="heading-anchor" href="#Continuous-normalizing-flows" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>A time-dependent vector field $v_t : \mathbb{R}^d \to \mathbb{R}^d$ defines a</span>
+<span>flow $\phi_t$ through the ODE</span></p>
+<p><span>$$\frac{d}{dt}\phi_t(x) = v_t\big(\phi_t(x)\big), \qquad \phi_0(x) = x.$$</span></p>
+<p><span>Pushing the source through the flow gives a path of densities</span>
+<span>$p_t = [\phi_t]_{\#}\, p_0$, and we want $p_1 \approx q$. If $v_t$ is a neural</span>
+<span>network $v_\theta(x, t)$, this is a continuous normalizing flow (CNF), which is</span>
+<span>what </span><code>probability_flow_ode</code><span> and </span><code>generate_samples</code><span> implement. The second one is</span>
+<span>an Euler solver.</span></p>
+<p><span>The density along the path obeys the continuity equation, which says that</span>
+<span>probability mass is conserved as it is transported by $v_t$:</span></p>
+<p><span>$$\partial_t p_t(x) + \nabla \cdot \big(p_t(x)\, v_t(x)\big) = 0.$$</span></p>
+<p><span>From it we get the </span><strong><span>instantaneous change of variables</span></strong><span> of Chen et al.</span>
+<span>Follow a single trajectory $x(t) = \phi_t(x_0)$ and differentiate $\log p_t$</span>
+<span>along it with the chain rule:</span></p>
+<p><span>$$\frac{d}{dt}\log p_t\big(x(t)\big)
+= \frac{\partial_t p_t + \nabla p_t \cdot v_t}{p_t}
+= \frac{-\nabla\cdot(p_t v_t) + \nabla p_t \cdot v_t}{p_t}
+= -\nabla \cdot v_t\big(x(t)\big),$$</span></p>
+<p><span>because $\nabla\cdot(p_t v_t) = \nabla p_t \cdot v_t + p_t\, \nabla\cdot v_t$.</span>
+<span>Integrating from $0$ to $1$:</span></p>
+<p><span>$$\log p_1\big(x(1)\big) = \log p_0\big(x(0)\big) - \int_0^1 \operatorname{tr}\Big(\frac{\partial v_t}{\partial x}\big(x(t)\big)\Big)\, dt.$$</span></p>
+<p><span>That is the CNF analogue of the $\log|\det J|$ term in a discrete normalizing</span>
+<span>flow. A determinant becomes a trace. In principle you can train a CNF by</span>
+<span>maximum likelihood with this formula, but every gradient step needs an ODE</span>
+<span>solve, plus a trace estimate (Hutchinson</span>&rsquo;<span>s estimator, in FFJORD). That is slow,</span>
+<span>and it is the motivation for flow matching, which never simulates the ODE during</span>
+<span>training.</span></p>
+</section>
+<section id="The-flow-matching-objective">
+
+    <h3>
+    <a href="#The-flow-matching-objective"><span>The flow-matching objective</span> </a><a class="heading-anchor" href="#The-flow-matching-objective" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Suppose we had a target probability path $p_t$ with $p_0$ the source and</span>
+<span>$p_1 \approx q$, and a vector field $u_t$ that generates it (meaning the pair</span>
+<span>satisfies the continuity equation). Then we could simply regress:</span></p>
+<p><span>$$\mathcal{L}_{\text{FM}}(\theta) = \mathbb{E}_{t \sim \mathcal{U}[0,1],\ x \sim p_t}\,\big\|v_\theta(x, t) - u_t(x)\big\|^2.$$</span></p>
+<p><span>The problem is that we know neither $p_t$ nor $u_t$ in closed form. Lipman et</span>
+<span>al. solve it by building the path out of simple per-sample pieces. Let $z$ be</span>
+<span>some conditioning variable with distribution $q(z)$, and for each $z$ pick a</span>
+<span>conditional path $p_t(x \mid z)$ generated by a conditional field</span>
+<span>$u_t(x \mid z)$. Define the marginals</span></p>
+<p><span>$$\begin{aligned}
+p_t(x) &amp;= \int p_t(x \mid z)\, q(z)\, dz, \\
+u_t(x) &amp;= \int u_t(x \mid z)\, \frac{p_t(x \mid z)\, q(z)}{p_t(x)}\, dz
+= \mathbb{E}\big[u_t(x \mid z) \mid x_t = x\big].
+\end{aligned}$$</span></p>
+<p><span>The marginal field is the posterior average of the conditional fields. It</span>
+<span>really does generate the marginal path, because the continuity equation is</span>
+<span>linear:</span></p>
+<p><span>$$\begin{aligned}
+\partial_t p_t(x) &amp;= \int \partial_t p_t(x \mid z)\, q(z)\, dz
+= -\int \nabla\cdot\big(u_t(x \mid z)\, p_t(x \mid z)\big)\, q(z)\, dz \\
+&amp;= -\nabla\cdot\big(u_t(x)\, p_t(x)\big).
+\end{aligned}$$</span></p>
+</section>
+<section id="Conditional-flow-matching-with-the-linear-path">
+
+    <h3>
+    <a href="#Conditional-flow-matching-with-the-linear-path"><span>Conditional flow matching with the linear path</span> </a><a class="heading-anchor" href="#Conditional-flow-matching-with-the-linear-path" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>In the code, the conditioning variable is the pair $z = (x_0, x_1)$ with</span>
+<span>$x_0 \sim p_0$ and $x_1 \sim q$ drawn independently. The conditional path is</span>
+<span>the straight line between them, and its velocity is constant:</span></p>
+<p><span>$$x_t = (1-t)\, x_0 + t\, x_1,
+\qquad
+u_t(x_t \mid x_0, x_1) = \frac{d x_t}{dt} = x_1 - x_0.$$</span></p>
+<p><span>This is exactly </span><code>conditional_vector_field</code><span>. It is the $\sigma_{\min} \to 0$</span>
+<span>limit of the </span>&ldquo;<span>optimal transport</span>&rdquo;<span> path of Lipman et al., who condition on $x_1$</span>
+<span>alone and use $x_t = (1 - (1-\sigma_{\min})t)\, x_0 + t\, x_1$, with target</span>
+<span>$x_1 - (1-\sigma_{\min})\, x_0$. It is also the interpolation used by rectified</span>
+<span>flow. The conditional flow matching loss regresses on these per-pair targets:</span></p>
+<p><span>$$\mathcal{L}_{\text{CFM}}(\theta) = \mathbb{E}_{t \sim \mathcal{U}[0,1],\ x_0 \sim p_0,\ x_1 \sim q}\,
+\big\|v_\theta\big((1-t)\,x_0 + t\,x_1,\ t\big) - (x_1 - x_0)\big\|^2.$$</span></p>
+<p><span>One detail that matters when you implement it: the network must be evaluated at</span>
+<span>the interpolated point $x_t$, not at the endpoint $x_0$.</span></p>
+</section>
+<section id="Why-the-CFM-gradient-equals-the-FM-gradient">
+
+    <h3>
+    <a href="#Why-the-CFM-gradient-equals-the-FM-gradient"><span>Why the CFM gradient equals the FM gradient</span> </a><a class="heading-anchor" href="#Why-the-CFM-gradient-equals-the-FM-gradient" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>At first sight the CFM loss is the wrong objective. A given point $x_t$ lies on</span>
+<span>many lines with different directions $x_1 - x_0$, so the regression target is</span>
+<span>noisy. The surprise is that it does not matter. Expand both squares (at a fixed</span>
+<span>$t$, then average over $t$):</span></p>
+<p><span>$$\|v_\theta - u\|^2 = \|v_\theta\|^2 - 2\langle v_\theta, u\rangle + \|u\|^2.$$</span></p>
+<ul>
+<li>
+<strong><strong><span>The $\|v_\theta\|^2$ term.</span></strong></strong><span> In both losses $x$ is distributed as the</span>
+<span>marginal $p_t$, so $\mathbb{E}_{p_t(x)}\|v_\theta(x,t)\|^2 = \mathbb{E}_{q(z),\, p_t(x \mid z)}\|v_\theta(x,t)\|^2$.</span>
+</li>
+<li>
+<strong><strong><span>The cross term.</span></strong></strong><span> Substitute the definition of $u_t$, which cancels the $p_t(x)$ in its denominator:</span>
+<span>$\mathbb{E}_{p_t(x)}\langle v_\theta(x,t), u_t(x)\rangle = \int \big\langle v_\theta(x,t), \int u_t(x \mid z)\, p_t(x \mid z)\, q(z)\, dz \big\rangle\, dx = \mathbb{E}_{q(z),\, p_t(x \mid z)}\langle v_\theta(x,t), u_t(x \mid z)\rangle.$</span>
+</li>
+<li>
+<strong><strong><span>The $\|u\|^2$ terms</span></strong></strong><span> differ between the two losses, but neither depends</span>
+<span>on $\theta$.</span>
+</li>
+</ul>
+<p><span>Therefore $\mathcal{L}_{\text{FM}}(\theta) = \mathcal{L}_{\text{CFM}}(\theta) + C$</span>
+<span>for a constant $C$, so $\nabla_\theta \mathcal{L}_{\text{FM}} = \nabla_\theta \mathcal{L}_{\text{CFM}}$.</span>
+<span>Equivalently, the minimizer of a squared loss is a conditional expectation, and</span>
+<span>here $\arg\min \mathcal{L}_{\text{CFM}}$ is $v^*(x, t) = \mathbb{E}[x_1 - x_0 \mid x_t = x] = u_t(x)$.</span>
+<span>The noise in the targets only adds variance to the stochastic gradient, not</span>
+<span>bias. Training is fully simulation-free: sample $t$, $x_0$, $x_1$, interpolate,</span>
+<span>regress.</span></p>
+</section>
+<section id="Rectified-flow-and-straightness">
+
+    <h3>
+    <a href="#Rectified-flow-and-straightness"><span>Rectified flow and straightness</span> </a><a class="heading-anchor" href="#Rectified-flow-and-straightness" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>The learned field is an </span><strong><span>average</span></strong><span> of straight-line velocities, so the ODE it</span>
+<span>defines is generally not straight. Where lines from different pairs cross, the</span>
+<span>average turns, and ODE trajectories cannot cross at all (solutions are unique).</span>
+<span>They bend and </span>&ldquo;<span>rewire</span>&rdquo;<span> which noise sample ends up at which data point. Curved</span>
+<span>trajectories are exactly what makes few-step Euler integration inaccurate.</span></p>
+<p><span>Liu et al. measure this with the straightness of a flow $Z = \{Z_t\}$:</span></p>
+<p><span>$$S(Z) = \int_0^1 \mathbb{E}\Big[\big\|(Z_1 - Z_0) - \dot Z_t\big\|^2\Big]\, dt.$$</span></p>
+<p><span>$S(Z) = 0$ means every trajectory moves at constant velocity along a straight</span>
+<span>line. Then a single Euler step $Z_1 = Z_0 + v(Z_0, 0)$ is exact. Rectified flow</span>
+<span>improves straightness with </span><strong><span>reflow</span></strong><span>:</span></p>
+<ol>
+<li>
+<span>Train $v^{(1)}$ with the CFM loss on independent pairs $(x_0, x_1)$.</span>
+</li>
+<li>
+<span>Draw $Z_0 \sim p_0$ and solve the learned ODE to get $Z_1$. The pair</span>
+<span>$(Z_0, Z_1)$ is a new coupling of $p_0$ and $p_1$ that is deterministic.</span>
+</li>
+<li>
+<span>Train $v^{(2)}$ with the same loss, but on the pairs $(Z_0, Z_1)$ instead of</span>
+<span>independent ones. Repeat if desired.</span>
+</li>
+</ol>
+<p><span>Each rectification preserves the marginals. Liu et al. also show that it never</span>
+<span>increases the transport cost $\mathbb{E}[c(Z_1 - Z_0)]$ for any convex $c$, and</span>
+<span>that iterating it drives the straightness towards zero. Since the new pairs are</span>
+<span>already matched by a flow with non-crossing paths, their connecting lines cross</span>
+<span>far less, the averaged field is closer to the per-pair one, and the ODE can be</span>
+<span>solved in one or a few steps. That is the basis of one-step rectified-flow</span>
+<span>samplers.</span></p>
+</section>
+</section>
+<section id="References">
+
+    <h2>
+    <a href="#References"><span>References</span> </a><a class="heading-anchor" href="#References" aria-label="Link to this section">#</a>
+    </h2>
+<ul>
+<li>
+<span>Ricky T. Q. Chen, Yulia Rubanova, Jesse Bettencourt, David Duvenaud. </span><a href="https://arxiv.org/abs/1806.07366"><span>Neural Ordinary Differential Equations</span></a><span>. NeurIPS 2018.</span>
+</li>
+<li>
+<span>Will Grathwohl, Ricky T. Q. Chen, Jesse Bettencourt, Ilya Sutskever, David Duvenaud. </span><a href="https://arxiv.org/abs/1810.01367"><span>FFJORD: Free-form Continuous Dynamics for Scalable Reversible Generative Models</span></a><span>. ICLR 2019.</span>
+</li>
+<li>
+<span>Yaron Lipman, Ricky T. Q. Chen, Heli Ben-Hamu, Maximilian Nickel, Matt Le. </span><a href="https://arxiv.org/abs/2210.02747"><span>Flow Matching for Generative Modeling</span></a><span>. ICLR 2023.</span>
+</li>
+<li>
+<span>Xingchao Liu, Chengyue Gong, Qiang Liu. </span><a href="https://arxiv.org/abs/2209.03003"><span>Flow Straight and Fast: Learning to Generate and Transfer Data with Rectified Flow</span></a><span>. ICLR 2023.</span>
+</li>
+</ul>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/flow-matching.html">#flow-matching</a><a class="tag" href="/tags/generative.html">#generative</a></div>
+      <section class="related">
+        <h2>Related posts</h2>
+        <ul class="related-list">
+          <li>
+              <a href="/2024/12/15/cfg.html">Classifier free diffusion guidance</a>
+              <span class="muted"><time datetime="2024-12-15">Dec 15, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li><li>
+              <a href="/2024/12/07/timeseries-diffusion.html">Diffusion models for time series</a>
+              <span class="muted"><time datetime="2024-12-07">Dec 7, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li><li>
+              <a href="/2024/10/13/vaes.html">A comprehensive list of different types of VAEs</a>
+              <span class="muted"><time datetime="2024-10-13">Oct 13, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li>
+        </ul>
+      </section><nav class="post-nav" aria-label="Chronological">
+        <a class="post-nav__link post-nav__prev" href="/2024/11/25/ssl.html">
+          <span class="post-nav__label">← Older</span>
+          <span class="post-nav__title">Scarf: Self Supervised Learning for Tabular Data</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/12/07/timeseries-diffusion.html">
+          <span class="post-nav__label">Newer →</span>
+          <span class="post-nav__title">Diffusion models for time series</span>
+        </a>
+      </nav><nav class="post-nav post-nav--theme" aria-label="Same theme">
+        <a class="post-nav__link post-nav__prev" href="/2024/10/13/vaes.html">
+          <span class="post-nav__label">← Older in theme</span>
+          <span class="post-nav__title">A comprehensive list of different types of VAEs</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/12/07/timeseries-diffusion.html">
+          <span class="post-nav__label">Newer in theme →</span>
+          <span class="post-nav__title">Diffusion models for time series</span>
+        </a>
+      </nav>
+      
+    <section class="comments" id="comments">
+      <h2>Comments</h2>
+      <div class="giscus"></div>
+      <noscript><p class="muted">Comments are powered by <a href="https://giscus.app">giscus</a> and need JavaScript.</p></noscript>
+    </section>
+    <script>
+    (function () {
+      // Inject giscus with the theme the site is actually using (the toggle
+      // persists in localStorage), rather than the OS preference.
+      var siteTheme = function () {
+        var t = document.documentElement.getAttribute("data-theme");
+        if (t) return t === "dark" ? "dark" : "light";
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark" : "light";
+      };
+      var s = document.createElement("script");
+      s.src = "https://giscus.app/client.js";
+      var attrs = {
+        "data-repo": "mbottoni/mbottoni.github.io",
+        "data-repo-id": "R_kgDOKv71Lg",
+        "data-category": "General",
+        "data-category-id": "DIC_kwDOKv71Ls4DEBYr",
+        "data-mapping": "pathname",
+        "data-strict": "1",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "top",
+        "data-theme": siteTheme(),
+        "data-lang": "en",
+        "data-loading": "lazy",
+        "crossorigin": "anonymous"
+      };
+      for (var k in attrs) s.setAttribute(k, attrs[k]);
+      s.async = true;
+      document.getElementById("comments").appendChild(s);
+
+      // Follow the dark-mode toggle after load.
+      new MutationObserver(function () {
+        var frame = document.querySelector("iframe.giscus-frame");
+        if (!frame) return;
+        frame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: siteTheme() } } },
+          "https://giscus.app");
+      }).observe(document.documentElement,
+        { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+    </script>
+  
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-12-01-flow.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        // Widgets build their own DOM and style their spans.
+        if (span.closest(".widget")) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  <script defer src="/widgets/flow-matching.js"></script>
+<script>
+(function () {
+  var bar = document.querySelector(".reading-progress__bar");
+  var article = document.querySelector("article");
+  if (bar && article) {
+    var update = function () {
+      var top = article.offsetTop;
+      var h = article.offsetHeight - window.innerHeight;
+      var p = h > 0 ? (window.scrollY - top) / h : 1;
+      bar.style.transform = "scaleX(" + Math.min(1, Math.max(0, p)) + ")";
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
+  var toc = document.querySelector(".toc");
+  if (!toc || !("IntersectionObserver" in window)) return;
+  var links = {};
+  toc.querySelectorAll("a[href^='#']").forEach(function (a) {
+    links[decodeURIComponent(a.getAttribute("href").slice(1))] = a;
+  });
+  var ids = Object.keys(links);
+  if (!ids.length) return;
+  var visible = {};
+  var setActive = function () {
+    var first = null;
+    for (var i = 0; i < ids.length; i++) {
+      if (visible[ids[i]]) { first = ids[i]; break; }
+    }
+    ids.forEach(function (id) {
+      links[id].classList.toggle("active", id === first);
+    });
+  };
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    setActive();
+  }, { rootMargin: "-10% 0px -70% 0px", threshold: 0 });
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>
+</body>
+
+</html>

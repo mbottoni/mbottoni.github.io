@@ -1,0 +1,471 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Integrated Information Theory (IIT)</title>
+  <meta name="description" content="One of the most interesting question to be made is about the nature of consciousness.
+During a long time the question of consciousness was considered as a philosophical question
+but during the last decades this question has been approached by the science with the
+emergence of the Integrated Information Theory (IIT) by Giulio Tononi.
+This paradigm, proposes a radical reconceptualization of consciousness, framing 
+it as an intrinsic property of physical systems, quantifiable through information integration.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Integrated Information Theory (IIT)">
+  <meta property="og:description" content="One of the most interesting question to be made is about the nature of consciousness.
+During a long time the question of consciousness was considered as a philosophical question
+but during the last decades this question has been approached by the science with the
+emergence of the Integrated Information Theory (IIT) by Giulio Tononi.
+This paradigm, proposes a radical reconceptualization of consciousness, framing 
+it as an intrinsic property of physical systems, quantifiable through information integration.">
+  <meta property="og:url" content="https://mbottoni.github.io/2024/10/20/IIT.html">
+  <meta property="og:image" content="/assets/foundations/iit.jpg">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Integrated Information Theory (IIT)">
+  <meta name="twitter:description" content="One of the most interesting question to be made is about the nature of consciousness.
+During a long time the question of consciousness was considered as a philosophical question
+but during the last decades this question has been approached by the science with the
+emergence of the Integrated Information Theory (IIT) by Giulio Tononi.
+This paradigm, proposes a radical reconceptualization of consciousness, framing 
+it as an intrinsic property of physical systems, quantifiable through information integration.">
+  <meta name="twitter:image" content="/assets/foundations/iit.jpg">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/10/20/IIT.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/map.html">Map</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="reading-progress" aria-hidden="true"><div class="reading-progress__bar"></div></div>
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/foundations.html">
+          Math, Physics &amp; Foundations
+        </a>
+        <span class="post-meta"><time datetime="2024-10-20">Oct 20, 2024</time> · 4 min read</span>
+      </div>
+      
+      
+      
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <ul><li class="toc-l2"><a href="#What-actually-measures">What Φ actually measures</a></li><li class="toc-l2"><a href="#References">References</a></li></ul>
+    </details>
+  
+      <article >
+
+    <h1 id="Integrated-Information-Theory-IIT">
+    <a href="#Integrated-Information-Theory-IIT"><span>Integrated Information Theory (IIT)</span> <time datetime="2024-10-20">Oct 20, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/foundations/iit.jpg">
+</figure>
+<p><span>One of the most interesting question to be made is about the nature of consciousness.</span>
+<span>During a long time the question of consciousness was considered as a philosophical question</span>
+<span>but during the last decades this question has been approached by the science with the</span>
+<span>emergence of the Integrated Information Theory (IIT) by Giulio Tononi.</span>
+<span>This paradigm, proposes a radical reconceptualization of consciousness, framing </span>
+<span>it as an intrinsic property of physical systems, quantifiable through information integration.</span></p>
+<p><span>At its core, IIT posits that consciousness arises from the intricate interplay of information </span>
+<span>within a system. Tononi</span>&rsquo;<span>s theory begins with five axiomatic properties of phenomenal </span>
+<span>experience: intrinsic existence, composition, information, integration, and exclusion. These axioms </span>
+<span>serve as the bedrock upon which the mathematical edifice of IIT is constructed.</span></p>
+<p><span>The theory introduces a novel metric, denoted by the Greek letter Φ (phi), which quantifies the degree of integ</span>
+<span>rated information within a system. This measure, Φ, becomes the crux of IIT</span>&rsquo;<span>s framework, hypothesizing a </span>
+<span>direct correlation between its magnitude and the intensity of conscious experience.</span></p>
+<p><span>Central to IIT is the concept of a system</span>&rsquo;<span>s cause-effect structure - a complex network of causal relationships </span>
+<span>that defines the system</span>&rsquo;<span>s internal dynamics. This structure, IIT argues, gives rise to the qualitative aspects </span>
+<span>of consciousness, or qualia, through the specific patterns of information integration it engenders.</span></p>
+<p><span>As the theory unfolds, it presents a nuanced view of consciousness as a spectrum rather than a binary state. This perspective </span>
+<span>implies that consciousness, to varying degrees, may be a fundamental feature of reality, potentially extending beyond </span>
+<span>biological systems to any entity capable of integrating information in specific ways.</span></p>
+<section id="What-actually-measures">
+
+    <h2>
+    <a href="#What-actually-measures"><span>What Φ actually measures</span> </a><a class="heading-anchor" href="#What-actually-measures" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>I don</span>&rsquo;<span>t want to go too deep into the formalism, because it changed a lot between</span>
+<span>versions of the theory (IIT 2.0, 3.0 and 4.0 all define Φ differently). The core</span>
+<span>idea is simple, though, and it is clearest in the discrete version of Balduzzi</span>
+<span>and Tononi (2008): </span><strong><strong><span>Φ is the information the whole system generates over and</span>
+<span>above its parts, measured across the cut that loses the least.</span></strong></strong></p>
+<p><span>Take a system of $n$ elements with joint state $X$, and a known mechanism</span>
+<span>$p(x_1 \mid x_0)$ that maps the state at one time step to the next. Suppose we</span>
+<span>observe the current state $x_1$.</span></p>
+<ul>
+<li>
+<span>The </span><strong><strong><span>a priori repertoire</span></strong></strong><span> $p^{\max}(X_0)$ is the uniform distribution over past states. It means </span>&ldquo;<span>I know nothing about the past</span>&rdquo;<span>, and it is what you get by perturbing the system into every state with equal probability.</span>
+</li>
+<li>
+<span>The </span><strong><strong><span>a posteriori repertoire</span></strong></strong><span> $p(X_0 \mid x_1)$ is the distribution over past states that could have produced $x_1$, obtained from the mechanism with Bayes</span>&rsquo;<span> rule and the uniform prior.</span>
+</li>
+</ul>
+<p><span>The effective information of the whole is how much observing $x_1$ narrows down</span>
+<span>the past: $\mathrm{ei}(x_1) = D_{\mathrm{KL}}\big(p(X_0 \mid x_1) \,\|\, p^{\max}(X_0)\big)$.</span></p>
+<p><span>Now cut the system. Let $\mathcal{P} = \{M^1, \dots, M^k\}$ be a partition of</span>
+<span>the elements into disjoint parts. For each part, compute its own a posteriori</span>
+<span>repertoire $p(M^k_0 \mid m^k_1)$, treating every input that crosses the cut as</span>
+<span>independent noise. The information lost by the cut is</span></p>
+<p><span>$$\mathrm{ei}(x_1 / \mathcal{P}) = D_{\mathrm{KL}}\Big( p(X_0 \mid x_1) \;\Big\|\; \prod_{k} p(M^k_0 \mid m^k_1) \Big),$$</span></p>
+<p><span>i.e. how much the whole system</span>&rsquo;<span>s account of its past exceeds what the parts can</span>
+<span>account for separately. Integrated information is this quantity at the</span>
+<strong><strong><span>minimum information partition</span></strong></strong><span>, the cut that loses the least:</span></p>
+<p><span>$$\Phi(x_1) = \mathrm{ei}(x_1 / \mathcal{P}^{\mathrm{MIP}}), \qquad
+\mathcal{P}^{\mathrm{MIP}} = \arg\min_{\mathcal{P}} \frac{\mathrm{ei}(x_1 / \mathcal{P})}{N_{\mathcal{P}}} .$$</span></p>
+<p><span>The normaliser $N_{\mathcal{P}} = (k - 1)\,\min_k H^{\max}(M^k_0)$ is the</span>
+<span>entropy of the smallest part</span>&rsquo;<span>s a priori repertoire times the number of other</span>
+<span>parts. It stops the minimisation from always preferring to chop off a single</span>
+<span>element.</span></p>
+<p><span>Two consequences match the intuition in the text above. If the system splits</span>
+<span>into two halves that don</span>&rsquo;<span>t interact, cutting between them loses nothing, so</span>
+<span>$\Phi = 0$, however much information each half processes on its own. And</span>
+<span>because of the minimum over partitions, Φ is a </span>&ldquo;<span>weakest link</span>&rdquo;<span> measure: one</span>
+<span>cheap cut is enough to make the whole system count as not integrated. The</span>
+<span>same minimum is also the practical problem. The number of partitions of $n$</span>
+<span>elements is the Bell number $B_n$, which grows faster than exponentially, so exact</span>
+<span>Φ is only computable for tiny systems.</span></p>
+<p><span>One big problem with this theory is the lack of empirical validation. Nevertheless, I believe that </span>
+<span>an initial functional theory of consciousness is a good starting point to build models more closely</span>
+<span>related to AGI. As the perceptron is a model that simplifies a lot the human brain, but is a good starting point</span>
+<span>and you can build marvelous things with it, I think that the same way of thinking can be applied to consciousness</span>
+<span>theories. We could start with this simple functional theory and then build more complex ones, but with these simpler</span>
+<span>theories we may already be capable to build marvelous things.</span></p>
+</section>
+<section id="References">
+
+    <h2>
+    <a href="#References"><span>References</span> </a><a class="heading-anchor" href="#References" aria-label="Link to this section">#</a>
+    </h2>
+<ul>
+<li>
+<ol start="7" type="A">
+<li>
+<span>Tononi (2004). </span><strong><span>An information integration theory of consciousness</span></strong><span>. BMC Neuroscience 5, 42.</span>
+</li>
+</ol>
+</li>
+<li>
+<ol start="4" type="A">
+<li>
+<span>Balduzzi, G. Tononi (2008). </span><strong><span>Integrated Information in Discrete Dynamical Systems: Motivation and Theoretical Framework</span></strong><span>. PLoS Computational Biology 4(6), e1000091.</span>
+</li>
+</ol>
+</li>
+<li>
+<ol start="13" type="A">
+<li>
+<span>Oizumi, L. Albantakis, G. Tononi (2014). </span><strong><span>From the Phenomenology to the Mechanisms of Consciousness: Integrated Information Theory 3.0</span></strong><span>. PLoS Computational Biology 10(5), e1003588.</span>
+</li>
+</ol>
+</li>
+</ul>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/consciousness.html">#consciousness</a><a class="tag" href="/tags/information-theory.html">#information-theory</a><a class="tag" href="/tags/philosophy.html">#philosophy</a></div>
+      <section class="related">
+        <h2>Related posts</h2>
+        <ul class="related-list">
+          <li>
+              <a href="/2026/01/25/epiplexity.html">From Entropy to Epiplexity</a>
+              <span class="muted"><time datetime="2026-01-25">Jan 25, 2026</time> · Math, Physics &amp; Foundations</span>
+            </li><li>
+              <a href="/2024/11/17/plato.html">The Platonic Representation Hypothesis: Are AI Models Converging on Universal Representations?</a>
+              <span class="muted"><time datetime="2024-11-17">Nov 17, 2024</time> · Math, Physics &amp; Foundations</span>
+            </li><li>
+              <a href="/2024/09/17/divergences.html">Some common divergences</a>
+              <span class="muted"><time datetime="2024-09-17">Sep 17, 2024</time> · Math, Physics &amp; Foundations</span>
+            </li>
+        </ul>
+      </section><nav class="post-nav" aria-label="Chronological">
+        <a class="post-nav__link post-nav__prev" href="/2024/10/13/vaes.html">
+          <span class="post-nav__label">← Older</span>
+          <span class="post-nav__title">A comprehensive list of different types of VAEs</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/10/26/gcn.html">
+          <span class="post-nav__label">Newer →</span>
+          <span class="post-nav__title">Graph Convolutional Networks</span>
+        </a>
+      </nav><nav class="post-nav post-nav--theme" aria-label="Same theme">
+        <a class="post-nav__link post-nav__prev" href="/2024/09/17/divergences.html">
+          <span class="post-nav__label">← Older in theme</span>
+          <span class="post-nav__title">Some common divergences</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/11/17/plato.html">
+          <span class="post-nav__label">Newer in theme →</span>
+          <span class="post-nav__title">The Platonic Representation Hypothesis: Are AI Models Converging on Universal Representations?</span>
+        </a>
+      </nav>
+      
+    <section class="comments" id="comments">
+      <h2>Comments</h2>
+      <div class="giscus"></div>
+      <noscript><p class="muted">Comments are powered by <a href="https://giscus.app">giscus</a> and need JavaScript.</p></noscript>
+    </section>
+    <script>
+    (function () {
+      // Inject giscus with the theme the site is actually using (the toggle
+      // persists in localStorage), rather than the OS preference.
+      var siteTheme = function () {
+        var t = document.documentElement.getAttribute("data-theme");
+        if (t) return t === "dark" ? "dark" : "light";
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark" : "light";
+      };
+      var s = document.createElement("script");
+      s.src = "https://giscus.app/client.js";
+      var attrs = {
+        "data-repo": "mbottoni/mbottoni.github.io",
+        "data-repo-id": "R_kgDOKv71Lg",
+        "data-category": "General",
+        "data-category-id": "DIC_kwDOKv71Ls4DEBYr",
+        "data-mapping": "pathname",
+        "data-strict": "1",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "top",
+        "data-theme": siteTheme(),
+        "data-lang": "en",
+        "data-loading": "lazy",
+        "crossorigin": "anonymous"
+      };
+      for (var k in attrs) s.setAttribute(k, attrs[k]);
+      s.async = true;
+      document.getElementById("comments").appendChild(s);
+
+      // Follow the dark-mode toggle after load.
+      new MutationObserver(function () {
+        var frame = document.querySelector("iframe.giscus-frame");
+        if (!frame) return;
+        frame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: siteTheme() } } },
+          "https://giscus.app");
+      }).observe(document.documentElement,
+        { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+    </script>
+  
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-10-20-IIT.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        // Widgets build their own DOM and style their spans.
+        if (span.closest(".widget")) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  <script>
+(function () {
+  var bar = document.querySelector(".reading-progress__bar");
+  var article = document.querySelector("article");
+  if (bar && article) {
+    var update = function () {
+      var top = article.offsetTop;
+      var h = article.offsetHeight - window.innerHeight;
+      var p = h > 0 ? (window.scrollY - top) / h : 1;
+      bar.style.transform = "scaleX(" + Math.min(1, Math.max(0, p)) + ")";
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
+  var toc = document.querySelector(".toc");
+  if (!toc || !("IntersectionObserver" in window)) return;
+  var links = {};
+  toc.querySelectorAll("a[href^='#']").forEach(function (a) {
+    links[decodeURIComponent(a.getAttribute("href").slice(1))] = a;
+  });
+  var ids = Object.keys(links);
+  if (!ids.length) return;
+  var visible = {};
+  var setActive = function () {
+    var first = null;
+    for (var i = 0; i < ids.length; i++) {
+      if (visible[ids[i]]) { first = ids[i]; break; }
+    }
+    ids.forEach(function (id) {
+      links[id].classList.toggle("active", id === first);
+    });
+  };
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    setActive();
+  }, { rootMargin: "-10% 0px -70% 0px", threshold: 0 });
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>
+</body>
+
+</html>

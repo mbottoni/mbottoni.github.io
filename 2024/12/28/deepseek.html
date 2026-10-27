@@ -1,0 +1,782 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deepseek, an overview and quick notes</title>
+  <meta name="description" content="When DeepSeek-V3 came out I first wrote these notes as a bullet list of its
+headline claims. The numbers are striking, but what interested me more were the
+architectural tricks that make a 671B-parameter model cheap to train and cheap
+to serve. So I went back to the technical report and worked through the main
+ideas properly: how Multi-head Latent Attention shrinks the KV cache, how the
+MoE layers are routed, the auxiliary-loss-free load balancing rule (with a
+small simulation you can play with), multi-token prediction, and a short note
+on the FP8 and pipeline-parallel engineering.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Deepseek, an overview and quick notes">
+  <meta property="og:description" content="When DeepSeek-V3 came out I first wrote these notes as a bullet list of its
+headline claims. The numbers are striking, but what interested me more were the
+architectural tricks that make a 671B-parameter model cheap to train and cheap
+to serve. So I went back to the technical report and worked through the main
+ideas properly: how Multi-head Latent Attention shrinks the KV cache, how the
+MoE layers are routed, the auxiliary-loss-free load balancing rule (with a
+small simulation you can play with), multi-token prediction, and a short note
+on the FP8 and pipeline-parallel engineering.">
+  <meta property="og:url" content="https://mbottoni.github.io/2024/12/28/deepseek.html">
+  <meta property="og:image" content="/assets/frontier/deekseek.webp">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Deepseek, an overview and quick notes">
+  <meta name="twitter:description" content="When DeepSeek-V3 came out I first wrote these notes as a bullet list of its
+headline claims. The numbers are striking, but what interested me more were the
+architectural tricks that make a 671B-parameter model cheap to train and cheap
+to serve. So I went back to the technical report and worked through the main
+ideas properly: how Multi-head Latent Attention shrinks the KV cache, how the
+MoE layers are routed, the auxiliary-loss-free load balancing rule (with a
+small simulation you can play with), multi-token prediction, and a short note
+on the FP8 and pipeline-parallel engineering.">
+  <meta name="twitter:image" content="/assets/frontier/deekseek.webp">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/12/28/deepseek.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/map.html">Map</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="reading-progress" aria-hidden="true"><div class="reading-progress__bar"></div></div>
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/frontier.html">
+          Frontier LLMs &amp; Architectures
+        </a>
+        <span class="post-meta"><time datetime="2024-12-28">Dec 28, 2024</time> · 12 min read</span>
+      </div>
+      
+    <aside class="series-box">
+      <div class="series-box__head">
+        <span class="series-box__label">Series</span>
+        <span class="series-box__title">DeepSeek notes</span>
+        <span class="muted">Part 1 of 2</span>
+      </div>
+      
+      <ol class="series-box__list"><li class="series-box__current" aria-current="page">Deepseek, an overview and quick notes</li><li><a href="/2025/02/06/grpo.html">Group Relative Policy Optimization (GRPO)</a></li></ol>
+    </aside>
+  
+      <p class="prereq-line">
+      <span class="prereq-line__label">Before reading this</span>
+      <a href="/2025/08/04/moe.html">Mixture of Experts</a>
+    </p>
+      
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <ul><li class="toc-l3"><a href="#Key-numbers">Key numbers</a></li><li class="toc-l3"><a href="#Multi-head-Latent-Attention-MLA">Multi-head Latent Attention (MLA)</a></li><li class="toc-l3"><a href="#DeepSeekMoE">DeepSeekMoE</a></li><li class="toc-l3"><a href="#Auxiliary-loss-free-load-balancing">Auxiliary-loss-free load balancing</a></li><li class="toc-l3"><a href="#Multi-token-prediction-MTP">Multi-token prediction (MTP)</a></li><li class="toc-l3"><a href="#FP8-training-and-DualPipe-briefly">FP8 training and DualPipe, briefly</a></li><li class="toc-l3"><a href="#References">References</a></li></ul>
+    </details>
+  
+      <article >
+
+    <h1 id="Deepseek-an-overview-and-quick-notes">
+    <a href="#Deepseek-an-overview-and-quick-notes"><span>Deepseek, an overview and quick notes</span> <time datetime="2024-12-28">Dec 28, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/frontier/deekseek.webp">
+</figure>
+<p><span>When DeepSeek-V3 came out I first wrote these notes as a bullet list of its</span>
+<span>headline claims. The numbers are striking, but what interested me more were the</span>
+<span>architectural tricks that make a 671B-parameter model cheap to train and cheap</span>
+<span>to serve. So I went back to the technical report and worked through the main</span>
+<span>ideas properly: how Multi-head Latent Attention shrinks the KV cache, how the</span>
+<span>MoE layers are routed, the auxiliary-loss-free load balancing rule (with a</span>
+<span>small simulation you can play with), multi-token prediction, and a short note</span>
+<span>on the FP8 and pipeline-parallel engineering.</span></p>
+<hr>
+<section id="Key-numbers">
+
+    <h3>
+    <a href="#Key-numbers"><span>Key numbers</span> </a><a class="heading-anchor" href="#Key-numbers" aria-label="Link to this section">#</a>
+    </h3>
+<ul>
+<li>
+<strong><strong><span>Size:</span></strong></strong><span> a Mixture-of-Experts model with 671B total parameters, of which 37B are</span>
+<span>activated per token. It has 61 layers with hidden size 7168.</span>
+</li>
+<li>
+<strong><strong><span>Data:</span></strong></strong><span> pre-trained on 14.8T tokens with a 4K context. The context was then extended in</span>
+<span>two stages (4K → 32K → 128K) with YaRN, 1000 steps each.</span>
+</li>
+<li>
+<strong><strong><span>Compute:</span></strong></strong><span> 2.788M H800 GPU hours in total: 2664K for pre-training, 119K for context</span>
+<span>extension and 5K for post-training. At an assumed rental price of 2 USD per GPU hour</span>
+<span>this comes to 5.576M USD. That figure covers only the final training run. The report says</span>
+<span>explicitly that it excludes prior research and ablation experiments.</span>
+</li>
+<li>
+<strong><strong><span>Benchmarks (chat model):</span></strong></strong><span> 90.2 on MATH-500, the 51.6th percentile on Codeforces, and</span>
+<span>75.9 on MMLU-Pro.</span>
+</li>
+<li>
+<strong><strong><span>Against closed models:</span></strong></strong><span> the report compares against GPT-4o (0513) and Claude-3.5-Sonnet</span>
+<span>(1022). V3 beats both on MATH-500 (74.6 and 78.3) and Codeforces (23.6 and 20.3). On</span>
+<span>MMLU-Pro it beats GPT-4o (72.6) but trails Claude (78.0). So </span>&ldquo;<span>competitive</span>&rdquo;<span> is the fair</span>
+<span>word, not </span>&ldquo;<span>better across the board</span>&rdquo;<span>.</span>
+</li>
+</ul>
+<hr>
+</section>
+<section id="Multi-head-Latent-Attention-MLA">
+
+    <h3>
+    <a href="#Multi-head-Latent-Attention-MLA"><span>Multi-head Latent Attention (MLA)</span> </a><a class="heading-anchor" href="#Multi-head-Latent-Attention-MLA" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>At inference time, autoregressive decoding is dominated by the </span><strong><strong><span>KV cache</span></strong></strong><span>. For every past</span>
+<span>token and every layer you keep its keys and values so you do not have to recompute them.</span>
+<span>Standard multi-head attention (MHA) with $n_h$ heads of dimension $d_h$ caches</span>
+<span>$2 n_h d_h$ numbers per token per layer. Grouped-query attention (GQA) shares each K/V head</span>
+<span>across a group of query heads and caches $2 n_g d_h$ numbers. Multi-query attention (MQA)</span>
+<span>goes all the way down to $2 d_h$. Both shrink the cache by throwing away K/V capacity.</span></p>
+<p><span>MLA, introduced in DeepSeek-V2 and reused in V3, takes a different route: </span><strong><strong><span>low-rank joint</span>
+<span>compression</span></strong></strong><span> of keys and values. For the attention input $h_t \in \mathbb{R}^d$ of token</span>
+<span>$t$, it computes a single small latent vector</span></p>
+<p><span>$$c_t^{KV} = W^{DKV} h_t, \qquad c_t^{KV} \in \mathbb{R}^{d_c},\; d_c \ll n_h d_h$$</span></p>
+<p><span>and reconstructs the per-head keys and values from it with up-projections:</span></p>
+<p><span>$$k_t^{C} = [k_{t,1}^C; \dots; k_{t,n_h}^C] = W^{UK} c_t^{KV}, \qquad
+v_t^{C} = [v_{t,1}^C; \dots; v_{t,n_h}^C] = W^{UV} c_t^{KV}$$</span></p>
+<p><span>with $W^{UK}, W^{UV} \in \mathbb{R}^{n_h d_h \times d_c}$. Only $c_t^{KV}$ needs to be</span>
+<span>cached. The queries are compressed the same way, $c_t^Q = W^{DQ} h_t$ with</span>
+<span>$d_c' = 1536$ and $q_t^C = W^{UQ} c_t^Q$. That does nothing for the cache but saves</span>
+<span>activation memory during training.</span></p>
+<section id="Why-the-up-projections-disappear-at-inference">
+
+    <h4>
+    <a href="#Why-the-up-projections-disappear-at-inference"><span>Why the up-projections disappear at inference</span> </a><a class="heading-anchor" href="#Why-the-up-projections-disappear-at-inference" aria-label="Link to this section">#</a>
+    </h4>
+<p><span>The trick that makes this cheap is that you never actually materialise $k^C$ and $v^C$.</span>
+<span>For head $i$ the attention logit is</span></p>
+<p><span>$${q_{t,i}^C}^\top k_{j,i}^C
+= \big(W^{UQ}_i c_t^Q\big)^\top W^{UK}_i c_j^{KV}
+= {c_t^Q}^\top \underbrace{\big({W^{UQ}_i}^\top W^{UK}_i\big)}_{\text{precompute once}} c_j^{KV}$$</span></p>
+<p><span>so $W^{UK}$ can be </span><strong><strong><span>absorbed</span></strong></strong><span> into the query projection, and the query attends directly</span>
+<span>over the cached latents. Likewise $W^{UV}$ can be folded into the output projection $W^O$,</span>
+<span>because $\sum_j a_{tj} W^{UV}_i c_j^{KV} = W^{UV}_i \sum_j a_{tj} c_j^{KV}$.</span></p>
+</section>
+<section id="The-decoupled-RoPE-key">
+
+    <h4>
+    <a href="#The-decoupled-RoPE-key"><span>The decoupled RoPE key</span> </a><a class="heading-anchor" href="#The-decoupled-RoPE-key" aria-label="Link to this section">#</a>
+    </h4>
+<p><span>Rotary position embeddings break this. RoPE multiplies queries and keys by</span>
+<span>position-dependent rotations $R_t$ and $R_j$, so the logit becomes</span></p>
+<p><span>$$\big(R_t W^{UQ}_i c_t^Q\big)^\top R_j W^{UK}_i c_j^{KV}
+= {c_t^Q}^\top {W^{UQ}_i}^\top R_{j-t}\, W^{UK}_i\, c_j^{KV}.$$</span></p>
+<p><span>Now there is a rotation, which depends on the relative position $j - t$, stuck </span><strong><span>between</span></strong>
+<span>the two matrices. There is no single matrix to precompute. You would have to rebuild the</span>
+<span>full keys for every cached token at every step, which defeats the purpose.</span></p>
+<p><span>DeepSeek</span>&rsquo;<span>s fix is to </span><strong><strong><span>decouple</span></strong></strong><span> position from content. Each head</span>&rsquo;<span>s key gets a few extra</span>
+<span>dimensions that carry RoPE, computed directly from $h_t$ and </span><strong><span>shared across all heads</span></strong><span>:</span></p>
+<p><span>$$k_t^R = \operatorname{RoPE}\big(W^{KR} h_t\big) \in \mathbb{R}^{d_h^R}, \qquad
+k_{t,i} = [k_{t,i}^C;\, k_t^R]$$</span></p>
+<p><span>The matching query part $q_{t,i}^R = \operatorname{RoPE}(W^{QR} c_t^Q)$ is per head. The</span>
+<span>attention output for head $i$ is</span></p>
+<p><span>$$o_{t,i} = \sum_{j \le t} \operatorname{Softmax}_j\!\left(
+\frac{q_{t,i}^\top k_{j,i}}{\sqrt{d_h + d_h^R}}\right) v_{j,i}^C ,
+\qquad u_t = W^O [o_{t,1}; \dots; o_{t,n_h}].$$</span></p>
+<p><span>The content part still goes through the absorbed latent path. Only the small RoPE part</span>
+<span>uses explicit positions. What gets cached per token per layer is therefore</span>
+<span>$c_t^{KV}$ and $k_t^R$, which is $d_c + d_h^R$ numbers. (This shared $k_t^R$ is also the</span>
+<span>part YaRN is applied to during context extension.)</span></p>
+</section>
+<section id="KV-cache-per-token">
+
+    <h4>
+    <a href="#KV-cache-per-token"><span>KV cache per token</span> </a><a class="heading-anchor" href="#KV-cache-per-token" aria-label="Link to this section">#</a>
+    </h4>
+<table>
+<tr>
+<th><span>Mechanism</span></th>
+<th><span>Cached elements per token per layer</span></th>
+</tr>
+<tr>
+<td><span>MHA</span></td>
+<td><span>$2 n_h d_h$</span></td>
+</tr>
+<tr>
+<td><span>GQA ($n_g$ groups)</span></td>
+<td><span>$2 n_g d_h$</span></td>
+</tr>
+<tr>
+<td><span>MQA</span></td>
+<td><span>$2 d_h$</span></td>
+</tr>
+<tr>
+<td><span>MLA</span></td>
+<td><span>$d_c + d_h^R$</span></td>
+</tr>
+</table>
+<p><span>With V3</span>&rsquo;<span>s real dimensions, $n_h = 128$, $d_h = 128$, $d_c = 512$ (that is $4 d_h$), and</span>
+<span>$d_h^R = 64$ (that is $d_h / 2$):</span></p>
+<ul>
+<li>
+<span>MHA: $2 \times 128 \times 128 = 32{,}768$ elements.</span>
+</li>
+<li>
+<span>MLA: $512 + 64 = 576$ elements.</span>
+</li>
+</ul>
+<p><span>That is a ratio of $32768 / 576 \approx 56.9\times$ against an MHA model with the same heads.</span>
+<span>In GQA terms, $576 = 2 \times 2.25 \times 128$, so MLA caches as much as GQA with only</span>
+<strong><strong><span>2.25 groups</span></strong></strong><span>. The DeepSeek-V2 paper makes the same comparison and claims MLA still</span>
+<span>performs better than MHA. Over all 61 layers in BF16 this is about 68.6 KiB per token,</span>
+<span>against 3.8 MiB for MHA.</span></p>
+<p><span>The block below works the comparison out for a full 128K context (</span>&ldquo;<span>elems</span>&rdquo;<span> is per token per</span>
+<span>layer). Press </span><strong><span>Run</span></strong><span> (it uses Pyodide with NumPy, so the first run takes a few seconds).</span></p>
+
+<figure class="code-block runnable" data-lang="python">
+
+
+<pre><code><span class="line"><span class="hl-keyword">import</span> numpy <span class="hl-keyword">as</span> np</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># DeepSeek-V3 attention dimensions (Section 4.2 of the technical report)</span></span>
+<span class="line">n_layers = <span class="hl-number">61</span></span>
+<span class="line">n_heads  = <span class="hl-number">128</span>     <span class="hl-comment"># n_h</span></span>
+<span class="line">d_head   = <span class="hl-number">128</span>     <span class="hl-comment"># d_h</span></span>
+<span class="line">d_c      = <span class="hl-number">512</span>     <span class="hl-comment"># KV compression dim</span></span>
+<span class="line">d_rope   = <span class="hl-number">64</span>      <span class="hl-comment"># decoupled RoPE key dim, d_h^R</span></span>
+<span class="line">bytes_per = <span class="hl-number">2</span>      <span class="hl-comment"># BF16 cache</span></span>
+<span class="line">context  = <span class="hl-number">128</span> * <span class="hl-number">1024</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Elements cached per token, per layer</span></span>
+<span class="line">schemes = {</span>
+<span class="line">    <span class="hl-string">&quot;MHA (128 KV heads)&quot;</span>: <span class="hl-number">2</span> * n_heads * d_head,</span>
+<span class="line">    <span class="hl-string">&quot;GQA (8 KV groups)&quot;</span>:  <span class="hl-number">2</span> * <span class="hl-number">8</span> * d_head,</span>
+<span class="line">    <span class="hl-string">&quot;MQA (1 KV head)&quot;</span>:    <span class="hl-number">2</span> * <span class="hl-number">1</span> * d_head,</span>
+<span class="line">    <span class="hl-string">&quot;MLA (d_c + d_h^R)&quot;</span>:  d_c + d_rope,</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line">elems = np.array(<span class="hl-built_in">list</span>(schemes.values()), dtype=np.int64)</span>
+<span class="line">per_token_bytes = elems * n_layers * bytes_per</span>
+<span class="line">total_gib = per_token_bytes * context / <span class="hl-number">2</span>**<span class="hl-number">30</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;context = <span class="hl-subst">{context:,}</span> tokens, <span class="hl-subst">{n_layers}</span> layers, BF16\n&quot;</span>)</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;<span class="hl-subst">{<span class="hl-string">&#x27;scheme&#x27;</span>:&lt;<span class="hl-number">20</span>}</span><span class="hl-subst">{<span class="hl-string">&#x27;elems&#x27;</span>:&gt;<span class="hl-number">7</span>}</span><span class="hl-subst">{<span class="hl-string">&#x27;KiB/tok&#x27;</span>:&gt;<span class="hl-number">9</span>}</span><span class="hl-subst">{<span class="hl-string">&#x27;GiB@128K&#x27;</span>:&gt;<span class="hl-number">10</span>}</span><span class="hl-subst">{<span class="hl-string">&#x27;vs MLA&#x27;</span>:&gt;<span class="hl-number">8</span>}</span>&quot;</span>)</span>
+<span class="line">mla = elems[-<span class="hl-number">1</span>]</span>
+<span class="line"><span class="hl-keyword">for</span> name, e, b, g <span class="hl-keyword">in</span> <span class="hl-built_in">zip</span>(schemes, elems, per_token_bytes, total_gib):</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;<span class="hl-subst">{name:&lt;<span class="hl-number">20</span>}</span><span class="hl-subst">{e:&gt;<span class="hl-number">7</span>,}</span><span class="hl-subst">{b / <span class="hl-number">1024</span>:&gt;<span class="hl-number">9.1</span>f}</span><span class="hl-subst">{g:&gt;<span class="hl-number">10.2</span>f}</span><span class="hl-subst">{e / mla:&gt;<span class="hl-number">7.2</span>f}</span>x&quot;</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;\nMLA caches the same as GQA with <span class="hl-subst">{mla / (<span class="hl-number">2</span> * d_head):<span class="hl-number">.2</span>f}</span> groups&quot;</span>)</span></code></pre>
+
+<textarea class="run-source" hidden spellcheck="false">import numpy as np
+
+# DeepSeek-V3 attention dimensions (Section 4.2 of the technical report)
+n_layers = 61
+n_heads  = 128     # n_h
+d_head   = 128     # d_h
+d_c      = 512     # KV compression dim
+d_rope   = 64      # decoupled RoPE key dim, d_h^R
+bytes_per = 2      # BF16 cache
+context  = 128 * 1024
+
+# Elements cached per token, per layer
+schemes = {
+    &quot;MHA (128 KV heads)&quot;: 2 * n_heads * d_head,
+    &quot;GQA (8 KV groups)&quot;:  2 * 8 * d_head,
+    &quot;MQA (1 KV head)&quot;:    2 * 1 * d_head,
+    &quot;MLA (d_c + d_h^R)&quot;:  d_c + d_rope,
+}
+
+elems = np.array(list(schemes.values()), dtype=np.int64)
+per_token_bytes = elems * n_layers * bytes_per
+total_gib = per_token_bytes * context / 2**30
+
+print(f&quot;context = {context:,} tokens, {n_layers} layers, BF16\n&quot;)
+print(f&quot;{'scheme':&lt;20}{'elems':&gt;7}{'KiB/tok':&gt;9}{'GiB@128K':&gt;10}{'vs MLA':&gt;8}&quot;)
+mla = elems[-1]
+for name, e, b, g in zip(schemes, elems, per_token_bytes, total_gib):
+    print(f&quot;{name:&lt;20}{e:&gt;7,}{b / 1024:&gt;9.1f}{g:&gt;10.2f}{e / mla:&gt;7.2f}x&quot;)
+
+print(f&quot;\nMLA caches the same as GQA with {mla / (2 * d_head):.2f} groups&quot;)
+</textarea>
+<div class="run-bar">
+<button type="button" class="widget-btn run-btn">Run</button>
+<button type="button" class="widget-btn run-edit">Edit</button>
+<span class="run-status muted"></span>
+</div>
+<pre class="run-output" hidden></pre>
+<noscript><p class="widget-fallback">This snippet can be run in the browser with JavaScript enabled.</p></noscript>
+</figure>
+<p><span>A single 128K sequence needs about 8.6 GiB of cache with MLA, against roughly 488 GiB with</span>
+<span>full MHA at the same width. That is most of the 640 GB of HBM on an 8×H800 node, spent on</span>
+<span>the cache of a single sequence.</span></p>
+<hr>
+</section>
+</section>
+<section id="DeepSeekMoE">
+
+    <h3>
+    <a href="#DeepSeekMoE"><span>DeepSeekMoE</span> </a><a class="heading-anchor" href="#DeepSeekMoE" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Every FFN except those in the first three layers is a DeepSeekMoE layer. It differs from a</span>
+<span>classic top-2 MoE in two ways (from the DeepSeekMoE paper):</span></p>
+<ol>
+<li>
+<strong><strong><span>Fine-grained experts.</span></strong></strong><span> Instead of a few big experts, use many small ones and activate</span>
+<span>more of them. V3 has 256 routed experts per layer, each with intermediate size 2048, and</span>
+<span>activates $K_r = 8$ of them. More, smaller experts give many more possible combinations</span>
+<span>and let each one specialise more narrowly.</span>
+</li>
+<li>
+<strong><strong><span>Shared experts.</span></strong></strong><span> A few experts process </span><strong><span>every</span></strong><span> token and capture common knowledge, so</span>
+<span>the routed experts do not each have to relearn it. V3 uses $N_s = 1$ shared expert.</span>
+</li>
+</ol>
+<p><span>For the FFN input $u_t$, the layer output is</span></p>
+<p><span>$$h_t' = u_t + \sum_{i=1}^{N_s} \operatorname{FFN}_i^{(s)}(u_t)
+       + \sum_{i=1}^{N_r} g_{i,t}\, \operatorname{FFN}_i^{(r)}(u_t).$$</span></p>
+<p><span>The router scores each expert with a learned centroid $e_i$. V3 switches from V2</span>&rsquo;<span>s softmax</span>
+<span>to a </span><strong><strong><span>sigmoid</span></strong></strong><span> affinity. It keeps the top $K_r$ and normalises the selected scores so</span>
+<span>they sum to one:</span></p>
+<p><span>$$s_{i,t} = \sigma\!\left(u_t^\top e_i\right), \qquad
+g'_{i,t} = \begin{cases} s_{i,t} &amp; s_{i,t} \in \operatorname{TopK}(\{s_{j,t}\}, K_r) \\ 0 &amp; \text{otherwise} \end{cases},
+\qquad
+g_{i,t} = \frac{g'_{i,t}}{\sum_j g'_{j,t}}.$$</span></p>
+<p><span>Two system details matter at this scale. First, </span><strong><strong><span>node-limited routing</span></strong></strong><span>: each token is</span>
+<span>sent to at most $M = 4$ nodes. The nodes are picked by the sum of the highest</span>
+<span>$K_r / M$ affinities on each node, which caps cross-node all-to-all traffic. Second, V3</span>
+<span>drops </span><strong><strong><span>no tokens</span></strong></strong><span>, neither in training nor in inference.</span></p>
+<hr>
+</section>
+<section id="Auxiliary-loss-free-load-balancing">
+
+    <h3>
+    <a href="#Auxiliary-loss-free-load-balancing"><span>Auxiliary-loss-free load balancing</span> </a><a class="heading-anchor" href="#Auxiliary-loss-free-load-balancing" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Left alone, a router collapses: a few experts get most of the tokens, the rest starve, and</span>
+<span>under expert parallelism the busiest GPU sets the pace for everyone. The usual remedy is an</span>
+<span>auxiliary loss that penalises imbalance. The trouble is that its gradient flows through the</span>
+<span>same router weights as the language-modelling loss. Make it strong enough to balance well</span>
+<span>and it starts to hurt model quality.</span></p>
+<p><span>DeepSeek</span>&rsquo;<span>s alternative (from Wang et al., 2024) adds a per-expert bias $b_i$ to the</span>
+<span>affinity </span><strong><strong><span>only for the top-k selection</span></strong></strong><span>:</span></p>
+<p><span>$$g'_{i,t} = \begin{cases} s_{i,t} &amp; s_{i,t} + b_i \in \operatorname{TopK}(\{s_{j,t} + b_j\}, K_r) \\ 0 &amp; \text{otherwise.} \end{cases}$$</span></p>
+<p><span>The gating weight is still the original $s_{i,t}$. The bias changes </span><strong><span>which</span></strong><span> experts fire,</span>
+<span>never </span><strong><span>how much</span></strong><span> each one</span>&rsquo;<span>s output counts. The bias is not trained by gradient descent.</span>
+<span>After each step, with $\bar{n}$ the mean load and $n_i$ expert $i$</span>&rsquo;<span>s load on the batch:</span></p>
+<p><span>$$b_i \leftarrow b_i + \gamma \,\operatorname{sign}(\bar{n} - n_i).$$</span></p>
+<p><span>So an overloaded expert has its bias lowered by $\gamma$ and an underloaded one has it</span>
+<span>raised by $\gamma$.</span></p>
+<p><span>I find it clearest to read this as a control loop. The error signal is</span>
+<span>$e_i = \bar{n} - n_i$. The bias is the </span><strong><span>integral</span></strong><span> of its sign:</span>
+<span>$b_i(T) = \gamma \sum_{t \le T} \operatorname{sign} e_i(t)$. Like any integral controller</span>
+<span>it removes steady-state error: as long as an expert is persistently over- or underloaded,</span>
+<span>its bias keeps moving. It settles where the load is balanced, then chatters in a band of</span>
+<span>width about $\gamma$. That makes $\gamma$ the usual gain trade-off. Large values converge</span>
+<span>fast but oscillate, small ones are smooth but slow. V3 uses $\gamma = 0.001$ for the first</span>
+<span>14.3T tokens and $\gamma = 0$ (frozen bias) for the last 500B.</span></p>
+<p><span>V3 does not drop the auxiliary loss entirely. It keeps a tiny </span><strong><strong><span>sequence-wise</span></strong></strong><span> balance</span>
+<span>loss so that no single sequence is wildly imbalanced:</span></p>
+<p><span>$$\begin{aligned}
+\mathcal{L}_{\text{Bal}} &amp;= \alpha \sum_{i=1}^{N_r} f_i P_i, \\
+f_i &amp;= \frac{N_r}{K_r T} \sum_{t=1}^{T} \mathbb{1}\big(s_{i,t} \in \operatorname{TopK}(\{s_{j,t}\}, K_r)\big), \\
+P_i &amp;= \frac{1}{T} \sum_{t=1}^{T} \frac{s_{i,t}}{\sum_j s_{j,t}},
+\end{aligned}$$</span></p>
+<p><span>with $\alpha = 0.0001$. That value is small enough that it is a safety net, not the main</span>
+<span>mechanism.</span></p>
+<p><span>The widget below simulates this. Tokens are routed to 16 experts (top-4) with a built-in</span>
+<span>popularity skew. </span><strong><span>Aux loss</span></strong><span> descends the gradient of $\alpha \sum_i f_i P_i$ with respect to</span>
+<span>a router offset, which a weak pull towards zero opposes. That pull stands in for the</span>
+<span>language-modelling gradient. </span><strong><span>Bias update</span></strong><span> runs the sign rule above. MaxVio is the paper</span>&rsquo;<span>s</span>
+<span>imbalance metric, $\max_i n_i / \bar{n} - 1$.</span></p>
+
+<figure class="widget" data-widget="moe-bias">
+<div class="widget-mount"></div>
+<noscript><p class="widget-fallback">This figure is interactive and needs JavaScript.</p></noscript>
+<figcaption class="title">A toy router: affinities are sigmoid(skew + noise) for 1024 tokens per step, 16 experts, top-4. Bars are per-expert load relative to the balanced ideal (dashed). The lower panel shows the offset each method applies. Gate distortion is the mean change in the normalised gating weights versus the router's un-shifted scores. The bias rule keeps it at exactly zero because the bias only affects selection. The pull standing in for the LM gradient is a modelling assumption, so read the aux-loss numbers qualitatively.</figcaption>
+</figure>
+<p><span>Things to try: start with </span><strong><span>No balancing</span></strong><span> and watch MaxVio sit near 1.8. Switch to </span><strong><span>Aux</span>
+<span>loss</span></strong><span>. MaxVio drops, and drops further as you raise $\alpha$, but gate distortion climbs</span>
+<span>with it. Then</span>
+<span>switch to </span><strong><span>Bias update</span></strong><span>. The load flattens and distortion goes to zero. Push $\gamma$ to the</span>
+<span>top of the slider and the trace gets visibly noisier. That is the integral controller</span>
+<span>overshooting.</span></p>
+<hr>
+</section>
+<section id="Multi-token-prediction-MTP">
+
+    <h3>
+    <a href="#Multi-token-prediction-MTP"><span>Multi-token prediction (MTP)</span> </a><a class="heading-anchor" href="#Multi-token-prediction-MTP" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>On top of the usual next-token loss, V3 trains $D$ extra </span><strong><strong><span>sequential</span></strong></strong><span> MTP modules. Module</span>
+<span>$k$ predicts the token $k$ steps further ahead. Unlike parallel heads that each predict from</span>
+<span>the same hidden state, each module keeps the causal chain: it combines the previous depth</span>&rsquo;<span>s</span>
+<span>representation with the embedding of the next ground-truth token.</span></p>
+<p><span>$$\begin{aligned}
+h_i'^{\,k} &amp;= M_k\big[\operatorname{RMSNorm}(h_i^{k-1});\ \operatorname{RMSNorm}(\operatorname{Emb}(t_{i+k}))\big], \\
+h_{1:T-k}^{k} &amp;= \operatorname{TRM}_k\big(h_{1:T-k}'^{\,k}\big), \\
+P_{i+k+1}^{k} &amp;= \operatorname{OutHead}(h_i^k).
+\end{aligned}$$</span></p>
+<p><span>Here $M_k \in \mathbb{R}^{d \times 2d}$, $\operatorname{TRM}_k$ is one Transformer block,</span>
+<span>and the embedding and output head are </span><strong><strong><span>shared</span></strong></strong><span> with the main model. The total objective</span>
+<span>adds $\mathcal{L}_{\text{MTP}} = \frac{\lambda}{D} \sum_{k=1}^{D} \mathcal{L}_{\text{MTP}}^{k}$,</span>
+<span>where each $\mathcal{L}^k_{\text{MTP}}$ is a cross-entropy. V3 uses $D = 1$, with</span>
+<span>$\lambda = 0.3$ for the first 10T tokens and $0.1$ for the remaining 4.8T.</span></p>
+<p><span>The main purpose is a denser training signal: the model has to plan one token further</span>
+<span>ahead. At inference the MTP module can simply be dropped. Alternatively, it can serve as</span>
+<span>the </span><strong><strong><span>draft model for speculative decoding</span></strong></strong><span>. It proposes the token after next, and the</span>
+<span>main model verifies it in the same forward pass. The report measures a second-token</span>
+<span>acceptance rate of 85–90%, which gives about </span><strong><strong><span>1.8×</span></strong></strong><span> more tokens per second.</span></p>
+<hr>
+</section>
+<section id="FP8-training-and-DualPipe-briefly">
+
+    <h3>
+    <a href="#FP8-training-and-DualPipe-briefly"><span>FP8 training and DualPipe, briefly</span> </a><a class="heading-anchor" href="#FP8-training-and-DualPipe-briefly" aria-label="Link to this section">#</a>
+    </h3>
+<p><strong><strong><span>FP8 with fine-grained scaling.</span></strong></strong><span> Most of the GEMMs run in FP8, using E4M3 on all tensors</span>
+<span>rather than the usual E4M3/E5M2 split. The problem with FP8 is its tiny dynamic range: a</span>
+<span>single outlier in a per-tensor scale crushes everything else to zero. V3 therefore scales</span>
+<span>in small groups. Activations get one scale per </span><strong><strong><span>1×128 tile</span></strong></strong><span> (per token, per 128 channels)</span>
+<span>and weights one scale per </span><strong><strong><span>128×128 block</span></strong></strong><span>. An outlier then only affects its own tile.</span>
+<span>Because the tensor cores</span>&rsquo;<span> FP8 accumulation keeps limited precision, partial sums are</span>
+<span>promoted to FP32 on the CUDA cores every 128 elements along the inner dimension. Sensitive</span>
+<span>parts stay in higher precision: the embedding, output head, MoE gating, normalisation and</span>
+<span>attention.</span></p>
+<p><strong><strong><span>DualPipe.</span></strong></strong><span> With experts spread across nodes, cross-node all-to-all communication costs</span>
+<span>about as much as the computation. DualPipe splits each chunk into attention, all-to-all</span>
+<span>dispatch, MLP and all-to-all combine. It then overlaps the computation of one micro-batch</span>&rsquo;<span>s</span>
+<span>forward chunk with another</span>&rsquo;<span>s backward communication, and vice versa. It also feeds</span>
+<span>micro-batches from </span><strong><span>both</span></strong><span> ends of the pipeline at once. The result is fewer pipeline</span>
+<span>bubbles than 1F1B or ZeroBubble, and communication that is almost fully hidden. The cost is</span>
+<span>keeping two copies of the parameters.</span></p>
+<hr>
+</section>
+<section id="References">
+
+    <h3>
+    <a href="#References"><span>References</span> </a><a class="heading-anchor" href="#References" aria-label="Link to this section">#</a>
+    </h3>
+<ul>
+<li>
+<span>DeepSeek-AI. </span><em><span>DeepSeek-V3 Technical Report</span></em><span>. </span><a href="https://arxiv.org/abs/2412.19437"><span>arXiv:2412.19437</span></a><span>, 2024.</span>
+</li>
+<li>
+<span>DeepSeek-AI. </span><em><span>DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model</span></em><span>. </span><a href="https://arxiv.org/abs/2405.04434"><span>arXiv:2405.04434</span></a><span>, 2024.</span>
+</li>
+<li>
+<span>Damai Dai et al. </span><em><span>DeepSeekMoE: Towards Ultimate Expert Specialization in Mixture-of-Experts Language Models</span></em><span>. </span><a href="https://arxiv.org/abs/2401.06066"><span>arXiv:2401.06066</span></a><span>, 2024.</span>
+</li>
+<li>
+<span>Lean Wang, Huazuo Gao, Chenggang Zhao, Xu Sun, Damai Dai. </span><em><span>Auxiliary-Loss-Free Load Balancing Strategy for Mixture-of-Experts</span></em><span>. </span><a href="https://arxiv.org/abs/2408.15664"><span>arXiv:2408.15664</span></a><span>, 2024.</span>
+</li>
+</ul>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/llm.html">#llm</a><a class="tag" href="/tags/deepseek.html">#deepseek</a><a class="tag" href="/tags/training.html">#training</a></div>
+      <p class="prereq-line">
+      <span class="prereq-line__label">Read next</span>
+      <a href="/2025/02/06/grpo.html">Group Relative Policy Optimization (GRPO)</a>
+    </p><section class="related">
+        <h2>Related posts</h2>
+        <ul class="related-list">
+          <li>
+              <a href="/2026/01/27/h-neurons.html">H-Neurons: Hallucination at the Neuron Level</a>
+              <span class="muted"><time datetime="2026-01-27">Jan 27, 2026</time> · Frontier LLMs &amp; Architectures</span>
+            </li><li>
+              <a href="/2025/08/04/moe.html">Mixture of Experts</a>
+              <span class="muted"><time datetime="2025-08-04">Aug 4, 2025</time> · Frontier LLMs &amp; Architectures</span>
+            </li><li>
+              <a href="/2025/04/12/mech-inter.html">Mechanistic Interpretability - Some concepts</a>
+              <span class="muted"><time datetime="2025-04-12">Apr 12, 2025</time> · Frontier LLMs &amp; Architectures</span>
+            </li>
+        </ul>
+      </section><nav class="post-nav" aria-label="Chronological">
+        <a class="post-nav__link post-nav__prev" href="/2024/12/23/prob.html">
+          <span class="post-nav__label">← Older</span>
+          <span class="post-nav__title">Probability Paradigms</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2025/02/06/grpo.html">
+          <span class="post-nav__label">Newer →</span>
+          <span class="post-nav__title">Group Relative Policy Optimization (GRPO)</span>
+        </a>
+      </nav><nav class="post-nav post-nav--theme" aria-label="Same theme">
+        <a class="post-nav__link post-nav__prev" href="/2024/11/25/ssl.html">
+          <span class="post-nav__label">← Older in theme</span>
+          <span class="post-nav__title">Scarf: Self Supervised Learning for Tabular Data</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2025/02/06/grpo.html">
+          <span class="post-nav__label">Newer in theme →</span>
+          <span class="post-nav__title">Group Relative Policy Optimization (GRPO)</span>
+        </a>
+      </nav>
+      
+    <section class="comments" id="comments">
+      <h2>Comments</h2>
+      <div class="giscus"></div>
+      <noscript><p class="muted">Comments are powered by <a href="https://giscus.app">giscus</a> and need JavaScript.</p></noscript>
+    </section>
+    <script>
+    (function () {
+      // Inject giscus with the theme the site is actually using (the toggle
+      // persists in localStorage), rather than the OS preference.
+      var siteTheme = function () {
+        var t = document.documentElement.getAttribute("data-theme");
+        if (t) return t === "dark" ? "dark" : "light";
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark" : "light";
+      };
+      var s = document.createElement("script");
+      s.src = "https://giscus.app/client.js";
+      var attrs = {
+        "data-repo": "mbottoni/mbottoni.github.io",
+        "data-repo-id": "R_kgDOKv71Lg",
+        "data-category": "General",
+        "data-category-id": "DIC_kwDOKv71Ls4DEBYr",
+        "data-mapping": "pathname",
+        "data-strict": "1",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "top",
+        "data-theme": siteTheme(),
+        "data-lang": "en",
+        "data-loading": "lazy",
+        "crossorigin": "anonymous"
+      };
+      for (var k in attrs) s.setAttribute(k, attrs[k]);
+      s.async = true;
+      document.getElementById("comments").appendChild(s);
+
+      // Follow the dark-mode toggle after load.
+      new MutationObserver(function () {
+        var frame = document.querySelector("iframe.giscus-frame");
+        if (!frame) return;
+        frame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: siteTheme() } } },
+          "https://giscus.app");
+      }).observe(document.documentElement,
+        { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+    </script>
+  
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-12-28-deepseek.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        // Widgets build their own DOM and style their spans.
+        if (span.closest(".widget")) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  <script defer src="/widgets/moe-bias.js"></script>
+<script defer src="/js/runner.js"></script>
+<script>
+(function () {
+  var bar = document.querySelector(".reading-progress__bar");
+  var article = document.querySelector("article");
+  if (bar && article) {
+    var update = function () {
+      var top = article.offsetTop;
+      var h = article.offsetHeight - window.innerHeight;
+      var p = h > 0 ? (window.scrollY - top) / h : 1;
+      bar.style.transform = "scaleX(" + Math.min(1, Math.max(0, p)) + ")";
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
+  var toc = document.querySelector(".toc");
+  if (!toc || !("IntersectionObserver" in window)) return;
+  var links = {};
+  toc.querySelectorAll("a[href^='#']").forEach(function (a) {
+    links[decodeURIComponent(a.getAttribute("href").slice(1))] = a;
+  });
+  var ids = Object.keys(links);
+  if (!ids.length) return;
+  var visible = {};
+  var setActive = function () {
+    var first = null;
+    for (var i = 0; i < ids.length; i++) {
+      if (visible[ids[i]]) { first = ids[i]; break; }
+    }
+    ids.forEach(function (id) {
+      links[id].classList.toggle("active", id === first);
+    });
+  };
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    setActive();
+  }, { rootMargin: "-10% 0px -70% 0px", threshold: 0 });
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>
+</body>
+
+</html>

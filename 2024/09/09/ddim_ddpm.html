@@ -1,0 +1,793 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DDIM vs DDPM</title>
+  <meta name="description" content="Diffusion models have emerged as a powerful class of deep generative models, particularly excelling in image synthesis tasks. This article 
+delves into a comprehensive comparison of two significant variants: Denoising Diffusion Probabilistic Models (DDPM) and Denoising 
+Diffusion Implicit Models (DDIM).">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="DDIM vs DDPM">
+  <meta property="og:description" content="Diffusion models have emerged as a powerful class of deep generative models, particularly excelling in image synthesis tasks. This article 
+delves into a comprehensive comparison of two significant variants: Denoising Diffusion Probabilistic Models (DDPM) and Denoising 
+Diffusion Implicit Models (DDIM).">
+  <meta property="og:url" content="https://mbottoni.github.io/2024/09/09/ddim_ddpm.html">
+  <meta property="og:image" content="/assets/generative/ddim.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="DDIM vs DDPM">
+  <meta name="twitter:description" content="Diffusion models have emerged as a powerful class of deep generative models, particularly excelling in image synthesis tasks. This article 
+delves into a comprehensive comparison of two significant variants: Denoising Diffusion Probabilistic Models (DDPM) and Denoising 
+Diffusion Implicit Models (DDIM).">
+  <meta name="twitter:image" content="/assets/generative/ddim.png">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/09/09/ddim_ddpm.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/map.html">Map</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="reading-progress" aria-hidden="true"><div class="reading-progress__bar"></div></div>
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/generative.html">
+          Diffusion &amp; Generative Modeling
+        </a>
+        <span class="post-meta"><time datetime="2024-09-09">Sep 9, 2024</time> · 14 min read</span>
+      </div>
+      
+    <aside class="series-box">
+      <div class="series-box__head">
+        <span class="series-box__label">Series</span>
+        <span class="series-box__title">Diffusion and flows</span>
+        <span class="muted">Part 2 of 5</span>
+      </div>
+      <p class="muted">Diffusion models, samplers, guidance, and their flow-matching cousins.</p>
+      <ol class="series-box__list"><li><a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a></li><li class="series-box__current" aria-current="page">DDIM vs DDPM</li><li><a href="/2024/12/15/cfg.html">Classifier free diffusion guidance</a></li><li><a href="/2024/12/01/flow.html">Flow Matching, a short overview</a></li><li><a href="/2024/12/07/timeseries-diffusion.html">Diffusion models for time series</a></li></ol>
+    </aside>
+  
+      <p class="prereq-line">
+      <span class="prereq-line__label">Before reading this</span>
+      <a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a>
+    </p>
+      
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <ul><li class="toc-l2"><a href="#DDPM">DDPM</a></li><li class="toc-l2"><a href="#DDIM">DDIM</a></li><li class="toc-l2"><a href="#The-derivations-behind-the-pseudocode">The derivations behind the pseudocode</a></li><li class="toc-l3"><a href="#The-forward-process-and-its-closed-form">The forward process and its closed form</a></li><li class="toc-l3"><a href="#The-posterior-$q(x_{t-1} \mid x_t, x_0)$">The posterior $q(x_{t-1} \mid x_t, x_0)$</a></li><li class="toc-l3"><a href="#From-the-ELBO-to-the-simple-$\epsilon$-loss">From the ELBO to the simple $\epsilon$-loss</a></li><li class="toc-l3"><a href="#DDIM-a-non-Markovian-family-with-the-same-marginals">DDIM: a non-Markovian family with the same marginals</a></li><li class="toc-l3"><a href="#$\eta = 0$-is-an-Euler-step-of-the-probability-flow-ODE">$\eta = 0$ is an Euler step of the probability-flow ODE</a></li><li class="toc-l3"><a href="#Checking-the-identities-numerically">Checking the identities numerically</a></li><li class="toc-l2"><a href="#References">References</a></li></ul>
+    </details>
+  
+      <article >
+
+    <h1 id="DDIM-vs-DDPM">
+    <a href="#DDIM-vs-DDPM"><span>DDIM vs DDPM</span> <time datetime="2024-09-09">Sep 9, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/generative/ddim.png">
+</figure>
+<p><span>Diffusion models have emerged as a powerful class of deep generative models, particularly excelling in image synthesis tasks. This article </span>
+<span>delves into a comprehensive comparison of two significant variants: Denoising Diffusion Probabilistic Models (DDPM) and Denoising </span>
+<span>Diffusion Implicit Models (DDIM).</span></p>
+<section id="DDPM">
+
+    <h2>
+    <a href="#DDPM"><span>DDPM</span> </a><a class="heading-anchor" href="#DDPM" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>DDPM, introduced by Ho et al. in their 2020 paper </span>&ldquo;<span>Denoising Diffusion Probabilistic Models,</span>&rdquo;<span> is grounded in the principles of </span>
+<span>non-equilibrium thermodynamics. The model defines a Markov chain of diffusion steps that gradually add Gaussian noise </span>
+<span>to data, and then learns to reverse this process. Here</span>&rsquo;<span>s a simplified pseudocode representation of the DDPM sampling process:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">sample_ddpm</span>(<span class="hl-params">num_steps</span>):</span>
+<span class="line">    x = random_noise()</span>
+<span class="line">    <span class="hl-keyword">for</span> t <span class="hl-keyword">in</span> <span class="hl-built_in">reversed</span>(<span class="hl-built_in">range</span>(num_steps)):</span>
+<span class="line">        z = random_noise() <span class="hl-keyword">if</span> t &gt; <span class="hl-number">1</span> <span class="hl-keyword">else</span> <span class="hl-number">0</span></span>
+<span class="line">        noise_pred = denoise_fn(x, t)</span>
+<span class="line">        x = (<span class="hl-number">1</span> / sqrt(<span class="hl-number">1</span> - beta[t])) * (x - (beta[t] / sqrt(<span class="hl-number">1</span> - alpha_bar[t])) * noise_pred) + sqrt(beta[t]) * z</span>
+<span class="line">    <span class="hl-keyword">return</span> x</span></code></pre>
+
+</figure>
+<p><span>In this pseudocode, </span><code>beta</code><span> represents the noise schedule, </span><code>alpha_bar</code><span> is the cumulative product of (1 - beta), and </span><code>denoise_fn</code><span> is the learned denoising function.</span></p>
+<p><span>DDPM is characterized by its Markovian nature, where each step depends only on the immediately preceding step. It typically employs </span>
+<span>a fixed number of steps, usually around 1000, for the denoising process. The generation process in DDPM involves stochastic </span>
+<span>sampling, drawing from probability distributions at each step. This approach generally yields high-quality samples but at the </span>
+<span>cost of computational intensity due to the large number of steps involved.</span></p>
+</section>
+<section id="DDIM">
+
+    <h2>
+    <a href="#DDIM"><span>DDIM</span> </a><a class="heading-anchor" href="#DDIM" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>DDIM, proposed by Song et al. in their 2020 paper </span>&ldquo;<span>Denoising Diffusion Implicit Models,</span>&rdquo;<span> builds upon DDPM while introducing significant </span>
+<span>modifications to the generative process. DDIM introduces a non-Markovian inference process. Here</span>&rsquo;<span>s a simplified </span>
+<span>pseudocode representation of the DDIM sampling process:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">sample_ddim</span>(<span class="hl-params">num_steps, eta</span>):</span>
+<span class="line">    x = random_noise()</span>
+<span class="line">    <span class="hl-keyword">for</span> t <span class="hl-keyword">in</span> <span class="hl-built_in">reversed</span>(<span class="hl-built_in">range</span>(num_steps)):</span>
+<span class="line">        noise_pred = denoise_fn(x, t)</span>
+<span class="line">        alpha = alpha_bar[t]</span>
+<span class="line">        alpha_next = alpha_bar[t-<span class="hl-number">1</span>] <span class="hl-keyword">if</span> t &gt; <span class="hl-number">0</span> <span class="hl-keyword">else</span> <span class="hl-number">1.0</span></span>
+<span class="line">        sigma = eta * sqrt((<span class="hl-number">1</span> - alpha / alpha_next) * (<span class="hl-number">1</span> - alpha_next) / (<span class="hl-number">1</span> - alpha))</span>
+<span class="line">        z = random_noise() <span class="hl-keyword">if</span> t &gt; <span class="hl-number">1</span> <span class="hl-keyword">else</span> <span class="hl-number">0</span></span>
+<span class="line">        x = sqrt(alpha_next) * (x - sqrt(<span class="hl-number">1</span> - alpha) * noise_pred) / sqrt(alpha)</span>
+<span class="line">        x = x + sqrt(<span class="hl-number">1</span> - alpha_next - sigma**<span class="hl-number">2</span>) * noise_pred + sigma * z</span>
+<span class="line">    <span class="hl-keyword">return</span> x</span></code></pre>
+
+</figure>
+<p><span>In this pseudocode, </span><code>eta</code><span> is a hyperparameter controlling the stochasticity of the sampling</span>
+<span>process. When </span><code>eta = 0</code><span>, the process becomes deterministic.</span></p>
+<p><span>The key advancements in DDIM include its non-Markovian process, where each step can depend on multiple previous</span>
+<span>steps, and the option for deterministic sampling by setting </span><code>eta</code><span> to 0. Perhaps most notably, DDIM allows</span>
+<span>for flexible sampling steps, capable of generating samples using significantly fewer steps (e.g., 10-100) compared to DDPM.</span></p>
+<p><span>When comparing the two models, several key differences emerge. In terms of sampling efficiency, DDPM requires a fixed number of steps, resulting in </span>
+<span>slower generation. DDIM, on the other hand, allows for accelerated sampling with fewer steps, significantly reducing generation time. This efficiency gain </span>
+<span>in DDIM comes with a potential trade-off in sample quality, especially at very low step counts, though it can generally maintain comparable quality to DDPM.</span></p>
+<p><span>The latent space properties of these models also differ significantly. DDPM</span>&rsquo;<span>s stochastic nature makes it challenging</span>
+<span>to manipulate the latent space directly. In contrast, DDIM</span>&rsquo;<span>s deterministic option allows</span>
+<span>for more controlled latent space manipulation, enabling operations like interpolation.</span></p>
+<p><span>That last point is the one worth seeing directly. Below, both samplers run on a</span>
+<span>toy target </span>&mdash;<span> eight Gaussian modes on a ring </span>&mdash;<span> with </span><strong><strong><span>no trained network at</span>
+<span>all</span></strong></strong><span>. Because the target is a known mixture, the score of every noised marginal</span>
+<span>is available in closed form, so </span><code>eps_hat</code><span> is exact. Whatever the samplers do</span>
+<span>here is the sampler</span>&rsquo;<span>s doing and nothing else.</span></p>
+<p><span>Watch the </span><strong><span>re-run drift</span></strong><span> readout, which re-runs the chain from the identical</span>
+<span>starting latent with a different noise stream. At </span><code>eta = 0</code><span> it is exactly zero:</span>
+<span>the same latent always produces the same sample, which is precisely what makes</span>
+<span>DDIM latents interpolable. Push </span><code>eta</code><span> to 1 and it jumps to around 1.9 </span>&mdash;<span> the</span>
+<span>latent no longer determines anything.</span></p>
+<p><span>One honest caveat, since the widget will show it to you anyway: with an </span><strong><span>exact</span></strong>
+<span>score, DDPM is not worse than DDIM. Over 2000 samples at 30 steps it is actually</span>
+<span>slightly tighter (mean distance to a mode centre 0.126 against 0.143). The</span>
+<span>efficiency advantage described above is real in practice, but it comes from how</span>
+<span>a </span><strong><span>learned</span></strong><span> network</span>&rsquo;<span>s errors compound under a stochastic sampler </span>&mdash;<span> it is not a</span>
+<span>property of the update rule by itself. Determinism is.</span></p>
+
+<figure class="widget" data-widget="diffusion">
+<div class="widget-mount"></div>
+<noscript><p class="widget-fallback">This figure is interactive and needs JavaScript.</p></noscript>
+<figcaption class="title">Eight modes on a ring, sampled from pure noise. 'Mode dist' is the mean distance from a sample to the nearest mode centre, against an ideal of 0.163 for a perfect draw; 'network calls' is the step count, which is the quantity DDIM is meant to save. Drag steps down to 5 and both samplers smear — resolution costs calls regardless of eta.</figcaption>
+</figure>
+</section>
+<section id="The-derivations-behind-the-pseudocode">
+
+    <h2>
+    <a href="#The-derivations-behind-the-pseudocode"><span>The derivations behind the pseudocode</span> </a><a class="heading-anchor" href="#The-derivations-behind-the-pseudocode" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>The two samplers above look like magic formulas, so in this section I want to</span>
+<span>derive every coefficient in them. I use the notation of the DDPM paper</span>
+<span>throughout. One warning before starting: the DDIM paper writes $\alpha_t$ for</span>
+<span>the quantity that DDPM calls $\bar\alpha_t$. I translate everything to the DDPM</span>
+<span>convention so the two halves of this post line up.</span></p>
+<section id="The-forward-process-and-its-closed-form">
+
+    <h3>
+    <a href="#The-forward-process-and-its-closed-form"><span>The forward process and its closed form</span> </a><a class="heading-anchor" href="#The-forward-process-and-its-closed-form" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Fix a variance schedule $\beta_1, \dots, \beta_T \in (0, 1)$ and define</span>
+<span>$\alpha_t = 1 - \beta_t$ and $\bar\alpha_t = \prod_{s=1}^{t} \alpha_s$. The</span>
+<span>forward (noising) process is a Markov chain that starts at a data point</span>
+<span>$x_0 \sim q(x_0)$ and adds a little Gaussian noise at each step:</span></p>
+<p><span>$$q(x_t \mid x_{t-1}) = \mathcal{N}\big(x_t;\ \sqrt{\alpha_t}\, x_{t-1},\ \beta_t I\big),
+\qquad
+q(x_{1:T} \mid x_0) = \prod_{t=1}^{T} q(x_t \mid x_{t-1}).$$</span></p>
+<p><span>The useful fact is that we never need to run this chain step by step: the</span>
+<span>marginal at any $t$ has a closed form. Write one step as</span>
+<span>$x_t = \sqrt{\alpha_t}\, x_{t-1} + \sqrt{1-\alpha_t}\, \epsilon_{t-1}$ with</span>
+<span>$\epsilon_{t-1} \sim \mathcal{N}(0, I)$, and unroll it once:</span></p>
+<p><span>$$x_t = \sqrt{\alpha_t \alpha_{t-1}}\, x_{t-2}
+    + \sqrt{\alpha_t (1-\alpha_{t-1})}\, \epsilon_{t-2}
+    + \sqrt{1-\alpha_t}\, \epsilon_{t-1}.$$</span></p>
+<p><span>The two noise terms are independent zero-mean Gaussians, so their sum is a</span>
+<span>Gaussian whose variance is the sum of the variances,</span>
+<span>$\alpha_t - \alpha_t\alpha_{t-1} + 1 - \alpha_t = 1 - \alpha_t\alpha_{t-1}$.</span>
+<span>The pattern is clear, and induction on $t$ gives</span></p>
+<p><span>$$q(x_t \mid x_0) = \mathcal{N}\big(x_t;\ \sqrt{\bar\alpha_t}\, x_0,\ (1-\bar\alpha_t) I\big),$$</span></p>
+<p><span>or, as a sampling recipe,</span></p>
+<p><span>$$x_t = \sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\, \epsilon,\qquad \epsilon \sim \mathcal{N}(0, I).$$</span></p>
+<p><span>Because $\bar\alpha_T \approx 0$ for a sensible schedule, $q(x_T \mid x_0)$ is</span>
+<span>almost exactly $\mathcal{N}(0, I)$ regardless of $x_0$, which is why sampling</span>
+<span>starts from pure noise.</span></p>
+</section>
+<section id="The-posterior-$q(x_{t-1} \mid x_t, x_0)$">
+
+    <h3>
+    <a href="#The-posterior-$q(x_{t-1} \mid x_t, x_0)$"><span>The posterior $q(x_{t-1} \mid x_t, x_0)$</span> </a><a class="heading-anchor" href="#The-posterior-$q(x_{t-1} \mid x_t, x_0)$" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>The reverse conditional $q(x_{t-1} \mid x_t)$ is intractable, because it</span>
+<span>depends on the whole data distribution. Conditioned on $x_0$, though, it is</span>
+<span>an easy Gaussian. By Bayes and the Markov property,</span></p>
+<p><span>$$\begin{aligned}
+q(x_{t-1} \mid x_t, x_0)
+&amp;= \frac{q(x_t \mid x_{t-1})\, q(x_{t-1} \mid x_0)}{q(x_t \mid x_0)} \\
+&amp;\propto \exp\!\Big(-\frac{1}{2}\Big[
+\frac{\|x_t - \sqrt{\alpha_t}\, x_{t-1}\|^2}{\beta_t}
++ \frac{\|x_{t-1} - \sqrt{\bar\alpha_{t-1}}\, x_0\|^2}{1-\bar\alpha_{t-1}}
+\Big]\Big).
+\end{aligned}$$</span></p>
+<p><span>The exponent is quadratic in $x_{t-1}$, so we can read off the precision (the</span>
+<span>coefficient of $\|x_{t-1}\|^2$) and the linear term, and then complete the</span>
+<span>square. The precision is</span></p>
+<p><span>$$\frac{\alpha_t}{\beta_t} + \frac{1}{1-\bar\alpha_{t-1}}
+= \frac{\alpha_t - \bar\alpha_t + \beta_t}{\beta_t (1-\bar\alpha_{t-1})}
+= \frac{1-\bar\alpha_t}{\beta_t (1-\bar\alpha_{t-1})},$$</span></p>
+<p><span>using $\alpha_t (1-\bar\alpha_{t-1}) = \alpha_t - \bar\alpha_t$ and</span>
+<span>$\alpha_t + \beta_t = 1$. Dividing the linear term</span>
+<span>$\frac{\sqrt{\alpha_t}}{\beta_t} x_t + \frac{\sqrt{\bar\alpha_{t-1}}}{1-\bar\alpha_{t-1}} x_0$</span>
+<span>by this precision gives the mean, so</span></p>
+<p><span>$$q(x_{t-1} \mid x_t, x_0) = \mathcal{N}\big(x_{t-1};\ \tilde\mu_t(x_t, x_0),\ \tilde\beta_t I\big),$$</span></p>
+<p><span>$$\tilde\mu_t(x_t, x_0) = \frac{\sqrt{\bar\alpha_{t-1}}\,\beta_t}{1-\bar\alpha_t}\, x_0
+ + \frac{\sqrt{\alpha_t}\,(1-\bar\alpha_{t-1})}{1-\bar\alpha_t}\, x_t,
+\qquad
+\tilde\beta_t = \frac{1-\bar\alpha_{t-1}}{1-\bar\alpha_t}\, \beta_t.$$</span></p>
+<p><span>Now substitute $x_0 = (x_t - \sqrt{1-\bar\alpha_t}\,\epsilon)/\sqrt{\bar\alpha_t}$</span>
+<span>from the closed form. The $x_t$ coefficient collapses to</span>
+<span>$\frac{\beta_t + \alpha_t - \bar\alpha_t}{\sqrt{\alpha_t}(1-\bar\alpha_t)} = \frac{1}{\sqrt{\alpha_t}}$,</span>
+<span>and the mean becomes</span></p>
+<p><span>$$\tilde\mu_t = \frac{1}{\sqrt{\alpha_t}}\Big(x_t - \frac{\beta_t}{\sqrt{1-\bar\alpha_t}}\, \epsilon\Big).$$</span></p>
+<p><span>That is exactly the update in </span><code>sample_ddpm</code><span> above, with the true noise</span>
+<span>$\epsilon$ replaced by the network</span>&rsquo;<span>s guess </span><code>noise_pred</code><span>.</span></p>
+</section>
+<section id="From-the-ELBO-to-the-simple-$\epsilon$-loss">
+
+    <h3>
+    <a href="#From-the-ELBO-to-the-simple-$\epsilon$-loss"><span>From the ELBO to the simple $\epsilon$-loss</span> </a><a class="heading-anchor" href="#From-the-ELBO-to-the-simple-$\epsilon$-loss" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>The model is a reverse Markov chain</span>
+<span>$p_\theta(x_{0:T}) = p(x_T)\prod_{t=1}^{T} p_\theta(x_{t-1} \mid x_t)$ with</span>
+<span>$p(x_T) = \mathcal{N}(0, I)$ and</span>
+<span>$p_\theta(x_{t-1} \mid x_t) = \mathcal{N}(x_{t-1};\ \mu_\theta(x_t, t),\ \sigma_t^2 I)$,</span>
+<span>where $\sigma_t^2$ is fixed (Ho et al. use $\sigma_t^2 = \beta_t$ or</span>
+<span>$\sigma_t^2 = \tilde\beta_t$). The forward chain plays the role of the</span>
+<span>variational posterior, so Jensen</span>&rsquo;<span>s inequality gives the usual bound</span></p>
+<p><span>$$-\log p_\theta(x_0) \le \mathbb{E}_{q}\Big[-\log \frac{p_\theta(x_{0:T})}{q(x_{1:T} \mid x_0)}\Big].$$</span></p>
+<p><span>Rewrite each forward factor for $t \ge 2$ with Bayes,</span>
+<span>$q(x_t \mid x_{t-1}) = q(x_t \mid x_{t-1}, x_0) = q(x_{t-1} \mid x_t, x_0)\, q(x_t \mid x_0) / q(x_{t-1} \mid x_0)$.</span>
+<span>The ratio $q(x_t \mid x_0)/q(x_{t-1} \mid x_0)$ telescopes across the product,</span>
+<span>and the bound splits into a sum of KL divergences:</span></p>
+<p><span>$$\mathbb{E}_q\Big[
+\underbrace{D_{\mathrm{KL}}\big(q(x_T \mid x_0)\,\|\,p(x_T)\big)}_{L_T}
++ \sum_{t=2}^{T} \underbrace{D_{\mathrm{KL}}\big(q(x_{t-1} \mid x_t, x_0)\,\|\,p_\theta(x_{t-1} \mid x_t)\big)}_{L_{t-1}}
+\underbrace{-\log p_\theta(x_0 \mid x_1)}_{L_0}
+\Big].$$</span></p>
+<p><span>$L_T$ has no parameters. Each $L_{t-1}$ compares two Gaussians with the same</span>
+<span>fixed isotropic covariance, so it is a scaled squared distance between means:</span></p>
+<p><span>$$L_{t-1} = \mathbb{E}_q\Big[\frac{1}{2\sigma_t^2}\,\big\|\tilde\mu_t(x_t, x_0) - \mu_\theta(x_t, t)\big\|^2\Big] + C.$$</span></p>
+<p><span>Since the target mean has the form $\frac{1}{\sqrt{\alpha_t}}(x_t - \frac{\beta_t}{\sqrt{1-\bar\alpha_t}}\epsilon)$</span>
+<span>and $x_t$ is an input to the network, the natural choice is to give</span>
+<span>$\mu_\theta$ the same form and let the network predict only the noise:</span>
+<span>$\mu_\theta(x_t, t) = \frac{1}{\sqrt{\alpha_t}}\big(x_t - \frac{\beta_t}{\sqrt{1-\bar\alpha_t}}\epsilon_\theta(x_t, t)\big)$.</span>
+<span>The $x_t$ terms cancel inside the norm, leaving</span></p>
+<p><span>$$L_{t-1} - C = \mathbb{E}_{x_0, \epsilon}\Big[
+\frac{\beta_t^2}{2\sigma_t^2\, \alpha_t\, (1-\bar\alpha_t)}\,
+\big\|\epsilon - \epsilon_\theta\big(\sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\, \epsilon,\ t\big)\big\|^2
+\Big].$$</span></p>
+<p><span>Ho et al. found that dropping the weight in front, and sampling $t$ uniformly,</span>
+<span>trains better. That gives the loss everyone actually uses:</span></p>
+<p><span>$$L_{\text{simple}}(\theta) = \mathbb{E}_{t \sim \mathcal{U}\{1,\dots,T\},\ x_0 \sim q,\ \epsilon \sim \mathcal{N}(0, I)}
+\Big[\big\|\epsilon - \epsilon_\theta\big(\sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\, \epsilon,\ t\big)\big\|^2\Big].$$</span></p>
+<p><span>Two things are worth pointing out. First, the loss only ever touches the</span>
+<span>marginals $q(x_t \mid x_0)$, never the joint chain. Second, $\epsilon_\theta$</span>
+<span>is a scaled score: by Tweedie</span>&rsquo;<span>s formula the optimal noise predictor satisfies</span>
+<span>$\nabla_{x_t} \log q(x_t) = -\epsilon^*(x_t, t)/\sqrt{1-\bar\alpha_t}$. Both</span>
+<span>facts matter for DDIM.</span></p>
+</section>
+<section id="DDIM-a-non-Markovian-family-with-the-same-marginals">
+
+    <h3>
+    <a href="#DDIM-a-non-Markovian-family-with-the-same-marginals"><span>DDIM: a non-Markovian family with the same marginals</span> </a><a class="heading-anchor" href="#DDIM-a-non-Markovian-family-with-the-same-marginals" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Because $L_{\text{simple}}$ only depends on $q(x_t \mid x_0)$, any forward</span>
+<span>process with those marginals is trained by exactly the same objective.</span>
+<span>Song et al. construct a whole family of them, indexed by a vector of standard</span>
+<span>deviations $\sigma \in \mathbb{R}_{\ge 0}^{T}$:</span></p>
+<p><span>$$q_\sigma(x_{t-1} \mid x_t, x_0) = \mathcal{N}\Big(x_{t-1};\
+\sqrt{\bar\alpha_{t-1}}\, x_0 + \sqrt{1-\bar\alpha_{t-1}-\sigma_t^2}\cdot
+\frac{x_t - \sqrt{\bar\alpha_t}\, x_0}{\sqrt{1-\bar\alpha_t}},\ \sigma_t^2 I\Big).$$</span></p>
+<p><span>The mean is chosen so that marginals are preserved. Suppose</span>
+<span>$x_t = \sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\,\epsilon$. Then the</span>
+<span>fraction in the mean is exactly $\epsilon$, so a draw from $q_\sigma$ is</span>
+<span>$\sqrt{\bar\alpha_{t-1}}\, x_0 + \sqrt{1-\bar\alpha_{t-1}-\sigma_t^2}\,\epsilon + \sigma_t z$</span>
+<span>with independent $z \sim \mathcal{N}(0, I)$. Its variance is</span>
+<span>$(1-\bar\alpha_{t-1}-\sigma_t^2) + \sigma_t^2 = 1-\bar\alpha_{t-1}$. Starting</span>
+<span>from $q_\sigma(x_T \mid x_0) = \mathcal{N}(\sqrt{\bar\alpha_T}\, x_0, (1-\bar\alpha_T) I)$</span>
+<span>and inducting downwards, every marginal is</span>
+<span>$q_\sigma(x_t \mid x_0) = \mathcal{N}(\sqrt{\bar\alpha_t}\, x_0, (1-\bar\alpha_t) I)$,</span>
+<span>the same as DDPM. The forward process implied by Bayes,</span>
+<span>$q_\sigma(x_t \mid x_{t-1}, x_0)$, still depends on $x_0$. That is what</span>
+&ldquo;<span>non-Markovian</span>&rdquo;<span> means here.</span></p>
+<p><span>To generate, we replace the unknown $x_0$ with the network</span>&rsquo;<span>s prediction</span>
+<span>$\hat x_0 = (x_t - \sqrt{1-\bar\alpha_t}\,\epsilon_\theta(x_t, t))/\sqrt{\bar\alpha_t}$:</span></p>
+<p><span>$$x_{t-1} = \sqrt{\bar\alpha_{t-1}}\, \hat x_0
+ + \sqrt{1-\bar\alpha_{t-1}-\sigma_t^2}\; \epsilon_\theta(x_t, t)
+ + \sigma_t z,
+\qquad
+\sigma_t(\eta) = \eta\, \sqrt{\frac{1-\bar\alpha_{t-1}}{1-\bar\alpha_t}}\,\sqrt{1-\frac{\bar\alpha_t}{\bar\alpha_{t-1}}}.$$</span></p>
+<p><span>These are the three lines of </span><code>sample_ddim</code><span>. Since</span>
+<span>$1 - \bar\alpha_t/\bar\alpha_{t-1} = \beta_t$, at $\eta = 1$ we get</span>
+<span>$\sigma_t^2 = \tilde\beta_t$ and the step coincides with the DDPM posterior</span>
+<span>step (in its $\sigma_t^2 = \tilde\beta_t$ variant). At $\eta = 0$ the noise term</span>
+<span>vanishes and sampling is a deterministic map from $x_T$ to $x_0$. Since</span>
+<span>only the marginals matter, the same derivation holds on any increasing</span>
+<span>subsequence $\tau_1 &lt; \dots &lt; \tau_S$ of $\{1, \dots, T\}$ with $\bar\alpha$</span>
+<span>evaluated on the subsequence. That is where DDIM</span>&rsquo;<span>s step skipping comes from.</span></p>
+</section>
+<section id="$\eta = 0$-is-an-Euler-step-of-the-probability-flow-ODE">
+
+    <h3>
+    <a href="#$\eta = 0$-is-an-Euler-step-of-the-probability-flow-ODE"><span>$\eta = 0$ is an Euler step of the probability-flow ODE</span> </a><a class="heading-anchor" href="#$\eta = 0$-is-an-Euler-step-of-the-probability-flow-ODE" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Divide the deterministic update by $\sqrt{\bar\alpha_{t-1}}$ and define</span>
+<span>$\kappa_t = \sqrt{(1-\bar\alpha_t)/\bar\alpha_t}$ (the inverse square root of</span>
+<span>the signal-to-noise ratio) and the rescaled state $\bar x_t = x_t/\sqrt{\bar\alpha_t}$:</span></p>
+<p><span>$$\bar x_{t-1} = \bar x_t + (\kappa_{t-1} - \kappa_t)\, \epsilon_\theta(x_t, t).$$</span></p>
+<p><span>This is one Euler step, with step size $\kappa_{t-1} - \kappa_t$, of the ODE</span></p>
+<p><span>$$\frac{d\bar x}{d\kappa} = \epsilon_\theta\Big(\frac{\bar x}{\sqrt{1+\kappa^2}},\ \kappa\Big),$$</span></p>
+<p><span>where I used $\sqrt{\bar\alpha} = 1/\sqrt{1+\kappa^2}$ to write $x$ in terms of</span>
+<span>$\bar x$. To see that this is the probability-flow ODE of the continuous</span>
+<span>variance-preserving SDE $dx = -\tfrac12\beta(t)\, x\, dt + \sqrt{\beta(t)}\, dw$</span>
+<span>from Song et al. (2021), go to continuous time, where</span>
+<span>$d\bar\alpha/dt = -\beta(t)\,\bar\alpha$. From $\kappa^2 = 1/\bar\alpha - 1$</span>
+<span>we get $d\kappa/dt = \beta/(2\kappa\bar\alpha)$, and from $\bar x = x/\sqrt{\bar\alpha}$</span>
+<span>we get $d\bar x = dx/\sqrt{\bar\alpha} + \tfrac{\beta}{2\sqrt{\bar\alpha}}\, x\, dt$.</span>
+<span>Setting $d\bar x = \epsilon_\theta\, d\kappa$ and using $\kappa\sqrt{\bar\alpha} = \sqrt{1-\bar\alpha}$:</span></p>
+<p><span>$$\frac{dx}{dt} = -\frac{1}{2}\beta(t)\Big[x - \frac{\epsilon_\theta(x, t)}{\sqrt{1-\bar\alpha_t}}\Big]
+\approx -\frac{1}{2}\beta(t)\big[x + \nabla_x \log p_t(x)\big],$$</span></p>
+<p><span>where the last step uses the score identity from the previous section (exact</span>
+<span>when $\epsilon_\theta$ is the optimal noise predictor). The</span>
+<span>right-hand side is exactly the probability-flow ODE of the VP-SDE: a</span>
+<span>deterministic flow whose marginals match the diffusion</span>&rsquo;<span>s at every $t$.</span>
+<span>So DDIM with $\eta = 0$ is a first-order solver for that ODE in a clever</span>
+<span>reparameterization of time. This explains the two properties from the widget.</span>
+<span>The sample is a deterministic function of $x_T$, because an ODE has unique</span>
+<span>solutions, so latents interpolate. And taking fewer, larger steps is a</span>
+<span>discretization error, not a change of model.</span></p>
+</section>
+<section id="Checking-the-identities-numerically">
+
+    <h3>
+    <a href="#Checking-the-identities-numerically"><span>Checking the identities numerically</span> </a><a class="heading-anchor" href="#Checking-the-identities-numerically" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>The block below checks the three facts I just derived using nothing but</span>
+<span>numpy. First, iterating $q(x_t \mid x_{t-1})$ three hundred times lands on the</span>
+<span>closed-form $q(x_t \mid x_0)$. Second, regressing $x_{t-1}$ on $x_t$ for a fixed</span>
+<span>$x_0$ recovers the posterior coefficients and $\tilde\beta_t$. Third, one DDIM</span>
+<span>step from the true marginal at $t$ produces the marginal at $t-1$ for every</span>
+<span>$\eta$.</span></p>
+
+<figure class="code-block runnable" data-lang="python">
+
+
+<pre><code><span class="line"><span class="hl-keyword">import</span> numpy <span class="hl-keyword">as</span> np</span>
+<span class="line"></span>
+<span class="line">rng = np.random.default_rng(<span class="hl-number">0</span>)</span>
+<span class="line">T = <span class="hl-number">1000</span></span>
+<span class="line">beta = np.linspace(<span class="hl-number">1e-4</span>, <span class="hl-number">0.02</span>, T)           <span class="hl-comment"># linear schedule from the DDPM paper</span></span>
+<span class="line">alpha = <span class="hl-number">1.0</span> - beta</span>
+<span class="line">alpha_bar = np.cumprod(alpha)</span>
+<span class="line"></span>
+<span class="line">n, x0, t = <span class="hl-number">200_000</span>, <span class="hl-number">1.5</span>, <span class="hl-number">300</span>                <span class="hl-comment"># t is 1-indexed: we stop at x_t</span></span>
+<span class="line">x = np.full(n, x0)</span>
+<span class="line"><span class="hl-keyword">for</span> s <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(t):                          <span class="hl-comment"># iterate q(x_s | x_{s-1}) t times</span></span>
+<span class="line">    x_prev = x</span>
+<span class="line">    x = np.sqrt(alpha[s]) * x + np.sqrt(beta[s]) * rng.standard_normal(n)</span>
+<span class="line"></span>
+<span class="line">ab, ab_prev = alpha_bar[t - <span class="hl-number">1</span>], alpha_bar[t - <span class="hl-number">2</span>]</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;1) closed-form marginal q(x_t | x_0)&quot;</span>)</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;   mean  iterated <span class="hl-subst">{x.mean():<span class="hl-number">.4</span>f}</span>   closed form <span class="hl-subst">{np.sqrt(ab) * x0:<span class="hl-number">.4</span>f}</span>&quot;</span>)</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;   var   iterated <span class="hl-subst">{x.var():<span class="hl-number">.4</span>f}</span>   closed form <span class="hl-subst">{<span class="hl-number">1</span> - ab:<span class="hl-number">.4</span>f}</span>&quot;</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Posterior q(x_{t-1} | x_t, x_0) is Gaussian and linear in x_t, so regressing</span></span>
+<span class="line"><span class="hl-comment"># x_{t-1} on x_t (x_0 fixed) must recover its slope and residual variance.</span></span>
+<span class="line">slope, icpt = np.polyfit(x, x_prev, <span class="hl-number">1</span>)</span>
+<span class="line">resid = x_prev - (slope * x + icpt)</span>
+<span class="line">coef_xt = np.sqrt(alpha[t - <span class="hl-number">1</span>]) * (<span class="hl-number">1</span> - ab_prev) / (<span class="hl-number">1</span> - ab)</span>
+<span class="line">coef_x0 = np.sqrt(ab_prev) * beta[t - <span class="hl-number">1</span>] / (<span class="hl-number">1</span> - ab)</span>
+<span class="line">beta_tilde = (<span class="hl-number">1</span> - ab_prev) / (<span class="hl-number">1</span> - ab) * beta[t - <span class="hl-number">1</span>]</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;2) posterior q(x_{t-1} | x_t, x_0)&quot;</span>)</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;   x_t coefficient  fit <span class="hl-subst">{slope:<span class="hl-number">.4</span>f}</span>   formula <span class="hl-subst">{coef_xt:<span class="hl-number">.4</span>f}</span>&quot;</span>)</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;   x_0 term         fit <span class="hl-subst">{icpt:<span class="hl-number">.4</span>f}</span>   formula <span class="hl-subst">{coef_x0 * x0:<span class="hl-number">.4</span>f}</span>&quot;</span>)</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;   variance         fit <span class="hl-subst">{resid.var():<span class="hl-number">.6</span>f}</span> formula <span class="hl-subst">{beta_tilde:<span class="hl-number">.6</span>f}</span>&quot;</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># DDIM: for any sigma, one step of q_sigma(x_{t-1} | x_t, x_0) maps the</span></span>
+<span class="line"><span class="hl-comment"># marginal at t onto the marginal at t-1.</span></span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;3) DDIM step keeps the DDPM marginal, for every eta&quot;</span>)</span>
+<span class="line">eps_t = (x - np.sqrt(ab) * x0) / np.sqrt(<span class="hl-number">1</span> - ab)</span>
+<span class="line"><span class="hl-keyword">for</span> eta <span class="hl-keyword">in</span> (<span class="hl-number">0.0</span>, <span class="hl-number">0.5</span>, <span class="hl-number">1.0</span>):</span>
+<span class="line">    sig = eta * np.sqrt(beta_tilde)</span>
+<span class="line">    x_ddim = (np.sqrt(ab_prev) * x0 + np.sqrt(<span class="hl-number">1</span> - ab_prev - sig**<span class="hl-number">2</span>) * eps_t</span>
+<span class="line">              + sig * rng.standard_normal(n))</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;   eta=<span class="hl-subst">{eta:<span class="hl-number">.1</span>f}</span>  mean <span class="hl-subst">{x_ddim.mean():<span class="hl-number">.4</span>f}</span> (target <span class="hl-subst">{np.sqrt(ab_prev) * x0:<span class="hl-number">.4</span>f}</span>)&quot;</span></span>
+<span class="line">          <span class="hl-string">f&quot;   var <span class="hl-subst">{x_ddim.var():<span class="hl-number">.4</span>f}</span> (target <span class="hl-subst">{<span class="hl-number">1</span> - ab_prev:<span class="hl-number">.4</span>f}</span>)&quot;</span>)</span></code></pre>
+
+<textarea class="run-source" hidden spellcheck="false">import numpy as np
+
+rng = np.random.default_rng(0)
+T = 1000
+beta = np.linspace(1e-4, 0.02, T)           # linear schedule from the DDPM paper
+alpha = 1.0 - beta
+alpha_bar = np.cumprod(alpha)
+
+n, x0, t = 200_000, 1.5, 300                # t is 1-indexed: we stop at x_t
+x = np.full(n, x0)
+for s in range(t):                          # iterate q(x_s | x_{s-1}) t times
+    x_prev = x
+    x = np.sqrt(alpha[s]) * x + np.sqrt(beta[s]) * rng.standard_normal(n)
+
+ab, ab_prev = alpha_bar[t - 1], alpha_bar[t - 2]
+print(&quot;1) closed-form marginal q(x_t | x_0)&quot;)
+print(f&quot;   mean  iterated {x.mean():.4f}   closed form {np.sqrt(ab) * x0:.4f}&quot;)
+print(f&quot;   var   iterated {x.var():.4f}   closed form {1 - ab:.4f}&quot;)
+
+# Posterior q(x_{t-1} | x_t, x_0) is Gaussian and linear in x_t, so regressing
+# x_{t-1} on x_t (x_0 fixed) must recover its slope and residual variance.
+slope, icpt = np.polyfit(x, x_prev, 1)
+resid = x_prev - (slope * x + icpt)
+coef_xt = np.sqrt(alpha[t - 1]) * (1 - ab_prev) / (1 - ab)
+coef_x0 = np.sqrt(ab_prev) * beta[t - 1] / (1 - ab)
+beta_tilde = (1 - ab_prev) / (1 - ab) * beta[t - 1]
+print(&quot;2) posterior q(x_{t-1} | x_t, x_0)&quot;)
+print(f&quot;   x_t coefficient  fit {slope:.4f}   formula {coef_xt:.4f}&quot;)
+print(f&quot;   x_0 term         fit {icpt:.4f}   formula {coef_x0 * x0:.4f}&quot;)
+print(f&quot;   variance         fit {resid.var():.6f} formula {beta_tilde:.6f}&quot;)
+
+# DDIM: for any sigma, one step of q_sigma(x_{t-1} | x_t, x_0) maps the
+# marginal at t onto the marginal at t-1.
+print(&quot;3) DDIM step keeps the DDPM marginal, for every eta&quot;)
+eps_t = (x - np.sqrt(ab) * x0) / np.sqrt(1 - ab)
+for eta in (0.0, 0.5, 1.0):
+    sig = eta * np.sqrt(beta_tilde)
+    x_ddim = (np.sqrt(ab_prev) * x0 + np.sqrt(1 - ab_prev - sig**2) * eps_t
+              + sig * rng.standard_normal(n))
+    print(f&quot;   eta={eta:.1f}  mean {x_ddim.mean():.4f} (target {np.sqrt(ab_prev) * x0:.4f})&quot;
+          f&quot;   var {x_ddim.var():.4f} (target {1 - ab_prev:.4f})&quot;)
+</textarea>
+<div class="run-bar">
+<button type="button" class="widget-btn run-btn">Run</button>
+<button type="button" class="widget-btn run-edit">Edit</button>
+<span class="run-status muted"></span>
+</div>
+<pre class="run-output" hidden></pre>
+<noscript><p class="widget-fallback">This snippet can be run in the browser with JavaScript enabled.</p></noscript>
+</figure>
+<p><span>From a theoretical standpoint, DDPM provides stronger guarantees due to its well-defined probabilistic </span>
+<span>framework. DDIM, while sacrificing some theoretical rigor, gains practical advantages in sampling speed and control. Both models can utilize </span>
+<span>similar neural network architectures, such as U-Net, for the denoising function. Notably, DDIM requires </span>
+<span>minimal modifications to a pre-trained DDPM model, making it an attractive upgrade option.</span></p>
+</section>
+</section>
+<section id="References">
+
+    <h2>
+    <a href="#References"><span>References</span> </a><a class="heading-anchor" href="#References" aria-label="Link to this section">#</a>
+    </h2>
+<ul>
+<li>
+<span>Jonathan Ho, Ajay Jain, Pieter Abbeel. </span><a href="https://arxiv.org/abs/2006.11239"><span>Denoising Diffusion Probabilistic Models</span></a><span>. NeurIPS 2020.</span>
+</li>
+<li>
+<span>Jiaming Song, Chenlin Meng, Stefano Ermon. </span><a href="https://arxiv.org/abs/2010.02502"><span>Denoising Diffusion Implicit Models</span></a><span>. ICLR 2021.</span>
+</li>
+<li>
+<span>Yang Song, Jascha Sohl-Dickstein, Diederik P. Kingma, Abhishek Kumar, Stefano Ermon, Ben Poole. </span><a href="https://arxiv.org/abs/2011.13456"><span>Score-Based Generative Modeling through Stochastic Differential Equations</span></a><span>. ICLR 2021.</span>
+</li>
+</ul>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/diffusion.html">#diffusion</a><a class="tag" href="/tags/generative.html">#generative</a><a class="tag" href="/tags/sampling.html">#sampling</a></div>
+      <p class="prereq-line">
+      <span class="prereq-line__label">Read next</span>
+      <a href="/2024/12/15/cfg.html">Classifier free diffusion guidance</a>
+    </p><section class="related">
+        <h2>Related posts</h2>
+        <ul class="related-list">
+          <li>
+              <a href="/2024/12/15/cfg.html">Classifier free diffusion guidance</a>
+              <span class="muted"><time datetime="2024-12-15">Dec 15, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li><li>
+              <a href="/2024/12/07/timeseries-diffusion.html">Diffusion models for time series</a>
+              <span class="muted"><time datetime="2024-12-07">Dec 7, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li><li>
+              <a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a>
+              <span class="muted"><time datetime="2024-09-01">Sep 1, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li>
+        </ul>
+      </section><nav class="post-nav" aria-label="Chronological">
+        <a class="post-nav__link post-nav__prev" href="/2024/09/01/diffusion.html">
+          <span class="post-nav__label">← Older</span>
+          <span class="post-nav__title">Diffusion models or Autoencoders?</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/09/17/divergences.html">
+          <span class="post-nav__label">Newer →</span>
+          <span class="post-nav__title">Some common divergences</span>
+        </a>
+      </nav><nav class="post-nav post-nav--theme" aria-label="Same theme">
+        <a class="post-nav__link post-nav__prev" href="/2024/09/01/diffusion.html">
+          <span class="post-nav__label">← Older in theme</span>
+          <span class="post-nav__title">Diffusion models or Autoencoders?</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/10/13/vaes.html">
+          <span class="post-nav__label">Newer in theme →</span>
+          <span class="post-nav__title">A comprehensive list of different types of VAEs</span>
+        </a>
+      </nav>
+      
+    <section class="comments" id="comments">
+      <h2>Comments</h2>
+      <div class="giscus"></div>
+      <noscript><p class="muted">Comments are powered by <a href="https://giscus.app">giscus</a> and need JavaScript.</p></noscript>
+    </section>
+    <script>
+    (function () {
+      // Inject giscus with the theme the site is actually using (the toggle
+      // persists in localStorage), rather than the OS preference.
+      var siteTheme = function () {
+        var t = document.documentElement.getAttribute("data-theme");
+        if (t) return t === "dark" ? "dark" : "light";
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark" : "light";
+      };
+      var s = document.createElement("script");
+      s.src = "https://giscus.app/client.js";
+      var attrs = {
+        "data-repo": "mbottoni/mbottoni.github.io",
+        "data-repo-id": "R_kgDOKv71Lg",
+        "data-category": "General",
+        "data-category-id": "DIC_kwDOKv71Ls4DEBYr",
+        "data-mapping": "pathname",
+        "data-strict": "1",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "top",
+        "data-theme": siteTheme(),
+        "data-lang": "en",
+        "data-loading": "lazy",
+        "crossorigin": "anonymous"
+      };
+      for (var k in attrs) s.setAttribute(k, attrs[k]);
+      s.async = true;
+      document.getElementById("comments").appendChild(s);
+
+      // Follow the dark-mode toggle after load.
+      new MutationObserver(function () {
+        var frame = document.querySelector("iframe.giscus-frame");
+        if (!frame) return;
+        frame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: siteTheme() } } },
+          "https://giscus.app");
+      }).observe(document.documentElement,
+        { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+    </script>
+  
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-09-09-ddim_ddpm.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        // Widgets build their own DOM and style their spans.
+        if (span.closest(".widget")) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  <script defer src="/widgets/diffusion.js"></script>
+<script defer src="/js/runner.js"></script>
+<script>
+(function () {
+  var bar = document.querySelector(".reading-progress__bar");
+  var article = document.querySelector("article");
+  if (bar && article) {
+    var update = function () {
+      var top = article.offsetTop;
+      var h = article.offsetHeight - window.innerHeight;
+      var p = h > 0 ? (window.scrollY - top) / h : 1;
+      bar.style.transform = "scaleX(" + Math.min(1, Math.max(0, p)) + ")";
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
+  var toc = document.querySelector(".toc");
+  if (!toc || !("IntersectionObserver" in window)) return;
+  var links = {};
+  toc.querySelectorAll("a[href^='#']").forEach(function (a) {
+    links[decodeURIComponent(a.getAttribute("href").slice(1))] = a;
+  });
+  var ids = Object.keys(links);
+  if (!ids.length) return;
+  var visible = {};
+  var setActive = function () {
+    var first = null;
+    for (var i = 0; i < ids.length; i++) {
+      if (visible[ids[i]]) { first = ids[i]; break; }
+    }
+    ids.forEach(function (id) {
+      links[id].classList.toggle("active", id === first);
+    });
+  };
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    setActive();
+  }, { rootMargin: "-10% 0px -70% 0px", threshold: 0 });
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>
+</body>
+
+</html>

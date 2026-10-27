@@ -1,0 +1,309 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Concept map — mbottoni</title>
+  <meta name="description" content="An interactive map of how the posts on this blog relate.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Concept map — mbottoni">
+  <meta property="og:description" content="An interactive map of how the posts on this blog relate.">
+  <meta property="og:url" content="https://mbottoni.github.io/map.html">
+  <meta property="og:image" content="https://avatars.githubusercontent.com/u/37229305?v=4">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Concept map — mbottoni">
+  <meta name="twitter:description" content="An interactive map of how the posts on this blog relate.">
+  <meta name="twitter:image" content="https://avatars.githubusercontent.com/u/37229305?v=4">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/map.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/map.html" class="active">Map</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <section class="theme-page map-page">
+        <header>
+          <h1>Concept map</h1>
+          <p>How the posts relate. Arrows point from a post to the ones that
+          build on it; dashed lines join parts of a series, faint lines join
+          posts that share a tag. Hover to trace neighbours, click to open a
+          post, drag to rearrange, scroll or pinch to zoom.</p>
+        </header>
+        <div class="map-controls" hidden>
+          <div class="map-legend" role="group" aria-label="Filter by theme"><button type="button" class="widget-btn map-filter" data-theme-key="frontier" aria-pressed="true"><span class="map-swatch map-swatch--frontier"></span>Frontier LLMs &amp; Architectures</button><button type="button" class="widget-btn map-filter" data-theme-key="generative" aria-pressed="true"><span class="map-swatch map-swatch--generative"></span>Diffusion &amp; Generative Modeling</button><button type="button" class="widget-btn map-filter" data-theme-key="graph_rl" aria-pressed="true"><span class="map-swatch map-swatch--graph_rl"></span>Graphs, Agents &amp; RL</button><button type="button" class="widget-btn map-filter" data-theme-key="foundations" aria-pressed="true"><span class="map-swatch map-swatch--foundations"></span>Math, Physics &amp; Foundations</button></div>
+          <div class="map-legend" role="group" aria-label="Edge types">
+            <button type="button" class="widget-btn map-edge-filter" data-edge="prereq" aria-pressed="true"><span class="map-key map-key--prereq"></span>Prerequisite <span class="muted">27</span></button>
+            <button type="button" class="widget-btn map-edge-filter" data-edge="series" aria-pressed="true"><span class="map-key map-key--series"></span>Same series <span class="muted">2</span></button>
+            <button type="button" class="widget-btn map-edge-filter" data-edge="tag" aria-pressed="false"><span class="map-key map-key--tag"></span>Shares a tag <span class="muted">78</span></button>
+          </div>
+        </div>
+        <figure class="map-stage" hidden>
+          <svg class="map-svg" aria-hidden="true"></svg>
+          <div class="map-zoom">
+            <button type="button" class="widget-btn" data-zoom="in" aria-label="Zoom in">+</button>
+            <button type="button" class="widget-btn" data-zoom="out" aria-label="Zoom out">−</button>
+            <button type="button" class="widget-btn" data-zoom="reset" aria-label="Reset view">⟲</button>
+          </div>
+          <div class="map-card" hidden></div>
+        </figure>
+        <section class="map-fallback" aria-labelledby="map-reading">
+          <h2 id="map-reading">Reading paths</h2>
+          <p class="muted">Every post with a suggested prerequisite, oldest first.
+          Shared tags are browsable from <a href="/tags.html">the tag index</a>.</p>
+          <ul class="related-list">
+            <li>
+              <a href="/2023/12/03/Bertimbau.html">BERT and fine tunning</a>
+              <span class="muted">read first: <a href="/2024/01/08/Transformer.html">Implementing the Transformer in Python</a></span>
+            </li><li>
+              <a href="/2023/12/06/Hopfield_from_scratch.html">Understanding Cover's Universal Portfolio</a>
+              <span class="muted">read first: <a href="/2024/12/23/prob.html">Probability Paradigms</a></span>
+            </li><li>
+              <a href="/2023/12/12/UP.html">Implementing from scratch a Hopfield Network</a>
+              <span class="muted">read first: <a href="/2023/12/04/Hopfield.html">Hopfield Networks for dummies</a></span>
+            </li><li>
+              <a href="/2023/12/19/Kalman.html">Implementing the Kalman Filter in Python</a>
+              <span class="muted">read first: <a href="/2024/12/23/prob.html">Probability Paradigms</a></span>
+            </li><li>
+              <a href="/2024/03/24/decoding.html">Having fun with decoding and optimization</a>
+              <span class="muted">read first: <a href="/2024/01/08/Transformer.html">Implementing the Transformer in Python</a></span>
+            </li><li>
+              <a href="/2024/07/21/llm-archs.html">Encoder vs Decoder vs EncoderDecoder Architectures</a>
+              <span class="muted">read first: <a href="/2024/01/08/Transformer.html">Implementing the Transformer in Python</a></span>
+            </li><li>
+              <a href="/2024/08/27/rag.html">Understanding and Implementing RAG (Retrieval-Augmented Generation)</a>
+              <span class="muted">read first: <a href="/2024/07/21/llm-archs.html">Encoder vs Decoder vs EncoderDecoder Architectures</a></span>
+            </li><li>
+              <a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a>
+              <span class="muted">read first: <a href="/2024/10/13/vaes.html">A comprehensive list of different types of VAEs</a></span>
+            </li><li>
+              <a href="/2024/09/09/ddim_ddpm.html">DDIM vs DDPM</a>
+              <span class="muted">read first: <a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a></span>
+            </li><li>
+              <a href="/2024/09/17/divergences.html">Some common divergences</a>
+              <span class="muted">read first: <a href="/2024/12/23/prob.html">Probability Paradigms</a></span>
+            </li><li>
+              <a href="/2024/09/29/llm-quant.html">Quantization of LLMs</a>
+              <span class="muted">read first: <a href="/2024/07/21/llm-archs.html">Encoder vs Decoder vs EncoderDecoder Architectures</a></span>
+            </li><li>
+              <a href="/2024/10/13/vaes.html">A comprehensive list of different types of VAEs</a>
+              <span class="muted">read first: <a href="/2024/09/17/divergences.html">Some common divergences</a></span>
+            </li><li>
+              <a href="/2024/11/03/temporal-gnn.html">Temporal Graph Networks: A Deep Dive into Dynamic Graph Learning</a>
+              <span class="muted">read first: <a href="/2024/10/26/gcn.html">Graph Convolutional Networks</a></span>
+            </li><li>
+              <a href="/2024/11/17/plato.html">The Platonic Representation Hypothesis: Are AI Models Converging on Universal Representations?</a>
+              <span class="muted">read first: <a href="/2024/08/18/ssl.html">Self Supervised Learning</a></span>
+            </li><li>
+              <a href="/2024/11/25/ssl.html">Scarf: Self Supervised Learning for Tabular Data</a>
+              <span class="muted">read first: <a href="/2024/08/18/ssl.html">Self Supervised Learning</a></span>
+            </li><li>
+              <a href="/2024/12/01/flow.html">Flow Matching, a short overview</a>
+              <span class="muted">read first: <a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a></span>
+            </li><li>
+              <a href="/2024/12/07/timeseries-diffusion.html">Diffusion models for time series</a>
+              <span class="muted">read first: <a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a></span>
+            </li><li>
+              <a href="/2024/12/15/cfg.html">Classifier free diffusion guidance</a>
+              <span class="muted">read first: <a href="/2024/09/09/ddim_ddpm.html">DDIM vs DDPM</a></span>
+            </li><li>
+              <a href="/2024/12/28/deepseek.html">Deepseek, an overview and quick notes</a>
+              <span class="muted">read first: <a href="/2025/08/04/moe.html">Mixture of Experts</a></span>
+            </li><li>
+              <a href="/2025/02/06/grpo.html">Group Relative Policy Optimization (GRPO)</a>
+              <span class="muted">read first: <a href="/2024/12/28/deepseek.html">Deepseek, an overview and quick notes</a>, <a href="/2024/08/04/simple_rl.html">Simple Reinforcement Learning Example</a></span>
+            </li><li>
+              <a href="/2025/04/12/mech-inter.html">Mechanistic Interpretability - Some concepts</a>
+              <span class="muted">read first: <a href="/2024/01/08/Transformer.html">Implementing the Transformer in Python</a>, <a href="/2024/11/10/sae.html">Sparse Autoencoders</a></span>
+            </li><li>
+              <a href="/2025/08/04/moe.html">Mixture of Experts</a>
+              <span class="muted">read first: <a href="/2024/07/21/llm-archs.html">Encoder vs Decoder vs EncoderDecoder Architectures</a></span>
+            </li><li>
+              <a href="/2026/01/25/epiplexity.html">From Entropy to Epiplexity</a>
+              <span class="muted">read first: <a href="/2024/07/29/kolmogorov.html">Kolmogorov Complexity</a>, <a href="/2024/09/17/divergences.html">Some common divergences</a></span>
+            </li><li>
+              <a href="/2026/01/27/h-neurons.html">H-Neurons: Hallucination at the Neuron Level</a>
+              <span class="muted">read first: <a href="/2025/04/12/mech-inter.html">Mechanistic Interpretability - Some concepts</a></span>
+            </li>
+          </ul>
+        </section>
+      </section>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/src/prereqs.ts">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        // Widgets build their own DOM and style their spans.
+        if (span.closest(".widget")) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  <script defer src="/js/map.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,924 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diffusion models or Autoencoders?</title>
+  <meta name="description" content="Recent advancements in generative AI have brought diffusion models to the forefront, particularly
+for their impressive performance in image generation. While these models are often seen as
+distinct from traditional approaches, there's a compelling argument for viewing diffusion models
+as a form of hierarchical autoencoder.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Diffusion models or Autoencoders?">
+  <meta property="og:description" content="Recent advancements in generative AI have brought diffusion models to the forefront, particularly
+for their impressive performance in image generation. While these models are often seen as
+distinct from traditional approaches, there's a compelling argument for viewing diffusion models
+as a form of hierarchical autoencoder.">
+  <meta property="og:url" content="https://mbottoni.github.io/2024/09/01/diffusion.html">
+  <meta property="og:image" content="/assets/generative/diffusion.webp">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Diffusion models or Autoencoders?">
+  <meta name="twitter:description" content="Recent advancements in generative AI have brought diffusion models to the forefront, particularly
+for their impressive performance in image generation. While these models are often seen as
+distinct from traditional approaches, there's a compelling argument for viewing diffusion models
+as a form of hierarchical autoencoder.">
+  <meta name="twitter:image" content="/assets/generative/diffusion.webp">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/09/01/diffusion.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/map.html">Map</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="reading-progress" aria-hidden="true"><div class="reading-progress__bar"></div></div>
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/generative.html">
+          Diffusion &amp; Generative Modeling
+        </a>
+        <span class="post-meta"><time datetime="2024-09-01">Sep 1, 2024</time> · 21 min read</span>
+      </div>
+      
+    <aside class="series-box">
+      <div class="series-box__head">
+        <span class="series-box__label">Series</span>
+        <span class="series-box__title">Diffusion and flows</span>
+        <span class="muted">Part 1 of 5</span>
+      </div>
+      <p class="muted">Diffusion models, samplers, guidance, and their flow-matching cousins.</p>
+      <ol class="series-box__list"><li class="series-box__current" aria-current="page">Diffusion models or Autoencoders?</li><li><a href="/2024/09/09/ddim_ddpm.html">DDIM vs DDPM</a></li><li><a href="/2024/12/15/cfg.html">Classifier free diffusion guidance</a></li><li><a href="/2024/12/01/flow.html">Flow Matching, a short overview</a></li><li><a href="/2024/12/07/timeseries-diffusion.html">Diffusion models for time series</a></li></ol>
+    </aside>
+  
+      <p class="prereq-line">
+      <span class="prereq-line__label">Before reading this</span>
+      <a href="/2024/10/13/vaes.html">A comprehensive list of different types of VAEs</a>
+    </p>
+      
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <ul><li class="toc-l2"><a href="#Unmasking-the-Secret-Link-Are-Diffusion-Models-Just-Fancy-Autoencoders">Unmasking the Secret Link: Are Diffusion Models Just Fancy Autoencoders?</a></li><li class="toc-l2"><a href="#1-The-forward-process-is-a-fixed-encoder">1. The forward process is a fixed encoder</a></li><li class="toc-l2"><a href="#2-The-ELBO-a-hierarchical-VAE-with-a-fixed-encoder">2. The ELBO: a hierarchical VAE with a fixed encoder</a></li><li class="toc-l2"><a href="#3-The-signal-to-noise-ratio-and-the-loss-weighting">3. The signal-to-noise ratio, and the loss weighting</a></li><li class="toc-l2"><a href="#4-Every-layer-is-a-denoising-autoencoder">4. Every layer is a denoising autoencoder</a></li><li class="toc-l2"><a href="#5-What-the-noise-destroys-a-bottleneck-with-a-known-capacity">5. What the noise destroys: a bottleneck with a known capacity</a></li><li class="toc-l2"><a href="#Try-it">Try it</a></li><li class="toc-l2"><a href="#So-are-diffusion-models-just-fancy-autoencoders">So: are diffusion models just fancy autoencoders?</a></li><li class="toc-l2"><a href="#References">References</a></li></ul>
+    </details>
+  
+      <article >
+
+    <h1 id="Diffusion-models-or-Autoencoders">
+    <a href="#Diffusion-models-or-Autoencoders"><span>Diffusion models or Autoencoders?</span> <time datetime="2024-09-01">Sep 1, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/generative/diffusion.webp">
+</figure>
+<section id="Unmasking-the-Secret-Link-Are-Diffusion-Models-Just-Fancy-Autoencoders">
+
+    <h2>
+    <a href="#Unmasking-the-Secret-Link-Are-Diffusion-Models-Just-Fancy-Autoencoders"><span>Unmasking the Secret Link: Are Diffusion Models Just Fancy Autoencoders?</span> </a><a class="heading-anchor" href="#Unmasking-the-Secret-Link-Are-Diffusion-Models-Just-Fancy-Autoencoders" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Recent advancements in generative AI have brought diffusion models to the forefront, particularly</span>
+<span>for their impressive performance in image generation. While these models are often seen as</span>
+<span>distinct from traditional approaches, there</span>&rsquo;<span>s a compelling argument for viewing diffusion models</span>
+<span>as a form of hierarchical autoencoder.</span></p>
+<p><span>The key insight lies in the similarity between the noise addition process in diffusion models</span>
+<span>and the compression step in autoencoders. When a diffusion model adds noise to data, it</span>&rsquo;<span>s</span>
+<span>effectively compressing the information, retaining only the most robust features. This</span>
+<span>is analogous to how an autoencoder</span>&rsquo;<span>s encoder compresses input data into a</span>
+<span>lower-dimensional representation.</span></p>
+<p><span>Conversely, the denoising process in diffusion models resembles the reconstruction phase</span>
+<span>of autoencoders. The critical difference is that diffusion models perform this reconstruction</span>
+<span>gradually, over multiple steps, allowing them to capture a hierarchy of details. This</span>
+<span>multi-step process creates a series of latent representations at different levels of</span>
+<span>abstraction, much like a hierarchical autoencoder.</span></p>
+<p><span>The noise in diffusion models serves a similar purpose to the bottleneck layer in</span>
+<span>autoencoders, acting as an information constraint that forces the model to learn</span>
+<span>efficient, robust representations. This perspective suggests that diffusion models implicitly</span>
+<span>learn a series of nested representations, each corresponding to a different noise level.</span></p>
+<p><span>That is the argument in words. In this post I want to make it precise, because every</span>
+<span>sentence above has an exact mathematical counterpart, and a couple of them need a caveat</span>
+<span>once you write the math down. The plan:</span></p>
+<ol>
+<li>
+<span>The forward process is an encoder, and it has a closed form.</span>
+</li>
+<li>
+<span>The diffusion training objective is </span><em><span>literally</span></em><span> the ELBO of a hierarchical VAE whose</span>
+<span>encoder is fixed. Each timestep contributes one KL term.</span>
+</li>
+<li>
+<span>Written in terms of the signal-to-noise ratio, that ELBO becomes a weighted denoising</span>
+<span>loss, and the popular </span>&ldquo;<span>simple</span>&rdquo;<span> loss is the same thing with a different weighting.</span>
+</li>
+<li>
+<span>Each term is a denoising autoencoder, and by Tweedie</span>&rsquo;<span>s formula the optimal denoiser is</span>
+<span>the score. This is the link Vincent made in 2011, long before diffusion models.</span>
+</li>
+<li>
+<span>The </span>&ldquo;<span>bottleneck</span>&rdquo;<span> is a Gaussian channel whose capacity is set by the noise level, and it</span>
+<span>destroys fine detail before coarse structure. This is the precise sense in which noise</span>
+&ldquo;<span>retains only the most robust features</span>&rdquo;<span>, and it is the rate-distortion reading in</span>
+<span>Section 4.3 of Ho et al. (2020).</span>
+</li>
+</ol>
+</section>
+<section id="1-The-forward-process-is-a-fixed-encoder">
+
+    <h2>
+    <a href="#1-The-forward-process-is-a-fixed-encoder"><span>1. The forward process is a fixed encoder</span> </a><a class="heading-anchor" href="#1-The-forward-process-is-a-fixed-encoder" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>A DDPM (Sohl-Dickstein et al., 2015; Ho et al., 2020) defines a Markov chain that slowly adds</span>
+<span>Gaussian noise to a data point $x_0$:</span></p>
+<p><span>$$q(x_t \mid x_{t-1}) = \mathcal{N}\big(x_t;\ \sqrt{\alpha_t}\, x_{t-1},\ \beta_t I\big),
+\qquad \alpha_t = 1 - \beta_t,\qquad t = 1, \dots, T.$$</span></p>
+<p><span>The scaling by $\sqrt{\alpha_t}$ is what keeps the variance from blowing up. Because a</span>
+<span>linear map of a Gaussian plus independent Gaussian noise is Gaussian, the steps compose. Write</span>
+<span>$x_t = \sqrt{\alpha_t}\, x_{t-1} + \sqrt{1 - \alpha_t}\, \epsilon_t$ and suppose, by induction,</span>
+<span>that $x_{t-1} = \sqrt{\bar\alpha_{t-1}}\, x_0 + \sqrt{1 - \bar\alpha_{t-1}}\, \bar\epsilon$. Then</span>
+<span>$x_t$ is $\sqrt{\alpha_t \bar\alpha_{t-1}}\, x_0$ plus zero-mean Gaussian noise of variance</span>
+<span>$\alpha_t (1 - \bar\alpha_{t-1}) + (1 - \alpha_t) = 1 - \alpha_t\bar\alpha_{t-1}$. With</span>
+<span>$\bar\alpha_t = \prod_{s=1}^t \alpha_s$:</span></p>
+<p><span>$$\begin{aligned}
+q(x_t \mid x_0) &amp;= \mathcal{N}\big(x_t;\ \sqrt{\bar\alpha_t}\, x_0,\ (1 - \bar\alpha_t) I\big), \\
+\text{i.e.}\quad x_t &amp;= \sqrt{\bar\alpha_t}\, x_0 + \sqrt{1 - \bar\alpha_t}\, \epsilon,\quad \epsilon \sim \mathcal{N}(0, I).
+\end{aligned}$$</span></p>
+<p><span>So the </span>&ldquo;<span>encoder</span>&rdquo;<span> maps $x_0$ to a whole family of codes $x_1, \dots, x_T$, and any one of them</span>
+<span>can be sampled in a single step. The schedule is chosen so that $\bar\alpha_T \approx 0$, which</span>
+<span>makes $q(x_T \mid x_0) \approx \mathcal{N}(0, I)$ regardless of $x_0$: the last code carries</span>
+<span>essentially no information about the input.</span></p>
+<p><span>Two facts are worth stating now because they are where the analogy with a normal</span>
+<span>autoencoder bends. The encoder has </span><strong><strong><span>no learnable parameters</span></strong></strong><span>. And every code $x_t$ has the</span>
+<strong><strong><span>same dimension</span></strong></strong><span> as $x_0$. There is no narrow layer anywhere. Whatever bottleneck exists has</span>
+<span>to come from the noise, and section 5 measures exactly how much.</span></p>
+</section>
+<section id="2-The-ELBO-a-hierarchical-VAE-with-a-fixed-encoder">
+
+    <h2>
+    <a href="#2-The-ELBO-a-hierarchical-VAE-with-a-fixed-encoder"><span>2. The ELBO: a hierarchical VAE with a fixed encoder</span> </a><a class="heading-anchor" href="#2-The-ELBO-a-hierarchical-VAE-with-a-fixed-encoder" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Recall the VAE bound. For a latent-variable model $p_\theta(x, z)$ and any encoder $q(z \mid x)$,</span></p>
+<p><span>$$-\log p_\theta(x) \le \mathbb{E}_{q(z \mid x)}\left[ -\log \frac{p_\theta(x, z)}{q(z \mid x)} \right].$$</span></p>
+<p><span>A hierarchical VAE has a stack of latents $z_1, \dots, z_T$ with a top-down decoder. Now</span>
+<span>take the latents to be $x_1, \dots, x_T$, the decoder to be a Markov chain running backwards,</span></p>
+<p><span>$$p_\theta(x_{0:T}) = p(x_T) \prod_{t=1}^T p_\theta(x_{t-1} \mid x_t), \qquad p(x_T) = \mathcal{N}(0, I),$$</span></p>
+<p><span>and the encoder to be the forward process $q(x_{1:T} \mid x_0) = \prod_t q(x_t \mid x_{t-1})$.</span>
+<span>Plug them into the bound. The trick that makes it tractable is to rewrite each encoder step</span>
+<span>using Bayes</span>&rsquo;<span> rule, conditioning on $x_0$ (which changes nothing, by the Markov property):</span></p>
+<p><span>$$q(x_t \mid x_{t-1}) = q(x_t \mid x_{t-1}, x_0) = \frac{q(x_{t-1} \mid x_t, x_0)\, q(x_t \mid x_0)}{q(x_{t-1} \mid x_0)} .$$</span></p>
+<p><span>The ratio $q(x_t \mid x_0)/q(x_{t-1} \mid x_0)$ telescopes across the product, and the bound</span>
+<span>splits into one term per level (Luo, 2022, walks through every line of this derivation):</span></p>
+<p><span>$$\begin{aligned}
+-\log p_\theta(x_0) \le\ &amp;
+\underbrace{\mathrm{KL}\big(q(x_T \mid x_0)\,\|\,p(x_T)\big)}_{L_T} \\
+&amp;+ \sum_{t=2}^{T} \underbrace{\mathbb{E}_{q}\, \mathrm{KL}\big(q(x_{t-1} \mid x_t, x_0)\,\|\,p_\theta(x_{t-1} \mid x_t)\big)}_{L_{t-1}} \\
+&amp;\underbrace{-\ \mathbb{E}_{q} \log p_\theta(x_0 \mid x_1)}_{L_0}.
+\end{aligned}$$</span></p>
+<p><span>Read it as a VAE practitioner would:</span></p>
+<ul>
+<li>
+<span>$L_0$ is the </span><strong><strong><span>reconstruction term</span></strong></strong><span>: decode $x_0$ from the least noisy code.</span>
+</li>
+<li>
+<span>$L_T$ is the </span><strong><strong><span>prior term</span></strong></strong><span> at the top of the hierarchy. It has no parameters and is</span>
+<span>approximately zero by design.</span>
+</li>
+<li>
+<span>Each $L_{t-1}$ is the </span><strong><strong><span>KL term of one layer</span></strong></strong><span> of the hierarchy: how well the decoder</span>&rsquo;<span>s</span>
+<span>layer $t \to t-1$ matches the encoder</span>&rsquo;<span>s posterior for that layer.</span>
+</li>
+</ul>
+<p><span>Every distribution in a KL term is Gaussian. The encoder posterior is available in closed</span>
+<span>form, because both $q(x_t \mid x_0)$ and $q(x_t \mid x_{t-1})$ are:</span></p>
+<p><span>$$\begin{aligned}
+q(x_{t-1} \mid x_t, x_0) &amp;= \mathcal{N}\big(\tilde\mu_t(x_t, x_0),\ \tilde\beta_t I\big), \\
+\tilde\mu_t &amp;= \frac{\sqrt{\bar\alpha_{t-1}}\,\beta_t}{1 - \bar\alpha_t}\, x_0 + \frac{\sqrt{\alpha_t}\,(1 - \bar\alpha_{t-1})}{1 - \bar\alpha_t}\, x_t, \\
+\tilde\beta_t &amp;= \frac{1 - \bar\alpha_{t-1}}{1 - \bar\alpha_t}\,\beta_t .
+\end{aligned}$$</span></p>
+<p><span>The decoder only has to supply its guess of $x_0$. Give $p_\theta(x_{t-1} \mid x_t)$ the same</span>
+<span>variance $\tilde\beta_t$ and the same mean formula, with $x_0$ replaced by a network</span>&rsquo;<span>s estimate</span>
+<span>$\hat x_\theta(x_t, t)$. A KL between two Gaussians with equal covariance is a squared distance</span>
+<span>between their means, so</span></p>
+<p><span>$$L_{t-1} = \frac{1}{2\tilde\beta_t}\, \frac{\bar\alpha_{t-1}\beta_t^2}{(1 - \bar\alpha_t)^2}\; \mathbb{E}\,\big\| x_0 - \hat x_\theta(x_t, t) \big\|^2 .$$</span></p>
+<p><span>So the diffusion model really is a hierarchical VAE, in the strict sense that its loss is a</span>
+<span>hierarchical VAE</span>&rsquo;<span>s ELBO. What makes it special is the list of things it gives up and gets in</span>
+<span>return:</span></p>
+<ul>
+<li>
+<strong><strong><span>Fixed encoder.</span></strong></strong><span> In a learned hierarchical VAE the encoder and decoder co-adapt, and a</span>
+<span>well-known failure is that the KL terms push upper layers to carry no information at all</span>
+<span>(posterior collapse). Here the encoder cannot be optimised away from informative codes:</span>
+<span>every $x_t$ with $t &lt; T$ contains information about $x_0$ by construction.</span>
+</li>
+<li>
+<strong><strong><span>Shared decoder.</span></strong></strong><span> All $T$ layers of the decoder are one network, told which layer it is</span>
+<span>via $t$.</span>
+</li>
+<li>
+<strong><strong><span>Every layer is a regression problem.</span></strong></strong><span> Each KL term reduces to a weighted mean-squared</span>
+<span>error, with no sampling of the encoder needed beyond a single draw of $x_t$.</span>
+</li>
+<li>
+<strong><strong><span>No dimensionality reduction.</span></strong></strong><span> The price of the fixed encoder: the </span>&ldquo;<span>compression</span>&rdquo;<span> has to</span>
+<span>be done entirely by noise.</span>
+</li>
+</ul>
+</section>
+<section id="3-The-signal-to-noise-ratio-and-the-loss-weighting">
+
+    <h2>
+    <a href="#3-The-signal-to-noise-ratio-and-the-loss-weighting"><span>3. The signal-to-noise ratio, and the loss weighting</span> </a><a class="heading-anchor" href="#3-The-signal-to-noise-ratio-and-the-loss-weighting" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>The awkward-looking coefficient in $L_{t-1}$ has a clean form. Define the signal-to-noise</span>
+<span>ratio of the code at level $t$,</span></p>
+<p><span>$$\mathrm{SNR}(t) = \frac{\bar\alpha_t}{1 - \bar\alpha_t},$$</span></p>
+<p><span>the ratio of the variance of the signal part $\sqrt{\bar\alpha_t}\, x_0$ (per unit of data</span>
+<span>variance) to the variance of the noise. It decreases monotonically from very large at $t = 1$</span>
+<span>to almost zero at $t = T$. Substituting $\tilde\beta_t$ and simplifying (the numerator</span>
+<span>$\bar\alpha_{t-1}(1 - \bar\alpha_t) - \bar\alpha_t(1 - \bar\alpha_{t-1})$ collapses to</span>
+<span>$\bar\alpha_{t-1} \beta_t$) gives the result of Kingma et al. (2021):</span></p>
+<p><span>$$L_{t-1} = \tfrac{1}{2}\big( \mathrm{SNR}(t-1) - \mathrm{SNR}(t) \big)\; \mathbb{E}\,\big\| x_0 - \hat x_\theta(x_t, t) \big\|^2 .$$</span></p>
+<p><span>Each layer of the hierarchy is a reconstruction error, weighted by how much SNR is lost</span>
+<span>between that layer and the one below. Take the continuous-time limit, write</span>
+<span>$\sigma_t = \sqrt{1 - \bar\alpha_t}$ for the noise scale, and parametrise by noise prediction,</span>
+<span>$\hat x_\theta = (x_t - \sigma_t \hat\epsilon_\theta)/\sqrt{\bar\alpha_t}$, so that</span>
+<span>$\|x_0 - \hat x_\theta\|^2 = \|\epsilon - \hat\epsilon_\theta\|^2 / \mathrm{SNR}(t)$. With</span>
+<span>$\lambda = \log \mathrm{SNR}$, the sum becomes an integral and the SNR factors cancel:</span></p>
+<p><span>$$\mathcal{L}_{\text{ELBO}} = \tfrac{1}{2}\, \mathbb{E}_{x_0, \epsilon} \int_{\lambda_{\min}}^{\lambda_{\max}} \big\| \epsilon - \hat\epsilon_\theta(x_\lambda, \lambda) \big\|^2 \, d\lambda .$$</span></p>
+<p><span>This is a striking statement. The ELBO is a denoising loss integrated </span><strong><strong><span>uniformly in log-SNR</span></strong></strong><span>.</span>
+<span>The schedule, i.e. how fast $t$ moves through log-SNR, does not appear at all: only the two</span>
+<span>endpoints do. Kingma et al. make exactly this point: in continuous time the bound is invariant</span>
+<span>to the noise schedule except at its endpoints. The schedule only changes the </span><em><span>variance</span></em><span> of the</span>
+<span>Monte Carlo estimate of the integral.</span></p>
+<p><span>Ho et al. did not train on the ELBO. They found better samples with the </span>&ldquo;<span>simple</span>&rdquo;<span> loss</span>
+<span>$\mathbb{E}_{t \sim \mathcal{U}}\, \|\epsilon - \hat\epsilon_\theta\|^2$, which samples $t$</span>
+<span>uniformly. A change of variables shows that this is the same integral with a weight: if $t$ is</span>
+<span>uniform on $[0, 1]$ then $\lambda$ has some density $p(\lambda)$, and</span></p>
+<p><span>$$\mathcal{L}_{\text{simple}} = \int p(\lambda)\; \mathbb{E}\,\big\| \epsilon - \hat\epsilon_\theta(x_\lambda, \lambda) \big\|^2 \, d\lambda ,
+\qquad\text{a weighted ELBO with } w(\lambda) \propto p(\lambda).$$</span></p>
+<p><span>For the cosine schedule of Nichol and Dhariwal (2021), $\bar\alpha_t = \cos^2(\pi t/2)$ (ignoring</span>
+<span>their small offset), one gets $\lambda = -2\log\tan(\pi t/2)$ and $p(\lambda) = \tfrac{1}{2\pi}\operatorname{sech}(\lambda/2)$: a</span>
+<span>bump centred at SNR = 1 that down-weights both very clean and very noisy levels relative to the</span>
+<span>ELBO. In other words, choosing a loss weighting is choosing </span><strong><strong><span>which layers of the hierarchical</span>
+<span>autoencoder to care about</span></strong></strong><span>. The ELBO cares about all of them equally in log-SNR, including</span>
+<span>the almost-clean levels that only encode imperceptible detail (we will see in section 5 that</span>
+<span>this is where most of the bits go). Perceptual quality prefers to spend capacity in the middle.</span></p>
+<p><span>Kingma and Gao (2023) close the loop: when the weighting $w(\lambda)$ is monotone in the noise</span>
+<span>level, the weighted loss equals the ELBO of the data augmented with Gaussian noise</span>
+<span>perturbations. The sech weighting above is not monotone, so it does not fall under that result</span>
+<span>as stated. They then report state-of-the-art FID with new monotone weightings.</span></p>
+</section>
+<section id="4-Every-layer-is-a-denoising-autoencoder">
+
+    <h2>
+    <a href="#4-Every-layer-is-a-denoising-autoencoder"><span>4. Every layer is a denoising autoencoder</span> </a><a class="heading-anchor" href="#4-Every-layer-is-a-denoising-autoencoder" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>So far $\hat x_\theta$ was just </span>&ldquo;<span>the decoder</span>&rsquo;<span>s guess of $x_0$</span>&rdquo;<span>. What is the best possible guess?</span>
+<span>The loss at each level is a mean-squared error, so the minimiser is the posterior mean</span>
+<span>$\mathbb{E}[x_0 \mid x_t]$. And for Gaussian corruption the posterior mean has a remarkable</span>
+<span>closed form, Tweedie</span>&rsquo;<span>s formula (see Efron, 2011). If $z = \alpha x + \sigma \epsilon$ then</span></p>
+<p><span>$$\mathbb{E}[x \mid z] = \frac{z + \sigma^2 \nabla_z \log p(z)}{\alpha} .$$</span></p>
+<p><span>The proof is one line. Differentiate $p(z) = \int p(x)\, \mathcal{N}(z; \alpha x, \sigma^2 I)\, dx$</span>
+<span>under the integral: $\nabla_z p(z) = \int p(x)\, \mathcal{N}(z; \alpha x, \sigma^2 I)\, \frac{\alpha x - z}{\sigma^2}\, dx$.</span>
+<span>Divide by $p(z)$ and the right side becomes $(\alpha\, \mathbb{E}[x \mid z] - z)/\sigma^2$.</span></p>
+<p><span>Two consequences:</span></p>
+<ul>
+<li>
+<strong><strong><span>The optimal denoiser is the score.</span></strong></strong><span> Learning to denoise at noise level $t$ is the same as</span>
+<span>learning $\nabla \log p_t(x_t)$, the score of the noised data distribution. In</span>
+<span>noise-prediction form, $\hat\epsilon^*(x_t) = -\sigma_t \nabla \log p_t(x_t)$.</span>
+</li>
+<li>
+<strong><strong><span>The diffusion loss is denoising score matching.</span></strong></strong><span> Vincent (2011) showed that training a</span>
+<span>model $s_\theta(\tilde x)$ to match $\nabla_{\tilde x} \log q_\sigma(\tilde x \mid x) = -(\tilde x - x)/\sigma^2$,</span>
+<span>the score of the </span><em><span>corruption</span></em><span> kernel, is equivalent up to a constant to matching the score of</span>
+<span>the corrupted data distribution $q_\sigma(\tilde x)$, and that this is what a denoising</span>
+<span>autoencoder with Gaussian noise is doing. With $\tilde x - x \propto \epsilon$, that is</span>
+<span>exactly the $\epsilon$-prediction loss. Song and Ermon (2019) built a generative model</span>
+<span>directly on this, with Langevin dynamics over a ladder of noise levels; Song et al. (2020)</span>
+<span>unified both views as a stochastic differential equation.</span>
+</li>
+</ul>
+<p><span>So the precise version of </span>&ldquo;<span>the denoising process resembles the reconstruction phase of</span>
+<span>autoencoders</span>&rdquo;<span> is: </span><em><span>a diffusion model is a stack of denoising autoencoders, one per noise</span>
+<span>level, with tied weights, trained with the weights given by the ELBO (or a reweighting of</span>
+<span>it), and chained together at sampling time.</span></em><span> The autoencoder at level $t$ is a DAE in</span>
+<span>Vincent</span>&rsquo;<span>s sense; the chain is what turns a family of DAEs into a generative model.</span></p>
+<p><span>There is one place where the autoencoder intuition is misleading, and it matters. At high</span>
+<span>noise the optimal reconstruction $\mathbb{E}[x_0 \mid x_t]$ is a </span><em><span>blurry average</span></em><span> of all the</span>
+<span>images consistent with $x_t$, not an image. A one-shot autoencoder at that level would be</span>
+<span>bad. The sampler never uses it that way: it takes a small step toward the posterior mean,</span>
+<span>re-noises, and asks again. The detail that the encoder destroyed is not </span><em><span>reconstructed</span></em><span>; it</span>
+<span>is </span><em><span>sampled</span></em><span>, consistently with whatever coarse structure survived.</span></p>
+</section>
+<section id="5-What-the-noise-destroys-a-bottleneck-with-a-known-capacity">
+
+    <h2>
+    <a href="#5-What-the-noise-destroys-a-bottleneck-with-a-known-capacity"><span>5. What the noise destroys: a bottleneck with a known capacity</span> </a><a class="heading-anchor" href="#5-What-the-noise-destroys-a-bottleneck-with-a-known-capacity" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Now the claim that noise acts like a bottleneck. The code $x_t = \sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\,\epsilon$</span>
+<span>is the output of an additive Gaussian noise channel. If $x_0$ has covariance $\Sigma$ with</span>
+<span>eigenvalues $\lambda_k$, the information the code carries is bounded by the Gaussian channel</span>
+<span>capacity,</span></p>
+<p><span>$$I(x_0; x_t) \;\le\; \tfrac{1}{2}\log\det\big(I + \mathrm{SNR}(t)\, \Sigma\big) = \sum_k \tfrac{1}{2}\log\big(1 + \mathrm{SNR}(t)\, \lambda_k\big),$$</span></p>
+<p><span>with equality when $x_0$ is Gaussian (a Gaussian has the largest entropy for a given covariance).</span>
+<span>Two things follow.</span></p>
+<p><strong><strong><span>The noise level sets the size of the bottleneck.</span></strong></strong><span> Unlike a narrow layer, which caps the</span>
+<span>information at </span>&ldquo;<span>number of units times bits per unit</span>&rdquo;<span>, the cap here is continuous and</span>
+<span>controlled by a single number, $\mathrm{SNR}(t)$. Sweeping $t$ sweeps the bottleneck from</span>
+&ldquo;<span>almost everything</span>&rdquo;<span> to </span>&ldquo;<span>nothing</span>&rdquo;<span>.</span></p>
+<p><strong><strong><span>It removes low-variance directions first.</span></strong></strong><span> A direction with $\mathrm{SNR}(t)\,\lambda_k \gg 1$</span>
+<span>is barely affected, while one with $\mathrm{SNR}(t)\,\lambda_k \ll 1$ is essentially erased. For</span>
+<span>natural images the variance is concentrated in low spatial frequencies (the power spectrum</span>
+<span>falls off roughly like a power of frequency), so as $t$ grows the noise drowns the fine</span>
+<span>details first and the coarse layout last. Generation runs this backwards: coarse to fine.</span>
+<span>Dieleman (2024) makes the striking observation that this makes image diffusion an approximate</span>
+<span>autoregression in frequency space.</span></p>
+<p><span>There is a nice rate-distortion way to say this. For a Gaussian component of variance $\lambda$,</span>
+<span>the best estimator from $x_t$ has error $D = \lambda / (1 + \mathrm{SNR}\cdot\lambda)$ and the</span>
+<span>channel carries $R = \tfrac{1}{2}\log(1 + \mathrm{SNR}\cdot\lambda) = \tfrac{1}{2}\log(\lambda/D)$</span>
+<span>nats, which is </span><em><span>exactly</span></em><span> the Gaussian rate-distortion function. So every component, on its own,</span>
+<span>sits on the optimal rate-distortion curve. Across components the allocation is a soft version</span>
+<span>of reverse water-filling: strong components end up with distortion close to $1/\mathrm{SNR}$</span>
+<span>(the </span>&ldquo;<span>water level</span>&rdquo;<span>), and weak ones are dropped almost entirely, with distortion close to their</span>
+<span>full variance. That is, in my reading, the cleanest formal sense in which </span>&ldquo;<span>adding noise is</span>
+<span>compressing, keeping the robust features</span>&rdquo;<span>.</span></p>
+<p><span>Ho et al. (2020, Section 4.3) measure this on real images. They treat the KL terms</span>
+<span>$L_1 + \dots + L_T$ as the </span><em><span>rate</span></em><span> and $L_0$ as the </span><em><span>distortion</span></em><span>, and set up a progressive lossy</span>
+<span>code: send $x_T, x_{T-1}, \dots$ one after another, with the receiver predicting $\hat x_0$ from</span>
+<span>whatever $x_t$ it has so far. Three findings:</span></p>
+<ul>
+<li>
+<span>Their best CIFAR-10 model has a rate of 1.78 bits/dim and a distortion of 1.97 bits/dim</span>
+<span>(RMSE 0.95 on a 0 to 255 scale). In their words, more than half of the lossless codelength</span>
+<span>describes imperceptible distortions.</span>
+</li>
+<li>
+<span>In the rate-distortion curve, the distortion falls steeply over the first small fraction of</span>
+<span>the rate. The first few bits buy almost all of the perceptual content.</span>
+</li>
+<li>
+<span>Samples from $p_\theta(x_0 \mid x_t)$ with $x_t$ held fixed share large-scale attributes and</span>
+<span>differ in details: when $t$ is large, only large-scale features are preserved. They call it,</span>
+<span>carefully, a hint of conceptual compression.</span>
+</li>
+</ul>
+<p><span>You can also see why the curve looks like that. With an ideal reverse model, the expected KL</span>
+<span>for the step $t \to t-1$ is</span>
+<span>$I(x_0; x_{t-1} \mid x_t) = I(x_0; x_{t-1}) - I(x_0; x_t)$ (chain rule plus the Markov property</span>
+<span>of the forward process), so the rate accumulated by the time the receiver holds $x_t$</span>
+<span>telescopes to exactly $I(x_0; x_t)$, the quantity bounded above. Rate in this code </span><em><span>is</span></em><span> the</span>
+<span>mutual information between the data and the current code.</span></p>
+<p><span>This backs up the original claim that the view </span>&ldquo;<span>hints at applications beyond generation, such</span>
+<span>as in data compression</span>&rdquo;<span>. The caveat is practical, not conceptual: Ho et al.</span>&rsquo;<span>s scheme assumes a</span>
+<span>procedure (such as minimal random coding) that can transmit a sample from $q$ using about</span>
+<span>$\mathrm{KL}(q \,\|\, p)$ bits, and such procedures are expensive in high dimension. It is a</span>
+<span>statement about what the model </span><em><span>could</span></em><span> compress, not a codec you can ship.</span></p>
+</section>
+<section id="Try-it">
+
+    <h2>
+    <a href="#Try-it"><span>Try it</span> </a><a class="heading-anchor" href="#Try-it" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>The block below runs in your browser (Python via Pyodide, with NumPy). It uses a toy </span>&ldquo;<span>image</span>&rdquo;<span>:</span>
+<span>a Gaussian signal of length 256 whose Fourier coefficients have variance proportional to</span>
+<span>$1/f^2$, roughly the falloff of natural images. Because the prior is Gaussian, everything is</span>
+<span>in closed form: the mutual information each frequency band keeps at each $t$, and the error of</span>
+<span>the best possible denoiser. It then checks the closed form by building that denoiser from the</span>
+<span>score with Tweedie</span>&rsquo;<span>s formula and measuring its error by Monte Carlo, and it prints the</span>
+&ldquo;<span>equal-power frequency</span>&rdquo;<span>, where signal and noise have the same variance, as $t$ grows.</span></p>
+
+<figure class="code-block runnable" data-lang="python">
+
+
+<pre><code><span class="line"><span class="hl-keyword">import</span> numpy <span class="hl-keyword">as</span> np</span>
+<span class="line"></span>
+<span class="line">rng = np.random.default_rng(<span class="hl-number">0</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># A toy &quot;image&quot;: a 1-D Gaussian signal of length D whose Fourier coefficients</span></span>
+<span class="line"><span class="hl-comment"># have variance ~ 1/f^2, the power law natural images roughly follow.</span></span>
+<span class="line"><span class="hl-comment"># In that basis x0 has a diagonal covariance, so everything is closed form.</span></span>
+<span class="line">D = <span class="hl-number">256</span></span>
+<span class="line">f = np.arange(<span class="hl-number">1</span>, D + <span class="hl-number">1</span>)              <span class="hl-comment"># frequency index of each coefficient</span></span>
+<span class="line">lam = <span class="hl-number">1.0</span> / f**<span class="hl-number">2</span></span>
+<span class="line">lam *= D / lam.<span class="hl-built_in">sum</span>()                 <span class="hl-comment"># normalise: total variance D (unit per pixel)</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Cosine schedule (Nichol &amp; Dhariwal style), T = 1000 steps</span></span>
+<span class="line">T = <span class="hl-number">1000</span></span>
+<span class="line">s = <span class="hl-number">0.008</span></span>
+<span class="line">abar = np.cos((np.arange(T + <span class="hl-number">1</span>) / T + s) / (<span class="hl-number">1</span> + s) * np.pi / <span class="hl-number">2</span>) ** <span class="hl-number">2</span></span>
+<span class="line">abar = np.clip(abar / abar[<span class="hl-number">0</span>], <span class="hl-number">1e-8</span>, <span class="hl-number">1.0</span>)</span>
+<span class="line">snr = abar / (<span class="hl-number">1</span> - abar + <span class="hl-number">1e-12</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">mi_per_coeff</span>(<span class="hl-params">t</span>):</span>
+<span class="line">    <span class="hl-comment"># I(x0_k ; x_t_k) = 1/2 log(1 + SNR(t) * lam_k)   (Gaussian channel)</span></span>
+<span class="line">    <span class="hl-keyword">return</span> <span class="hl-number">0.5</span> * np.log1p(snr[t] * lam)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">mmse_per_coeff</span>(<span class="hl-params">t</span>):</span>
+<span class="line">    <span class="hl-comment"># E[(x0_k - E[x0_k | x_t])^2] = lam_k / (1 + SNR(t) * lam_k)</span></span>
+<span class="line">    <span class="hl-keyword">return</span> lam / (<span class="hl-number">1</span> + snr[t] * lam)</span>
+<span class="line"></span>
+<span class="line">bands = {<span class="hl-string">&quot;coarse f&lt;=4&quot;</span>: f &lt;= <span class="hl-number">4</span>, <span class="hl-string">&quot;mid 4&lt;f&lt;=32&quot;</span>: (f &gt; <span class="hl-number">4</span>) &amp; (f &lt;= <span class="hl-number">32</span>), <span class="hl-string">&quot;fine f&gt;32&quot;</span>: f &gt; <span class="hl-number">32</span>}</span>
+<span class="line"></span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;Information about x0 that survives in x_t (nats), by frequency band,&quot;</span>)</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;and the relative error of the best possible denoiser E[x0 | x_t].\n&quot;</span>)</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;<span class="hl-subst">{<span class="hl-string">&#x27;t&#x27;</span>:&gt;<span class="hl-number">5</span>}</span> <span class="hl-subst">{<span class="hl-string">&#x27;log SNR&#x27;</span>:&gt;<span class="hl-number">8</span>}</span> &quot;</span> + <span class="hl-string">&quot; &quot;</span>.join(<span class="hl-string">f&quot;<span class="hl-subst">{b:&gt;<span class="hl-number">12</span>}</span>&quot;</span> <span class="hl-keyword">for</span> b <span class="hl-keyword">in</span> bands) + <span class="hl-string">f&quot; <span class="hl-subst">{<span class="hl-string">&#x27;total&#x27;</span>:&gt;<span class="hl-number">8</span>}</span> <span class="hl-subst">{<span class="hl-string">&#x27;rel. MSE&#x27;</span>:&gt;<span class="hl-number">9</span>}</span>&quot;</span>)</span>
+<span class="line"><span class="hl-keyword">for</span> t <span class="hl-keyword">in</span> [<span class="hl-number">1</span>, <span class="hl-number">50</span>, <span class="hl-number">150</span>, <span class="hl-number">300</span>, <span class="hl-number">500</span>, <span class="hl-number">700</span>, <span class="hl-number">850</span>, <span class="hl-number">950</span>, <span class="hl-number">1000</span>]:</span>
+<span class="line">    mi = mi_per_coeff(t)</span>
+<span class="line">    rel = mmse_per_coeff(t).<span class="hl-built_in">sum</span>() / lam.<span class="hl-built_in">sum</span>()</span>
+<span class="line">    cols = <span class="hl-string">&quot; &quot;</span>.join(<span class="hl-string">f&quot;<span class="hl-subst">{mi[m].<span class="hl-built_in">sum</span>():<span class="hl-number">12.2</span>f}</span>&quot;</span> <span class="hl-keyword">for</span> m <span class="hl-keyword">in</span> bands.values())</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;<span class="hl-subst">{t:5d}</span> <span class="hl-subst">{np.log(snr[t]):<span class="hl-number">8.2</span>f}</span> <span class="hl-subst">{cols}</span> <span class="hl-subst">{mi.<span class="hl-built_in">sum</span>():<span class="hl-number">8.2</span>f}</span> <span class="hl-subst">{rel:<span class="hl-number">9.3</span>f}</span>&quot;</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;\nFraction of each band&#x27;s variance the best denoiser recovers from x_t:\n&quot;</span>)</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;<span class="hl-subst">{<span class="hl-string">&#x27;t&#x27;</span>:&gt;<span class="hl-number">5</span>}</span> &quot;</span> + <span class="hl-string">&quot; &quot;</span>.join(<span class="hl-string">f&quot;<span class="hl-subst">{b:&gt;<span class="hl-number">12</span>}</span>&quot;</span> <span class="hl-keyword">for</span> b <span class="hl-keyword">in</span> bands))</span>
+<span class="line"><span class="hl-keyword">for</span> t <span class="hl-keyword">in</span> [<span class="hl-number">50</span>, <span class="hl-number">150</span>, <span class="hl-number">300</span>, <span class="hl-number">500</span>, <span class="hl-number">700</span>, <span class="hl-number">850</span>, <span class="hl-number">950</span>]:</span>
+<span class="line">    r2 = <span class="hl-number">1</span> - mmse_per_coeff(t) / lam</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;<span class="hl-subst">{t:5d}</span> &quot;</span> + <span class="hl-string">&quot; &quot;</span>.join(<span class="hl-string">f&quot;<span class="hl-subst">{r2[m].mean():<span class="hl-number">12.2</span>f}</span>&quot;</span> <span class="hl-keyword">for</span> m <span class="hl-keyword">in</span> bands.values()))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Monte Carlo check: Tweedie&#x27;s formula gives the same denoiser.</span></span>
+<span class="line"><span class="hl-comment">#   E[x0 | x_t] = (x_t + (1 - abar) * score(x_t)) / sqrt(abar)</span></span>
+<span class="line"><span class="hl-comment"># and for this Gaussian prior score(x_t) = -x_t / (abar * lam + 1 - abar).</span></span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;\nMonte Carlo check of the denoiser built from the score (Tweedie):&quot;</span>)</span>
+<span class="line">n = <span class="hl-number">2000</span></span>
+<span class="line">x0 = rng.standard_normal((n, D)) * np.sqrt(lam)</span>
+<span class="line"><span class="hl-keyword">for</span> t <span class="hl-keyword">in</span> [<span class="hl-number">150</span>, <span class="hl-number">500</span>, <span class="hl-number">850</span>]:</span>
+<span class="line">    a = abar[t]</span>
+<span class="line">    xt = np.sqrt(a) * x0 + np.sqrt(<span class="hl-number">1</span> - a) * rng.standard_normal((n, D))</span>
+<span class="line">    score = -xt / (a * lam + <span class="hl-number">1</span> - a)</span>
+<span class="line">    x0_hat = (xt + (<span class="hl-number">1</span> - a) * score) / np.sqrt(a)</span>
+<span class="line">    mc = np.mean(np.<span class="hl-built_in">sum</span>((x0 - x0_hat) ** <span class="hl-number">2</span>, <span class="hl-number">1</span>)) / lam.<span class="hl-built_in">sum</span>()</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;  t=<span class="hl-subst">{t:4d}</span>: relative MSE  Monte Carlo <span class="hl-subst">{mc:<span class="hl-number">.3</span>f}</span>   closed form &quot;</span></span>
+<span class="line">          <span class="hl-string">f&quot;<span class="hl-subst">{mmse_per_coeff(t).<span class="hl-built_in">sum</span>() / lam.<span class="hl-built_in">sum</span>():<span class="hl-number">.3</span>f}</span>&quot;</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Where is the &quot;cut-off&quot;? The coefficient with SNR(t) * lam_k = 1 is the</span></span>
+<span class="line"><span class="hl-comment"># frequency at which signal and noise have equal power.</span></span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;\nEqual-power frequency (signal = noise) as t grows:&quot;</span>)</span>
+<span class="line"><span class="hl-keyword">for</span> t <span class="hl-keyword">in</span> [<span class="hl-number">50</span>, <span class="hl-number">300</span>, <span class="hl-number">500</span>, <span class="hl-number">700</span>, <span class="hl-number">850</span>, <span class="hl-number">950</span>]:</span>
+<span class="line">    fc = np.sqrt(snr[t] * D / (<span class="hl-number">1.0</span> / f**<span class="hl-number">2</span>).<span class="hl-built_in">sum</span>())</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;  t=<span class="hl-subst">{t:4d}</span>: f_c ~ <span class="hl-subst">{fc:<span class="hl-number">7.1</span>f}</span>&quot;</span>)</span></code></pre>
+
+<textarea class="run-source" hidden spellcheck="false">import numpy as np
+
+rng = np.random.default_rng(0)
+
+# A toy &quot;image&quot;: a 1-D Gaussian signal of length D whose Fourier coefficients
+# have variance ~ 1/f^2, the power law natural images roughly follow.
+# In that basis x0 has a diagonal covariance, so everything is closed form.
+D = 256
+f = np.arange(1, D + 1)              # frequency index of each coefficient
+lam = 1.0 / f**2
+lam *= D / lam.sum()                 # normalise: total variance D (unit per pixel)
+
+# Cosine schedule (Nichol &amp; Dhariwal style), T = 1000 steps
+T = 1000
+s = 0.008
+abar = np.cos((np.arange(T + 1) / T + s) / (1 + s) * np.pi / 2) ** 2
+abar = np.clip(abar / abar[0], 1e-8, 1.0)
+snr = abar / (1 - abar + 1e-12)
+
+def mi_per_coeff(t):
+    # I(x0_k ; x_t_k) = 1/2 log(1 + SNR(t) * lam_k)   (Gaussian channel)
+    return 0.5 * np.log1p(snr[t] * lam)
+
+def mmse_per_coeff(t):
+    # E[(x0_k - E[x0_k | x_t])^2] = lam_k / (1 + SNR(t) * lam_k)
+    return lam / (1 + snr[t] * lam)
+
+bands = {&quot;coarse f&lt;=4&quot;: f &lt;= 4, &quot;mid 4&lt;f&lt;=32&quot;: (f &gt; 4) &amp; (f &lt;= 32), &quot;fine f&gt;32&quot;: f &gt; 32}
+
+print(&quot;Information about x0 that survives in x_t (nats), by frequency band,&quot;)
+print(&quot;and the relative error of the best possible denoiser E[x0 | x_t].\n&quot;)
+print(f&quot;{'t':&gt;5} {'log SNR':&gt;8} &quot; + &quot; &quot;.join(f&quot;{b:&gt;12}&quot; for b in bands) + f&quot; {'total':&gt;8} {'rel. MSE':&gt;9}&quot;)
+for t in [1, 50, 150, 300, 500, 700, 850, 950, 1000]:
+    mi = mi_per_coeff(t)
+    rel = mmse_per_coeff(t).sum() / lam.sum()
+    cols = &quot; &quot;.join(f&quot;{mi[m].sum():12.2f}&quot; for m in bands.values())
+    print(f&quot;{t:5d} {np.log(snr[t]):8.2f} {cols} {mi.sum():8.2f} {rel:9.3f}&quot;)
+
+print(&quot;\nFraction of each band's variance the best denoiser recovers from x_t:\n&quot;)
+print(f&quot;{'t':&gt;5} &quot; + &quot; &quot;.join(f&quot;{b:&gt;12}&quot; for b in bands))
+for t in [50, 150, 300, 500, 700, 850, 950]:
+    r2 = 1 - mmse_per_coeff(t) / lam
+    print(f&quot;{t:5d} &quot; + &quot; &quot;.join(f&quot;{r2[m].mean():12.2f}&quot; for m in bands.values()))
+
+# Monte Carlo check: Tweedie's formula gives the same denoiser.
+#   E[x0 | x_t] = (x_t + (1 - abar) * score(x_t)) / sqrt(abar)
+# and for this Gaussian prior score(x_t) = -x_t / (abar * lam + 1 - abar).
+print(&quot;\nMonte Carlo check of the denoiser built from the score (Tweedie):&quot;)
+n = 2000
+x0 = rng.standard_normal((n, D)) * np.sqrt(lam)
+for t in [150, 500, 850]:
+    a = abar[t]
+    xt = np.sqrt(a) * x0 + np.sqrt(1 - a) * rng.standard_normal((n, D))
+    score = -xt / (a * lam + 1 - a)
+    x0_hat = (xt + (1 - a) * score) / np.sqrt(a)
+    mc = np.mean(np.sum((x0 - x0_hat) ** 2, 1)) / lam.sum()
+    print(f&quot;  t={t:4d}: relative MSE  Monte Carlo {mc:.3f}   closed form &quot;
+          f&quot;{mmse_per_coeff(t).sum() / lam.sum():.3f}&quot;)
+
+# Where is the &quot;cut-off&quot;? The coefficient with SNR(t) * lam_k = 1 is the
+# frequency at which signal and noise have equal power.
+print(&quot;\nEqual-power frequency (signal = noise) as t grows:&quot;)
+for t in [50, 300, 500, 700, 850, 950]:
+    fc = np.sqrt(snr[t] * D / (1.0 / f**2).sum())
+    print(f&quot;  t={t:4d}: f_c ~ {fc:7.1f}&quot;)
+</textarea>
+<div class="run-bar">
+<button type="button" class="widget-btn run-btn">Run</button>
+<button type="button" class="widget-btn run-edit">Edit</button>
+<span class="run-status muted"></span>
+</div>
+<pre class="run-output" hidden></pre>
+<noscript><p class="widget-fallback">This snippet can be run in the browser with JavaScript enabled.</p></noscript>
+</figure>
+<p><span>What to look for. The fine band (frequencies above 32) holds most of the nats at $t = 1$, simply</span>
+<span>because it has the most coefficients, and it loses them first: by $t = 300$ the best denoiser</span>
+<span>recovers only about 6% of its variance, while the coarse band is still at 99%. The equal-power</span>
+<span>frequency slides from above 100 down to 1 as $t$ goes from 50 to 950. That is the</span>
+<span>coarse-to-fine hierarchy, computed rather than asserted. Notice also how small the total</span>
+<span>relative error is at $t = 300$ (under 4%) even though most of the information is gone. The bits</span>
+<span>that are lost first are many, but they carry little energy, which is Ho et al.</span>&rsquo;<span>s </span>&ldquo;<span>most of the</span>
+<span>codelength is imperceptible detail</span>&rdquo;<span> in miniature. (For a Gaussian toy the posterior mean is a</span>
+<span>linear filter, a Wiener filter; for real images it is a deep network, but Tweedie</span>&rsquo;<span>s identity</span>
+<span>between denoiser and score holds either way.)</span></p>
+</section>
+<section id="So-are-diffusion-models-just-fancy-autoencoders">
+
+    <h2>
+    <a href="#So-are-diffusion-models-just-fancy-autoencoders"><span>So: are diffusion models just fancy autoencoders?</span> </a><a class="heading-anchor" href="#So-are-diffusion-models-just-fancy-autoencoders" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Viewing diffusion models through this lens opens up new possibilities for research</span>
+<span>and improvement. It suggests potential hybrid architectures combining elements of both</span>
+<span>approaches, and hints at applications beyond generation, such as in data compression.</span></p>
+<p><span>With the math in hand I would put it like this. A diffusion model is </span><em><span>exactly</span></em><span> a hierarchical</span>
+<span>VAE whose encoder is a fixed Gaussian noising process, and each layer of its decoder is a</span>
+<span>denoising autoencoder whose optimal solution is the score. The </span>&ldquo;<span>bottleneck</span>&rdquo;<span> is real and</span>
+<span>measurable: it is a Gaussian channel with capacity set by $\mathrm{SNR}(t)$, and it removes</span>
+<span>information in order of increasing variance, which for images means fine to coarse. The</span>
+<span>compression reading is also real: Ho et al.</span>&rsquo;<span>s progressive code is a rate-distortion curve,</span>
+<span>and with an ideal model the rate at level $t$ is exactly $I(x_0; x_t)$.</span></p>
+<p><span>The hybrid architectures exist too. Latent diffusion (Rombach et al., 2021) is precisely an</span>
+<span>autoencoder with a diffusion model in its latent space: a learned encoder does the</span>
+<span>dimensionality reduction that the diffusion encoder cannot, and the diffusion model handles</span>
+<span>the rest.</span></p>
+<p><span>Two parts of the original argument need softening. First, the codes $x_t$ themselves are not</span>
+<span>learned representations: they are noisy images. If diffusion models </span>&ldquo;<span>implicitly learn a series of</span>
+<span>nested representations</span>&rdquo;<span>, those live inside the denoiser</span>&rsquo;<span>s activations, and whether they are</span>
+<span>good representations is an empirical question, not something the ELBO guarantees. I still find</span>
+<span>it a plausible bet, since denoising at many noise levels forces the network to model structure</span>
+<span>at every scale, but it is a bet. Second, the decoder does not reconstruct what the encoder</span>
+<span>removed; at high noise it cannot, because the information is gone. It </span><em><span>samples</span></em><span> it. That is the</span>
+<span>difference between an autoencoder and a generative model, and it is exactly the part that the</span>
+&ldquo;<span>fancy autoencoder</span>&rdquo;<span> framing tends to hide.</span></p>
+</section>
+<section id="References">
+
+    <h2>
+    <a href="#References"><span>References</span> </a><a class="heading-anchor" href="#References" aria-label="Link to this section">#</a>
+    </h2>
+<ul>
+<li>
+<span>Sohl-Dickstein, J., Weiss, E. A., Maheswaranathan, N., Ganguli, S. (2015). Deep Unsupervised Learning using Nonequilibrium Thermodynamics. ICML 2015. </span><a href="https://arxiv.org/abs/1503.03585" class="url">https://arxiv.org/abs/1503.03585</a>
+</li>
+<li>
+<span>Ho, J., Jain, A., Abbeel, P. (2020). Denoising Diffusion Probabilistic Models. NeurIPS 2020. </span><a href="https://arxiv.org/abs/2006.11239" class="url">https://arxiv.org/abs/2006.11239</a>
+</li>
+<li>
+<span>Kingma, D. P., Salimans, T., Poole, B., Ho, J. (2021). Variational Diffusion Models. NeurIPS 2021. </span><a href="https://arxiv.org/abs/2107.00630" class="url">https://arxiv.org/abs/2107.00630</a>
+</li>
+<li>
+<span>Kingma, D. P., Gao, R. (2023). Understanding Diffusion Objectives as the ELBO with Simple Data Augmentation. </span><a href="https://arxiv.org/abs/2303.00848" class="url">https://arxiv.org/abs/2303.00848</a>
+</li>
+<li>
+<span>Nichol, A., Dhariwal, P. (2021). Improved Denoising Diffusion Probabilistic Models. </span><a href="https://arxiv.org/abs/2102.09672" class="url">https://arxiv.org/abs/2102.09672</a>
+</li>
+<li>
+<span>Vincent, P. (2011). A Connection Between Score Matching and Denoising Autoencoders. Neural Computation 23(7), 1661-1674. </span><a href="https://doi.org/10.1162/NECO_a_00142" class="url">https://doi.org/10.1162/NECO_a_00142</a>
+</li>
+<li>
+<span>Efron, B. (2011). Tweedie</span>&rsquo;<span>s Formula and Selection Bias. Journal of the American Statistical Association 106(496), 1602-1614. </span><a href="https://doi.org/10.1198/jasa.2011.tm11181" class="url">https://doi.org/10.1198/jasa.2011.tm11181</a>
+</li>
+<li>
+<span>Song, Y., Ermon, S. (2019). Generative Modeling by Estimating Gradients of the Data Distribution. NeurIPS 2019. </span><a href="https://arxiv.org/abs/1907.05600" class="url">https://arxiv.org/abs/1907.05600</a>
+</li>
+<li>
+<span>Song, Y., Sohl-Dickstein, J., Kingma, D. P., Kumar, A., Ermon, S., Poole, B. (2020). Score-Based Generative Modeling through Stochastic Differential Equations. ICLR 2021. </span><a href="https://arxiv.org/abs/2011.13456" class="url">https://arxiv.org/abs/2011.13456</a>
+</li>
+<li>
+<span>Luo, C. (2022). Understanding Diffusion Models: A Unified Perspective. </span><a href="https://arxiv.org/abs/2208.11970" class="url">https://arxiv.org/abs/2208.11970</a>
+</li>
+<li>
+<span>Rombach, R., Blattmann, A., Lorenz, D., Esser, P., Ommer, B. (2021). High-Resolution Image Synthesis with Latent Diffusion Models. CVPR 2022. </span><a href="https://arxiv.org/abs/2112.10752" class="url">https://arxiv.org/abs/2112.10752</a>
+</li>
+<li>
+<span>Dieleman, S. (2024). Diffusion is spectral autoregression. Blog post. </span><a href="https://sander.ai/2024/09/02/spectral-autoregression.html" class="url">https://sander.ai/2024/09/02/spectral-autoregression.html</a>
+</li>
+</ul>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/diffusion.html">#diffusion</a><a class="tag" href="/tags/generative.html">#generative</a></div>
+      <p class="prereq-line">
+      <span class="prereq-line__label">Read next</span>
+      <a href="/2024/09/09/ddim_ddpm.html">DDIM vs DDPM</a><span class="prereq-line__sep" aria-hidden="true">·</span><a href="/2024/12/01/flow.html">Flow Matching, a short overview</a><span class="prereq-line__sep" aria-hidden="true">·</span><a href="/2024/12/07/timeseries-diffusion.html">Diffusion models for time series</a>
+    </p><section class="related">
+        <h2>Related posts</h2>
+        <ul class="related-list">
+          <li>
+              <a href="/2024/12/15/cfg.html">Classifier free diffusion guidance</a>
+              <span class="muted"><time datetime="2024-12-15">Dec 15, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li><li>
+              <a href="/2024/12/07/timeseries-diffusion.html">Diffusion models for time series</a>
+              <span class="muted"><time datetime="2024-12-07">Dec 7, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li><li>
+              <a href="/2024/09/09/ddim_ddpm.html">DDIM vs DDPM</a>
+              <span class="muted"><time datetime="2024-09-09">Sep 9, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li>
+        </ul>
+      </section><nav class="post-nav" aria-label="Chronological">
+        <a class="post-nav__link post-nav__prev" href="/2024/08/27/rag.html">
+          <span class="post-nav__label">← Older</span>
+          <span class="post-nav__title">Understanding and Implementing RAG (Retrieval-Augmented Generation)</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/09/09/ddim_ddpm.html">
+          <span class="post-nav__label">Newer →</span>
+          <span class="post-nav__title">DDIM vs DDPM</span>
+        </a>
+      </nav><nav class="post-nav post-nav--theme" aria-label="Same theme">
+        <a class="post-nav__link post-nav__prev" href="/2024/08/13/ctgan.html">
+          <span class="post-nav__label">← Older in theme</span>
+          <span class="post-nav__title">Conditional Tabular GAN - CTGAN</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/09/09/ddim_ddpm.html">
+          <span class="post-nav__label">Newer in theme →</span>
+          <span class="post-nav__title">DDIM vs DDPM</span>
+        </a>
+      </nav>
+      
+    <section class="comments" id="comments">
+      <h2>Comments</h2>
+      <div class="giscus"></div>
+      <noscript><p class="muted">Comments are powered by <a href="https://giscus.app">giscus</a> and need JavaScript.</p></noscript>
+    </section>
+    <script>
+    (function () {
+      // Inject giscus with the theme the site is actually using (the toggle
+      // persists in localStorage), rather than the OS preference.
+      var siteTheme = function () {
+        var t = document.documentElement.getAttribute("data-theme");
+        if (t) return t === "dark" ? "dark" : "light";
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark" : "light";
+      };
+      var s = document.createElement("script");
+      s.src = "https://giscus.app/client.js";
+      var attrs = {
+        "data-repo": "mbottoni/mbottoni.github.io",
+        "data-repo-id": "R_kgDOKv71Lg",
+        "data-category": "General",
+        "data-category-id": "DIC_kwDOKv71Ls4DEBYr",
+        "data-mapping": "pathname",
+        "data-strict": "1",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "top",
+        "data-theme": siteTheme(),
+        "data-lang": "en",
+        "data-loading": "lazy",
+        "crossorigin": "anonymous"
+      };
+      for (var k in attrs) s.setAttribute(k, attrs[k]);
+      s.async = true;
+      document.getElementById("comments").appendChild(s);
+
+      // Follow the dark-mode toggle after load.
+      new MutationObserver(function () {
+        var frame = document.querySelector("iframe.giscus-frame");
+        if (!frame) return;
+        frame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: siteTheme() } } },
+          "https://giscus.app");
+      }).observe(document.documentElement,
+        { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+    </script>
+  
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-09-01-diffusion.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        // Widgets build their own DOM and style their spans.
+        if (span.closest(".widget")) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  <script defer src="/js/runner.js"></script>
+<script>
+(function () {
+  var bar = document.querySelector(".reading-progress__bar");
+  var article = document.querySelector("article");
+  if (bar && article) {
+    var update = function () {
+      var top = article.offsetTop;
+      var h = article.offsetHeight - window.innerHeight;
+      var p = h > 0 ? (window.scrollY - top) / h : 1;
+      bar.style.transform = "scaleX(" + Math.min(1, Math.max(0, p)) + ")";
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
+  var toc = document.querySelector(".toc");
+  if (!toc || !("IntersectionObserver" in window)) return;
+  var links = {};
+  toc.querySelectorAll("a[href^='#']").forEach(function (a) {
+    links[decodeURIComponent(a.getAttribute("href").slice(1))] = a;
+  });
+  var ids = Object.keys(links);
+  if (!ids.length) return;
+  var visible = {};
+  var setActive = function () {
+    var first = null;
+    for (var i = 0; i < ids.length; i++) {
+      if (visible[ids[i]]) { first = ids[i]; break; }
+    }
+    ids.forEach(function (id) {
+      links[id].classList.toggle("active", id === first);
+    });
+  };
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    setActive();
+  }, { rootMargin: "-10% 0px -70% 0px", threshold: 0 });
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>
+</body>
+
+</html>

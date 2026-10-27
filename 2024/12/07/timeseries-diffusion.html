@@ -1,0 +1,594 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diffusion models for time series</title>
+  <meta name="description" content="On this post I will explore the main findings from the paper UTSD: Unified Time Series Diffusion Model and an explanation 
+of the content. For more details here is the link to the paper Link to paper">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Diffusion models for time series">
+  <meta property="og:description" content="On this post I will explore the main findings from the paper UTSD: Unified Time Series Diffusion Model and an explanation 
+of the content. For more details here is the link to the paper Link to paper">
+  <meta property="og:url" content="https://mbottoni.github.io/2024/12/07/timeseries-diffusion.html">
+  <meta property="og:image" content="/assets/generative/time-series-diffusion.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Diffusion models for time series">
+  <meta name="twitter:description" content="On this post I will explore the main findings from the paper UTSD: Unified Time Series Diffusion Model and an explanation 
+of the content. For more details here is the link to the paper Link to paper">
+  <meta name="twitter:image" content="/assets/generative/time-series-diffusion.png">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/12/07/timeseries-diffusion.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/map.html">Map</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="reading-progress" aria-hidden="true"><div class="reading-progress__bar"></div></div>
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/generative.html">
+          Diffusion &amp; Generative Modeling
+        </a>
+        <span class="post-meta"><time datetime="2024-12-07">Dec 7, 2024</time> · 7 min read</span>
+      </div>
+      
+    <aside class="series-box">
+      <div class="series-box__head">
+        <span class="series-box__label">Series</span>
+        <span class="series-box__title">Diffusion and flows</span>
+        <span class="muted">Part 5 of 5</span>
+      </div>
+      <p class="muted">Diffusion models, samplers, guidance, and their flow-matching cousins.</p>
+      <ol class="series-box__list"><li><a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a></li><li><a href="/2024/09/09/ddim_ddpm.html">DDIM vs DDPM</a></li><li><a href="/2024/12/15/cfg.html">Classifier free diffusion guidance</a></li><li><a href="/2024/12/01/flow.html">Flow Matching, a short overview</a></li><li class="series-box__current" aria-current="page">Diffusion models for time series</li></ol>
+    </aside>
+  
+      <p class="prereq-line">
+      <span class="prereq-line__label">Before reading this</span>
+      <a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a>
+    </p>
+      
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <ul><li class="toc-l2"><a href="#Summary-of-Findings-from-UTSD-Paper">Summary of Findings from UTSD Paper</a></li><li class="toc-l2"><a href="#Explanation-of-the-Paper">Explanation of the Paper</a></li><li class="toc-l3"><a href="#1-Condition-Denoising-Architecture">1. Condition-Denoising Architecture</a></li><li class="toc-l3"><a href="#2-Reverse-Noise-Reduction-in-Actual-Sequence-Space">2. Reverse Noise Reduction in Actual Sequence Space</a></li><li class="toc-l3"><a href="#3-Improved-Classifier-Free-Guidance">3. Improved Classifier-Free Guidance</a></li><li class="toc-l3"><a href="#Additional-Architectural-Components">Additional Architectural Components</a></li><li class="toc-l2"><a href="#How-Conditioning-Enters-the-Reverse-Process">How Conditioning Enters the Reverse Process</a></li><li class="toc-l3"><a href="#Targets-and-conditional-observations">Targets and conditional observations</a></li><li class="toc-l3"><a href="#The-conditional-reverse-process">The conditional reverse process</a></li><li class="toc-l3"><a href="#Why-condition-on-clean-observations">Why condition on clean observations</a></li><li class="toc-l3"><a href="#Autoregressive-forecasting">Autoregressive forecasting</a></li><li class="toc-l3"><a href="#Guidance-on-top-of-the-condition">Guidance on top of the condition</a></li><li class="toc-l2"><a href="#References">References</a></li></ul>
+    </details>
+  
+      <article >
+
+    <h1 id="Diffusion-models-for-time-series">
+    <a href="#Diffusion-models-for-time-series"><span>Diffusion models for time series</span> <time datetime="2024-12-07">Dec 7, 2024</time></a>
+    </h1>
+<p><span>On this post I will explore the main findings from the paper </span>&ldquo;<span>UTSD: Unified Time Series Diffusion Model</span>&rdquo;<span> and an explanation </span>
+<span>of the content. For more details here is the link to the paper </span><a href="https://arxiv.org/pdf/2412.03068.pdf"><span>Link to paper</span></a></p>
+<section id="Summary-of-Findings-from-UTSD-Paper">
+
+    <h2>
+    <a href="#Summary-of-Findings-from-UTSD-Paper"><span>Summary of Findings from UTSD Paper</span> </a><a class="heading-anchor" href="#Summary-of-Findings-from-UTSD-Paper" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>The authors of the paper propose a novel architecture, UTSD, for time </span>
+<span>series analysis. The researchers note the prevalence of time series </span>
+<span>data in a variety of real world applications. They also point out that </span>
+<span>data across different domains often have different statistical properties. They posit that this </span>
+<span>creates a challenge to the generalizability and robustness of time </span>
+<span>series analysis. In order to address this, the authors propose a unified time </span>
+<span>series diffusion model. The paper explains that the UTSD model </span>
+<span>uses a diffusion denoising process, in contrast to autoregressive models, to model </span>
+<span>the mixture distribution of cross-domain data and generate a prediction sequence for </span>
+<span>the target domain. The model learns from time series data across a range of domains </span>
+<span>with the goal of having strong generalization capabilities and robustness to achieve zero-shot </span>
+<span>inference on unseen domains. UTSD consists of three key designs:</span></p>
+<ul>
+<li>
+<span>Condition-denoising architecture</span>
+</li>
+<li>
+<span>Reverse noise reduction process in the actual sequence space</span>
+</li>
+<li>
+<span>Conditional generation strategy based on improved classifier-free guidance</span>
+</li>
+</ul>
+<p><span>The paper reports that UTSD outperforms existing foundation models on all data domains. It achieves an average </span>
+<span>MSE reduction of 14.2%, 20.1%, and 27.6% compared to the existing Moirai, UniTime, and GPT4TS, respectively. The paper also </span>
+<span>reports that UTSD, when trained from scratch, achieves comparable performance to domain-specific models. In the paper, the authors </span>
+<span>contend that UTSD shows stable and reliable time series generation which indicates the </span>
+<span>model</span>&rsquo;<span>s potential as a foundational model for time series analysis.</span></p>
+</section>
+<section id="Explanation-of-the-Paper">
+
+    <h2>
+    <a href="#Explanation-of-the-Paper"><span>Explanation of the Paper</span> </a><a class="heading-anchor" href="#Explanation-of-the-Paper" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>The paper presents a detailed explanation of the UTSD model architecture and its three key design elements. These designs aim </span>
+<span>to address the challenges of modeling probability distributions across multiple time series domains and generating accurate </span>
+<span>long-term forecasts.</span></p>
+
+<figure>
+
+<img alt="" src="/assets/generative/time-series-diffusion.png">
+</figure>
+<section id="1-Condition-Denoising-Architecture">
+
+    <h3>
+    <a href="#1-Condition-Denoising-Architecture"><span>1. Condition-Denoising Architecture</span> </a><a class="heading-anchor" href="#1-Condition-Denoising-Architecture" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>This architecture includes a Condition Net and a Denoising Net. The Condition Net learns multi-scale </span>
+<span>representations of temporal fluctuation patterns from different time series domains. These representations </span>
+<span>are then used as conditional variables to guide the Denoising Net in generating the prediction sequence. The paper argues </span>
+<span>that capturing multi-scale representations is crucial because time series from various domains often exhibit different latent patterns.</span></p>
+</section>
+<section id="2-Reverse-Noise-Reduction-in-Actual-Sequence-Space">
+
+    <h3>
+    <a href="#2-Reverse-Noise-Reduction-in-Actual-Sequence-Space"><span>2. Reverse Noise Reduction in Actual Sequence Space</span> </a><a class="heading-anchor" href="#2-Reverse-Noise-Reduction-in-Actual-Sequence-Space" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>UTSD performs the reverse noise reduction process directly in the actual sequence space, unlike traditional </span>
+<span>diffusion models that operate in a latent space. This design choice is justified by the fact that iterative </span>
+<span>denoising in the latent space can lead to error accumulation, which is amplified when aligning </span>
+<span>the latent space back to the actual sequence space.</span></p>
+</section>
+<section id="3-Improved-Classifier-Free-Guidance">
+
+    <h3>
+    <a href="#3-Improved-Classifier-Free-Guidance"><span>3. Improved Classifier-Free Guidance</span> </a><a class="heading-anchor" href="#3-Improved-Classifier-Free-Guidance" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>The UTSD model uses an improved classifier-free guidance strategy to ensure strong generalization ability. This strategy leverages the multi-scale </span>
+<span>representation captured by the Condition Net as a conditional variable to guide the reconstruction of the forecast from Gaussian noise.</span></p>
+</section>
+<section id="Additional-Architectural-Components">
+
+    <h3>
+    <a href="#Additional-Architectural-Components"><span>Additional Architectural Components</span> </a><a class="heading-anchor" href="#Additional-Architectural-Components" aria-label="Link to this section">#</a>
+    </h3>
+<ul>
+<li>
+<strong><strong><span>Transfer-Adapter Module:</span></strong></strong><span> This module allows for efficient fine-tuning of the pre-trained UTSD model on specific downstream tasks. It transforms </span>
+<span>the fluctuation patterns learned during pre-training into the latent space of the target domain, enabling the generation of domain-specific time series samples.</span>
+</li>
+<li>
+<strong><strong><span>Blocks Implementation:</span></strong></strong><span> The Condition Net and Denoising Net are built using ResNet1D and Transformer1D modules. The ResNet1D modules handle </span>
+<span>the embedding of diffusion timesteps and latent representations, while the Transformer1D modules capture dependencies within the observation sequence and leverage historical fluctuation patterns as context for denoising.</span>
+</li>
+</ul>
+</section>
+</section>
+<section id="How-Conditioning-Enters-the-Reverse-Process">
+
+    <h2>
+    <a href="#How-Conditioning-Enters-the-Reverse-Process"><span>How Conditioning Enters the Reverse Process</span> </a><a class="heading-anchor" href="#How-Conditioning-Enters-the-Reverse-Process" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>The three designs above all answer one question: how does the observed part of</span>
+<span>a series steer the denoiser? UTSD is one answer. Here I want to write the</span>
+<span>general machinery as equations, following CSDI (Tashiro et al.), which states</span>
+<span>it most cleanly. I use DDPM notation for the noise schedule: $\beta_t$,</span>
+<span>$\alpha_t = 1 - \beta_t$, $\bar\alpha_t = \prod_{s \le t}\alpha_s$. Note that</span>
+<span>CSDI itself writes $\alpha_t$ for the cumulative product.</span></p>
+<section id="Targets-and-conditional-observations">
+
+    <h3>
+    <a href="#Targets-and-conditional-observations"><span>Targets and conditional observations</span> </a><a class="heading-anchor" href="#Targets-and-conditional-observations" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Take a multivariate series $x_0 \in \mathbb{R}^{K \times L}$ ($K$ channels,</span>
+<span>$L$ time steps), and split its entries into two disjoint sets.</span></p>
+<ul>
+<li>
+<strong><strong><span>Conditional observations</span></strong></strong><span> $x_0^{co}$ are the values we know.</span>
+</li>
+<li>
+<strong><strong><span>Targets</span></strong></strong><span> $x_0^{ta}$ are the values we want a distribution over.</span>
+</li>
+</ul>
+<p><strong><span>Imputation</span></strong><span> and </span><strong><span>forecasting</span></strong><span> are the same problem with different masks. For</span>
+<span>imputation, the targets are the missing entries scattered through the window.</span>
+<span>For forecasting, they are every entry after the last observed time step, with</span>
+<span>the history as $x_0^{co}$.</span></p>
+</section>
+<section id="The-conditional-reverse-process">
+
+    <h3>
+    <a href="#The-conditional-reverse-process"><span>The conditional reverse process</span> </a><a class="heading-anchor" href="#The-conditional-reverse-process" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Only the targets are diffused. The forward process is the usual one applied to</span>
+<span>$x_0^{ta}$, so $x_t^{ta} = \sqrt{\bar\alpha_t}\, x_0^{ta} + \sqrt{1-\bar\alpha_t}\,\epsilon$.</span>
+<span>The reverse process is conditioned on the </span><strong><span>clean</span></strong><span> observations at every step:</span></p>
+<p><span>$$p_\theta\big(x_{0:T}^{ta} \mid x_0^{co}\big) = p\big(x_T^{ta}\big) \prod_{t=1}^{T} p_\theta\big(x_{t-1}^{ta} \mid x_t^{ta}, x_0^{co}\big),
+\qquad x_T^{ta} \sim \mathcal{N}(0, I),$$</span></p>
+<p><span>$$p_\theta\big(x_{t-1}^{ta} \mid x_t^{ta}, x_0^{co}\big) = \mathcal{N}\Big(x_{t-1}^{ta};\ \mu_\theta\big(x_t^{ta}, t \mid x_0^{co}\big),\ \sigma_t^2 I\Big).$$</span></p>
+<p><span>The mean keeps exactly the DDPM form. Only the noise predictor gains an extra</span>
+<span>input:</span></p>
+<p><span>$$\mu_\theta\big(x_t^{ta}, t \mid x_0^{co}\big) = \frac{1}{\sqrt{\alpha_t}}\Big(x_t^{ta} - \frac{\beta_t}{\sqrt{1-\bar\alpha_t}}\, \epsilon_\theta\big(x_t^{ta}, t \mid x_0^{co}\big)\Big).$$</span></p>
+<p><span>Training is the simple $\epsilon$-loss, conditioned:</span></p>
+<p><span>$$\mathcal{L}(\theta) = \mathbb{E}_{x_0,\ \epsilon \sim \mathcal{N}(0, I),\ t}\Big[\big\|\epsilon - \epsilon_\theta\big(\sqrt{\bar\alpha_t}\, x_0^{ta} + \sqrt{1-\bar\alpha_t}\,\epsilon,\ t \mid x_0^{co}\big)\big\|^2\Big],$$</span></p>
+<p><span>where $\epsilon$ has the shape of $x_0^{ta}$. By the same Tweedie argument as in</span>
+<span>the unconditional case, the optimal predictor is a scaled </span><strong><span>conditional</span></strong><span> score:</span></p>
+<p><span>$$\epsilon^*\big(x_t^{ta}, t \mid x_0^{co}\big) = -\sqrt{1-\bar\alpha_t}\ \nabla_{x_t^{ta}} \log q\big(x_t^{ta} \mid x_0^{co}\big).$$</span></p>
+<p><span>Here is a practical question: where do training targets come from when the</span>
+<span>true missing values are unknown? CSDI uses self-supervision, much like masked</span>
+<span>language modelling. Some </span><strong><span>observed</span></strong><span> entries are hidden and become $x_0^{ta}$,</span>
+<span>and the rest serve as $x_0^{co}$. The masks are chosen at random, copied from</span>
+<span>missingness patterns found elsewhere in the data, or set to </span>&ldquo;<span>the future</span>&rdquo;<span> for</span>
+<span>forecasting.</span></p>
+</section>
+<section id="Why-condition-on-clean-observations">
+
+    <h3>
+    <a href="#Why-condition-on-clean-observations"><span>Why condition on clean observations</span> </a><a class="heading-anchor" href="#Why-condition-on-clean-observations" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>The alternative is to train an unconditional model of the full $x_0$ and</span>
+<span>impute by replacement. At each reverse step you would overwrite the known</span>
+<span>coordinates with a forward-noised copy</span>
+<span>$x_t^{co} = \sqrt{\bar\alpha_t}\, x_0^{co} + \sqrt{1-\bar\alpha_t}\,\epsilon'$.</span>
+<span>That approximates the conditional score with</span>
+<span>$\nabla_{x_t^{ta}} \log p(x_t^{ta}, x_t^{co})$, i.e. a score conditioned on</span>
+<strong><span>noisy</span></strong><span> observations. Since $x_t^{co}$ is a corrupted version of $x_0^{co}$, it</span>
+<span>carries less information about the targets. CSDI argues that this noise can</span>
+<span>destroy useful information in the observations, and models</span>
+<span>$p(x_{t-1}^{ta} \mid x_t^{ta}, x_0^{co})$ directly. As I read it, UTSD</span>&rsquo;<span>s</span>
+<span>Condition Net follows the same pattern: the history enters the denoiser as a</span>
+<span>representation $c = f_\psi(x_0^{co})$ of the clean observations, where</span>
+<span>$f_\psi$ is the Condition Net with parameters $\psi$, and not as a noised</span>
+<span>input.</span></p>
+</section>
+<section id="Autoregressive-forecasting">
+
+    <h3>
+    <a href="#Autoregressive-forecasting"><span>Autoregressive forecasting</span> </a><a class="heading-anchor" href="#Autoregressive-forecasting" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>TimeGrad (Rasul et al.) conditions differently. Time-series steps are</span>
+<span>generated one at a time, and the history is summarized by a recurrent state.</span>
+<span>To avoid a clash of indices, write $\tau$ for the time-series index and $n$ for</span>
+<span>the diffusion step. An RNN produces $h_{\tau-1}$ from the observations up to</span>
+<span>$\tau - 1$, and the loss at step $\tau$ is</span></p>
+<p><span>$$\mathbb{E}_{x_\tau^0,\ \epsilon,\ n}\Big[\big\|\epsilon - \epsilon_\theta\big(\sqrt{\bar\alpha_n}\, x_\tau^0 + \sqrt{1-\bar\alpha_n}\,\epsilon,\ h_{\tau-1},\ n\big)\big\|^2\Big],$$</span></p>
+<p><span>where $x_\tau^0$ is the clean value of the series at time $\tau$. Forecasting</span>
+<span>runs the reverse chain for $x_\tau$, feeds the sample back into the RNN, and</span>
+<span>repeats. That gives a joint distribution over the horizon through the chain</span>
+<span>rule. CSDI and UTSD instead denoise the whole target window at once.</span></p>
+</section>
+<section id="Guidance-on-top-of-the-condition">
+
+    <h3>
+    <a href="#Guidance-on-top-of-the-condition"><span>Guidance on top of the condition</span> </a><a class="heading-anchor" href="#Guidance-on-top-of-the-condition" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Finally, the classifier-free guidance used by UTSD sits on top of this</span>
+<span>machinery. Bayes</span>&rsquo;<span> rule on scores gives</span></p>
+<p><span>$$\nabla_{x_t^{ta}} \log p\big(x_t^{ta} \mid c\big) = \nabla_{x_t^{ta}} \log p\big(x_t^{ta}\big) + \nabla_{x_t^{ta}} \log p\big(c \mid x_t^{ta}\big).$$</span></p>
+<p><span>Train one network with the condition randomly dropped to a null token</span>
+<span>$\varnothing$, and amplify the second term with a weight $w$:</span></p>
+<p><span>$$\tilde\epsilon\big(x_t^{ta}, t, c\big) = (1+w)\,\epsilon_\theta\big(x_t^{ta}, t \mid c\big) - w\,\epsilon_\theta\big(x_t^{ta}, t \mid \varnothing\big).$$</span></p>
+<p><span>Here $c$ is the multi-scale history representation from the Condition Net.</span>
+<span>UTSD</span>&rsquo;<span>s </span>&ldquo;<span>improved</span>&rdquo;<span> variant modifies this basic recipe, and I refer to the paper</span>
+<span>for its exact form. The derivation of the basic formula, and of why large $w$</span>
+<span>trades diversity for fidelity, is in </span><a href="/2024/12/15/cfg.html"><span>my post on classifier-free guidance</span></a><span>. For</span>
+<span>forecasting this matters directly: the spread of the sampled trajectories </span><strong><span>is</span></strong>
+<span>the predictive uncertainty, so too much guidance gives overconfident</span>
+<span>prediction intervals.</span></p>
+</section>
+</section>
+<section id="References">
+
+    <h2>
+    <a href="#References"><span>References</span> </a><a class="heading-anchor" href="#References" aria-label="Link to this section">#</a>
+    </h2>
+<ul>
+<li>
+<span>Xiangkai Ma, Xiaobin Hong, Wenzhong Li, Sanglu Lu. </span><a href="https://arxiv.org/abs/2412.03068v1"><span>UTSD: Unified Time Series Diffusion Model</span></a><span>. 2024. (Later versions of the arXiv entry carry a different title.)</span>
+</li>
+<li>
+<span>Yusuke Tashiro, Jiaming Song, Yang Song, Stefano Ermon. </span><a href="https://arxiv.org/abs/2107.03502"><span>CSDI: Conditional Score-based Diffusion Models for Probabilistic Time Series Imputation</span></a><span>. NeurIPS 2021.</span>
+</li>
+<li>
+<span>Kashif Rasul, Calvin Seward, Ingmar Schuster, Roland Vollgraf. </span><a href="https://arxiv.org/abs/2101.12072"><span>Autoregressive Denoising Diffusion Models for Multivariate Probabilistic Time Series Forecasting</span></a><span>. ICML 2021.</span>
+</li>
+<li>
+<span>Jonathan Ho, Ajay Jain, Pieter Abbeel. </span><a href="https://arxiv.org/abs/2006.11239"><span>Denoising Diffusion Probabilistic Models</span></a><span>. NeurIPS 2020.</span>
+</li>
+</ul>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/diffusion.html">#diffusion</a><a class="tag" href="/tags/time-series.html">#time-series</a><a class="tag" href="/tags/generative.html">#generative</a></div>
+      <section class="related">
+        <h2>Related posts</h2>
+        <ul class="related-list">
+          <li>
+              <a href="/2024/12/15/cfg.html">Classifier free diffusion guidance</a>
+              <span class="muted"><time datetime="2024-12-15">Dec 15, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li><li>
+              <a href="/2024/09/09/ddim_ddpm.html">DDIM vs DDPM</a>
+              <span class="muted"><time datetime="2024-09-09">Sep 9, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li><li>
+              <a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a>
+              <span class="muted"><time datetime="2024-09-01">Sep 1, 2024</time> · Diffusion &amp; Generative Modeling</span>
+            </li>
+        </ul>
+      </section><nav class="post-nav" aria-label="Chronological">
+        <a class="post-nav__link post-nav__prev" href="/2024/12/01/flow.html">
+          <span class="post-nav__label">← Older</span>
+          <span class="post-nav__title">Flow Matching, a short overview</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/12/15/cfg.html">
+          <span class="post-nav__label">Newer →</span>
+          <span class="post-nav__title">Classifier free diffusion guidance</span>
+        </a>
+      </nav><nav class="post-nav post-nav--theme" aria-label="Same theme">
+        <a class="post-nav__link post-nav__prev" href="/2024/12/01/flow.html">
+          <span class="post-nav__label">← Older in theme</span>
+          <span class="post-nav__title">Flow Matching, a short overview</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/12/15/cfg.html">
+          <span class="post-nav__label">Newer in theme →</span>
+          <span class="post-nav__title">Classifier free diffusion guidance</span>
+        </a>
+      </nav>
+      
+    <section class="comments" id="comments">
+      <h2>Comments</h2>
+      <div class="giscus"></div>
+      <noscript><p class="muted">Comments are powered by <a href="https://giscus.app">giscus</a> and need JavaScript.</p></noscript>
+    </section>
+    <script>
+    (function () {
+      // Inject giscus with the theme the site is actually using (the toggle
+      // persists in localStorage), rather than the OS preference.
+      var siteTheme = function () {
+        var t = document.documentElement.getAttribute("data-theme");
+        if (t) return t === "dark" ? "dark" : "light";
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark" : "light";
+      };
+      var s = document.createElement("script");
+      s.src = "https://giscus.app/client.js";
+      var attrs = {
+        "data-repo": "mbottoni/mbottoni.github.io",
+        "data-repo-id": "R_kgDOKv71Lg",
+        "data-category": "General",
+        "data-category-id": "DIC_kwDOKv71Ls4DEBYr",
+        "data-mapping": "pathname",
+        "data-strict": "1",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "top",
+        "data-theme": siteTheme(),
+        "data-lang": "en",
+        "data-loading": "lazy",
+        "crossorigin": "anonymous"
+      };
+      for (var k in attrs) s.setAttribute(k, attrs[k]);
+      s.async = true;
+      document.getElementById("comments").appendChild(s);
+
+      // Follow the dark-mode toggle after load.
+      new MutationObserver(function () {
+        var frame = document.querySelector("iframe.giscus-frame");
+        if (!frame) return;
+        frame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: siteTheme() } } },
+          "https://giscus.app");
+      }).observe(document.documentElement,
+        { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+    </script>
+  
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-12-07-timeseries-diffusion.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        // Widgets build their own DOM and style their spans.
+        if (span.closest(".widget")) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  <script>
+(function () {
+  var bar = document.querySelector(".reading-progress__bar");
+  var article = document.querySelector("article");
+  if (bar && article) {
+    var update = function () {
+      var top = article.offsetTop;
+      var h = article.offsetHeight - window.innerHeight;
+      var p = h > 0 ? (window.scrollY - top) / h : 1;
+      bar.style.transform = "scaleX(" + Math.min(1, Math.max(0, p)) + ")";
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
+  var toc = document.querySelector(".toc");
+  if (!toc || !("IntersectionObserver" in window)) return;
+  var links = {};
+  toc.querySelectorAll("a[href^='#']").forEach(function (a) {
+    links[decodeURIComponent(a.getAttribute("href").slice(1))] = a;
+  });
+  var ids = Object.keys(links);
+  if (!ids.length) return;
+  var visible = {};
+  var setActive = function () {
+    var first = null;
+    for (var i = 0; i < ids.length; i++) {
+      if (visible[ids[i]]) { first = ids[i]; break; }
+    }
+    ids.forEach(function (id) {
+      links[id].classList.toggle("active", id === first);
+    });
+  };
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    setActive();
+  }, { rootMargin: "-10% 0px -70% 0px", threshold: 0 });
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>
+</body>
+
+</html>

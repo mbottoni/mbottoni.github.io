@@ -1,0 +1,977 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kolmogorov-Arnold Networks</title>
+  <meta name="description" content="I have been playing with some implementations of Kolmogorov-Arnold Networks
+(KANs), the architecture Liu et al. proposed in April 2024. The pitch is
+simple and a bit provocative: take an MLP, move the nonlinearities from the
+nodes to the edges, and make them learnable. Every weight becomes a small
+univariate function, parameterized as a spline. The paper claimed better
+accuracy per parameter than MLPs, faster neural scaling laws, and networks you
+can read off as symbolic formulas.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Kolmogorov-Arnold Networks">
+  <meta property="og:description" content="I have been playing with some implementations of Kolmogorov-Arnold Networks
+(KANs), the architecture Liu et al. proposed in April 2024. The pitch is
+simple and a bit provocative: take an MLP, move the nonlinearities from the
+nodes to the edges, and make them learnable. Every weight becomes a small
+univariate function, parameterized as a spline. The paper claimed better
+accuracy per parameter than MLPs, faster neural scaling laws, and networks you
+can read off as symbolic formulas.">
+  <meta property="og:url" content="https://mbottoni.github.io/2024/09/21/kan.html">
+  <meta property="og:image" content="/assets/frontier/kan.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Kolmogorov-Arnold Networks">
+  <meta name="twitter:description" content="I have been playing with some implementations of Kolmogorov-Arnold Networks
+(KANs), the architecture Liu et al. proposed in April 2024. The pitch is
+simple and a bit provocative: take an MLP, move the nonlinearities from the
+nodes to the edges, and make them learnable. Every weight becomes a small
+univariate function, parameterized as a spline. The paper claimed better
+accuracy per parameter than MLPs, faster neural scaling laws, and networks you
+can read off as symbolic formulas.">
+  <meta name="twitter:image" content="/assets/frontier/kan.png">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/09/21/kan.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/map.html">Map</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="reading-progress" aria-hidden="true"><div class="reading-progress__bar"></div></div>
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/frontier.html">
+          Frontier LLMs &amp; Architectures
+        </a>
+        <span class="post-meta"><time datetime="2024-09-21">Sep 21, 2024</time> · 17 min read</span>
+      </div>
+      
+      
+      
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <ul><li class="toc-l2"><a href="#The-Kolmogorov-Arnold-representation-theorem">The Kolmogorov-Arnold representation theorem</a></li><li class="toc-l3"><a href="#How-KANs-relax-the-theorem">How KANs relax the theorem</a></li><li class="toc-l2"><a href="#B-spline-edges">B-spline edges</a></li><li class="toc-l3"><a href="#Counting-parameters">Counting parameters</a></li><li class="toc-l2"><a href="#A-tiny-KAN-from-scratch">A tiny KAN from scratch</a></li><li class="toc-l2"><a href="#Where-KANs-stand">Where KANs stand</a></li><li class="toc-l2"><a href="#References">References</a></li></ul>
+    </details>
+  
+      <article >
+
+    <h1 id="Kolmogorov-Arnold-Networks">
+    <a href="#Kolmogorov-Arnold-Networks"><span>Kolmogorov-Arnold Networks</span> <time datetime="2024-09-21">Sep 21, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/frontier/kan.png">
+</figure>
+<p><span>I have been playing with some implementations of Kolmogorov-Arnold Networks</span>
+<span>(KANs), the architecture Liu et al. proposed in April 2024. The pitch is</span>
+<span>simple and a bit provocative: take an MLP, move the nonlinearities from the</span>
+<span>nodes to the edges, and make them </span><em><span>learnable</span></em><span>. Every weight becomes a small</span>
+<span>univariate function, parameterized as a spline. The paper claimed better</span>
+<span>accuracy per parameter than MLPs, faster neural scaling laws, and networks you</span>
+<span>can read off as symbolic formulas.</span></p>
+<p><span>In general, the promising ideas shown in the original paper are not</span>
+<span>so easy to replicate. I personally believe that KANs are a promising</span>
+<span>research direction, but the hype around the original paper created</span>
+<span>an unrealistic expectation of what KANs can do for now.</span></p>
+<p><span>In this post I want to go through the whole thing properly: the theorem the</span>
+<span>name comes from, how the architecture relaxes it, how the B-spline edges</span>
+<span>actually work (with a widget you can drag), a from-scratch KAN in NumPy that</span>
+<span>runs in your browser against an MLP, and finally where I think KANs stand.</span>
+<span>For the original exploration, here is the colab where I implemented the</span>
+<span>models </span><a href="https://colab.research.google.com/drive/1N9gmXIGNU-lRnyaCCMwCNab4AQu5NnUF?usp=sharing"><span>Link to code</span></a><span>.</span></p>
+<hr>
+<section id="The-Kolmogorov-Arnold-representation-theorem">
+
+    <h2>
+    <a href="#The-Kolmogorov-Arnold-representation-theorem"><span>The Kolmogorov-Arnold representation theorem</span> </a><a class="heading-anchor" href="#The-Kolmogorov-Arnold-representation-theorem" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>In 1957 Kolmogorov, building on work by his student Arnold on Hilbert</span>&rsquo;<span>s</span>
+<span>13th problem, proved a remarkable statement about continuous functions of</span>
+<span>several variables.</span></p>
+<p><strong><strong><span>Theorem (Kolmogorov-Arnold).</span></strong></strong><span> Let $f : [0,1]^n \to \mathbb{R}$ be</span>
+<span>continuous. Then there exist continuous univariate functions</span>
+<span>$\phi_{q,p} : [0,1] \to \mathbb{R}$ and $\Phi_q : \mathbb{R} \to \mathbb{R}$</span>
+<span>such that</span></p>
+<p><span>$$f(x_1, \dots, x_n) = \sum_{q=0}^{2n} \Phi_q\left( \sum_{p=1}^{n} \phi_{q,p}(x_p) \right).$$</span></p>
+<p><span>Moreover, the inner functions $\phi_{q,p}$ can be chosen once and for all,</span>
+<span>independently of $f$. Only the outer functions $\Phi_q$ depend on the target.</span></p>
+<p><span>Read that again, because it is strange. Every continuous multivariate function</span>
+<span>is a finite composition of univariate functions and addition. The only truly</span>
+&ldquo;<span>multivariate</span>&rdquo;<span> operation you ever need is $+$. In some sense, there are no</span>
+<span>genuinely multivariate continuous functions.</span></p>
+<p><span>So why didn</span>&rsquo;<span>t this become the foundation of neural networks decades ago?</span>
+<span>Because the catch is in the regularity. The inner functions guaranteed by the</span>
+<span>theorem can be extremely rough, fractal-like objects. They are not</span>
+<span>something you can learn with gradient descent or even write down nicely.</span>
+<span>Girosi and Poggio made exactly this argument in 1989, in a paper whose</span>
+<span>title is the whole argument: </span><em><span>Kolmogorov</span>&rsquo;<span>s theorem is irrelevant</span></em><span>. For decades</span>
+<span>that was the consensus.</span></p>
+<section id="How-KANs-relax-the-theorem">
+
+    <h3>
+    <a href="#How-KANs-relax-the-theorem"><span>How KANs relax the theorem</span> </a><a class="heading-anchor" href="#How-KANs-relax-the-theorem" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>The theorem has a fixed shape: $n$ inputs, a hidden layer of $2n+1$ sums,</span>
+<span>one output, and depth two. Liu et al. read this as a two-layer network,</span>
+<span>$[n, 2n+1, 1]$, where every </span><em><span>edge</span></em><span> carries a univariate function and every</span>
+<em><span>node</span></em><span> just sums its inputs. Then they do the deep learning thing: forget</span>
+<span>about the exact shape and stack such layers, as wide and as deep as you like.</span></p>
+<p><span>A KAN layer with $n_l$ inputs and $n_{l+1}$ outputs is a</span>
+<span>matrix of $n_l \times n_{l+1}$ learnable functions</span>
+<span>$\phi_{j,i}$:</span></p>
+<p><span>$$x^{(l+1)}_j = \sum_{i=1}^{n_l} \phi^{(l)}_{j,i}\left(x^{(l)}_i\right),
+\qquad
+\text{KAN}(x) = \left(\Phi^{(L-1)} \circ \cdots \circ \Phi^{(1)} \circ \Phi^{(0)}\right)(x).$$</span></p>
+<p><span>Compare this with an MLP layer:</span></p>
+<p><span>$$x^{(l+1)} = \sigma\left(W^{(l)} x^{(l)} + b^{(l)}\right).$$</span></p>
+<p><span>In an MLP the edges are scalars, linear and learnable, while the nonlinearity</span>
+<span>$\sigma$ sits on the nodes and is </span><em><span>fixed</span></em><span>. In a KAN the edges are nonlinear and</span>
+<span>learnable, and the nodes only add. The bet is that with deep stacks you no</span>
+<span>longer need the pathological inner functions of the original theorem, and that</span>
+<span>smooth functions with compositional structure get </span><em><span>smooth</span></em><span> KAN</span>
+<span>representations. That bet is a heuristic, not a theorem. The paper does prove</span>
+<span>an approximation bound, but it assumes the target already has a smooth</span>
+<span>KAN representation.</span></p>
+<p><span>A small observation that helped me: since every $\phi$ is a linear</span>
+<span>combination of fixed basis functions (next section), a KAN layer is a linear</span>
+<span>layer acting on a </span><em><span>fixed per-input feature expansion</span></em>
+<span>$x_i \mapsto (B_0(x_i), \dots, B_{G+k-1}(x_i))$. The learnable part is still</span>
+<span>just a matrix. That is why the implementation below is mostly </span><code>einsum</code><span>.</span></p>
+<hr>
+</section>
+</section>
+<section id="B-spline-edges">
+
+    <h2>
+    <a href="#B-spline-edges"><span>B-spline edges</span> </a><a class="heading-anchor" href="#B-spline-edges" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Each edge function is parameterized as</span></p>
+<p><span>$$\phi(x) = w_b \, \text{silu}(x) + \sum_{m=0}^{G+k-1} c_m B_m(x),
+\qquad
+\text{silu}(x) = \frac{x}{1 + e^{-x}}.$$</span></p>
+<p><span>The </span><strong><strong><span>grid</span></strong></strong><span> is a set of $G$ equal intervals on the expected input range, say</span>
+<span>$[-1, 1]$, with knots $t_0 &lt; t_1 &lt; \dots$ spaced $h = 2/G$ apart. The grid is</span>
+<span>extended by $k$ extra knots on each side, so that every point of $[-1,1]$</span>
+<span>is covered by the same number of basis functions.</span></p>
+<p><span>The </span><strong><strong><span>basis functions</span></strong></strong><span> $B_m$ are B-splines of order $k$ (the paper uses</span>
+<span>$k = 3$, cubic), defined by the Cox-de Boor recursion:</span></p>
+<p><span>$$B_{m,0}(x) = \begin{cases} 1 &amp; t_m \le x &lt; t_{m+1} \\ 0 &amp; \text{otherwise} \end{cases}$$</span></p>
+<p><span>$$B_{m,p}(x) = \frac{x - t_m}{t_{m+p} - t_m} B_{m,p-1}(x)
++ \frac{t_{m+p+1} - x}{t_{m+p+1} - t_{m+1}} B_{m+1,p-1}(x).$$</span></p>
+<p><span>Each $B_{m,k}$ is a piecewise polynomial of degree $k$, nonzero only on the</span>
+<span>$k+1$ intervals $[t_m, t_{m+k+1})$, and on the grid they sum to one. Two</span>
+<span>properties matter for learning. </span><strong><strong><span>Local support</span></strong></strong><span>: changing $c_m$ only moves</span>
+<span>$\phi$ on those $k+1$ intervals, so different regions of the input are learned</span>
+<span>by different parameters. </span><strong><strong><span>Smoothness</span></strong></strong><span>: cubic splines are $C^2$, so the</span>
+<span>function and its first two derivatives are continuous and gradients behave.</span></p>
+<p><span>The </span><strong><strong><span>residual base term</span></strong></strong><span> $w_b \, \text{silu}(x)$ is the paper</span>&rsquo;<span>s version of a</span>
+<span>skip connection. It gives every edge a reasonable global shape from</span>
+<span>initialization, and it keeps the edge alive outside the grid, where every</span>
+<span>B-spline is zero. The original implementation also has a separate scale $w_s$</span>
+<span>multiplying the spline. That is redundant with the $c_m$, so I fold it in.</span></p>
+<p><strong><strong><span>Grid refinement.</span></strong></strong><span> A trained spline on a grid of $G$ intervals can be</span>
+<span>transferred to a finer grid of $2G$ intervals by least squares. Because the</span>
+<span>coarse knots are a subset of the fine ones, the coarse spline space is a</span>
+<span>subspace of the fine one, and the transfer is exact on the grid. You can train</span>
+<span>coarse, then refine and keep training with more resolution. The paper calls</span>
+<span>this </span><em><span>grid extension</span></em><span>, and it is one of the genuinely nice ideas in it.</span></p>
+<p><span>Play with a single edge below. Drag the control points (they sit at the</span>
+<em><span>Greville abscissae</span></em><span>, the average of each basis function</span>&rsquo;<span>s interior knots,</span>
+<span>which is where a spline</span>&rsquo;<span>s control polygon naturally lives), change the order,</span>
+<span>add the SiLU term, refine the grid, and fit a target.</span></p>
+
+<figure class="widget" data-widget="kan-spline">
+<div class="widget-mount"></div>
+<noscript><p class="widget-fallback">This figure is interactive and needs JavaScript.</p></noscript>
+<figcaption class="title">A single learnable KAN edge. The red curve is φ(x), the dashed polygon joins the B-spline coefficients c_m, and the strip below shows the basis functions B_m(x), with the one you are touching highlighted. Shaded regions are outside the grid: there the spline part decays to zero and only the SiLU base term survives. Try Fit sin(4x) at G = 5, then refine and fit again.</figcaption>
+</figure>
+<section id="Counting-parameters">
+
+    <h3>
+    <a href="#Counting-parameters"><span>Counting parameters</span> </a><a class="heading-anchor" href="#Counting-parameters" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Each edge has $G + k$ spline coefficients plus $w_b$, so a KAN layer has</span></p>
+<p><span>$$n_l \cdot n_{l+1} \cdot (G + k + 1)$$</span></p>
+<p><span>parameters, against $n_l \cdot n_{l+1} + n_{l+1}$ for a dense layer. With</span>
+<span>$G = 5$ and $k = 3$ that is roughly </span><strong><strong><span>9 times</span></strong></strong><span> more parameters per</span>
+<span>connection. For a stack of $L$ layers of width $N$, a KAN has</span>
+<span>$O(N^2 L (G + k))$ parameters versus $O(N^2 L)$ for an MLP. The whole</span>
+<span>argument of the paper is that KANs need a much smaller $N$ to reach the same</span>
+<span>accuracy, so the comparison only makes sense at </span><em><span>matched parameter count</span></em><span>,</span>
+<span>not matched width. That is what I do below.</span></p>
+<p><span>Concretely, the $[2, 5, 1]$ KAN in the code has $15$ edges. At $G=5$ that is</span>
+<span>$15 \times 9 = 135$ parameters, and after refining to $G = 10$ it is</span>
+<span>$15 \times 14 = 210$. The MLP I compare against, $[2, 12, 12, 1]$ with tanh,</span>
+<span>has $36 + 156 + 13 = 205$.</span></p>
+<hr>
+</section>
+</section>
+<section id="A-tiny-KAN-from-scratch">
+
+    <h2>
+    <a href="#A-tiny-KAN-from-scratch"><span>A tiny KAN from scratch</span> </a><a class="heading-anchor" href="#A-tiny-KAN-from-scratch" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Here is a complete KAN in NumPy: the Cox-de Boor basis (and its derivative), a</span>
+<code>KANLayer</code><span> with hand-written backprop, grid updates and refinement by least</span>
+<span>squares, and a plain MLP with the same training loop. The target is the</span>
+<span>example from the paper,</span></p>
+<p><span>$$f(x, y) = \exp\left(\sin(\pi x) + y^2\right),$$</span></p>
+<p><span>which a $[2, 1, 1]$ KAN can represent exactly: inner functions $\sin(\pi x)$</span>
+<span>and $y^2$, with $\exp$ as the outer function. Both models train with full-batch Adam on</span>
+<span>the same 500 points and are evaluated on 2000 fresh ones. A KAN step costs</span>
+<span>about three times an MLP step, so the MLP gets three times as many steps,</span>
+<span>which gives both models roughly the same compute budget. The gradients are</span>
+<span>derived by hand (I checked them against finite differences). Press </span><em><span>Run</span></em><span>. It</span>
+<span>takes about six seconds in the browser.</span></p>
+
+<figure class="code-block runnable" data-lang="python">
+
+
+<pre><code><span class="line"><span class="hl-keyword">import</span> time</span>
+<span class="line"><span class="hl-keyword">import</span> numpy <span class="hl-keyword">as</span> np</span>
+<span class="line"></span>
+<span class="line">rng = np.random.default_rng(<span class="hl-number">0</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># ---- data: f(x, y) = exp(sin(pi x) + y^2) on [-1, 1]^2 ----------------------</span></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">target</span>(<span class="hl-params">X</span>):</span>
+<span class="line">    <span class="hl-keyword">return</span> np.exp(np.sin(np.pi * X[:, <span class="hl-number">0</span>]) + X[:, <span class="hl-number">1</span>] ** <span class="hl-number">2</span>)[:, <span class="hl-literal">None</span>]</span>
+<span class="line"></span>
+<span class="line">Xtr = rng.uniform(-<span class="hl-number">1</span>, <span class="hl-number">1</span>, (<span class="hl-number">500</span>, <span class="hl-number">2</span>)); ytr = target(Xtr)</span>
+<span class="line">Xte = rng.uniform(-<span class="hl-number">1</span>, <span class="hl-number">1</span>, (<span class="hl-number">2000</span>, <span class="hl-number">2</span>)); yte = target(Xte)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">silu</span>(<span class="hl-params">x</span>):  <span class="hl-keyword">return</span> x / (<span class="hl-number">1</span> + np.exp(-x))</span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">dsilu</span>(<span class="hl-params">x</span>):</span>
+<span class="line">    s = <span class="hl-number">1</span> / (<span class="hl-number">1</span> + np.exp(-x))</span>
+<span class="line">    <span class="hl-keyword">return</span> s * (<span class="hl-number">1</span> + x * (<span class="hl-number">1</span> - s))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># ---- B-splines (Cox-de Boor), vectorised over samples and inputs ------------</span></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">knots</span>(<span class="hl-params">lo, hi, G, k</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;One uniform grid per input: lo, hi have shape (d,). Returns (d, G+2k+1).&quot;&quot;&quot;</span></span>
+<span class="line">    h = (hi - lo) / G</span>
+<span class="line">    <span class="hl-keyword">return</span> lo[:, <span class="hl-literal">None</span>] + h[:, <span class="hl-literal">None</span>] * np.arange(-k, G + k + <span class="hl-number">1</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">bspline</span>(<span class="hl-params">x, t, k</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;x: (N, d). Returns B (N, d, G+k) of order k and B&#x27; (its derivative).&quot;&quot;&quot;</span></span>
+<span class="line">    x = x[..., <span class="hl-literal">None</span>]</span>
+<span class="line">    B = ((x &gt;= t[:, :-<span class="hl-number">1</span>]) &amp; (x &lt; t[:, <span class="hl-number">1</span>:])).astype(<span class="hl-built_in">float</span>)  <span class="hl-comment"># order 0</span></span>
+<span class="line">    <span class="hl-keyword">for</span> p <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(<span class="hl-number">1</span>, k + <span class="hl-number">1</span>):</span>
+<span class="line">        <span class="hl-keyword">if</span> p == k:</span>
+<span class="line">            Bprev = B</span>
+<span class="line">        left = (x - t[:, :-(p + <span class="hl-number">1</span>)]) / (t[:, p:-<span class="hl-number">1</span>] - t[:, :-(p + <span class="hl-number">1</span>)])</span>
+<span class="line">        right = (t[:, p + <span class="hl-number">1</span>:] - x) / (t[:, p + <span class="hl-number">1</span>:] - t[:, <span class="hl-number">1</span>:-p])</span>
+<span class="line">        B = left * B[..., :-<span class="hl-number">1</span>] + right * B[..., <span class="hl-number">1</span>:]</span>
+<span class="line">    a = k / (t[:, k:-<span class="hl-number">1</span>] - t[:, :-(k + <span class="hl-number">1</span>)])</span>
+<span class="line">    b = k / (t[:, k + <span class="hl-number">1</span>:] - t[:, <span class="hl-number">1</span>:-k])</span>
+<span class="line">    dB = a * Bprev[..., :-<span class="hl-number">1</span>] - b * Bprev[..., <span class="hl-number">1</span>:]</span>
+<span class="line">    <span class="hl-keyword">return</span> B, dB</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">class</span> <span class="hl-title class_">KANLayer</span>:</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;phi_ij(x) = wb_ij * silu(x) + sum_m c_ijm B_m(x), one per edge i -&gt; j.&quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">__init__</span>(<span class="hl-params">self, d_in, d_out, G=<span class="hl-number">5</span>, k=<span class="hl-number">3</span>, lo=-<span class="hl-number">1.0</span>, hi=<span class="hl-number">1.0</span></span>):</span>
+<span class="line">        self.k, self.G = k, G</span>
+<span class="line">        self.t = knots(np.full(d_in, lo), np.full(d_in, hi), G, k)</span>
+<span class="line">        self.p = {</span>
+<span class="line">            <span class="hl-string">&quot;c&quot;</span>: rng.normal(<span class="hl-number">0</span>, <span class="hl-number">0.1</span>, (d_in, d_out, G + k)),</span>
+<span class="line">            <span class="hl-string">&quot;wb&quot;</span>: rng.normal(<span class="hl-number">0</span>, <span class="hl-number">1</span> / np.sqrt(d_in), (d_in, d_out)),</span>
+<span class="line">        }</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">forward</span>(<span class="hl-params">self, x</span>):</span>
+<span class="line">        <span class="hl-keyword">if</span> x <span class="hl-keyword">is</span> <span class="hl-keyword">not</span> <span class="hl-built_in">getattr</span>(self, <span class="hl-string">&quot;x&quot;</span>, <span class="hl-literal">None</span>):    <span class="hl-comment"># first layer: input never changes</span></span>
+<span class="line">            self.B, self.dB = bspline(x, self.t, self.k)</span>
+<span class="line">        self.x = x</span>
+<span class="line">        <span class="hl-keyword">return</span> silu(x) @ self.p[<span class="hl-string">&quot;wb&quot;</span>] + np.einsum(<span class="hl-string">&quot;nim,ijm-&gt;nj&quot;</span>, self.B, self.p[<span class="hl-string">&quot;c&quot;</span>])</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">backward</span>(<span class="hl-params">self, g</span>):</span>
+<span class="line">        x = self.x</span>
+<span class="line">        self.g = {</span>
+<span class="line">            <span class="hl-string">&quot;c&quot;</span>: np.einsum(<span class="hl-string">&quot;nim,nj-&gt;ijm&quot;</span>, self.B, g),</span>
+<span class="line">            <span class="hl-string">&quot;wb&quot;</span>: silu(x).T @ g,</span>
+<span class="line">        }</span>
+<span class="line">        dphi = np.einsum(<span class="hl-string">&quot;nim,ijm-&gt;nij&quot;</span>, self.dB, self.p[<span class="hl-string">&quot;c&quot;</span>])</span>
+<span class="line">        <span class="hl-keyword">return</span> (g @ self.p[<span class="hl-string">&quot;wb&quot;</span>].T) * dsilu(x) + np.einsum(<span class="hl-string">&quot;nj,nij-&gt;ni&quot;</span>, g, dphi)</span>
+<span class="line"></span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">regrid</span>(<span class="hl-params">self, x, G</span>):</span>
+<span class="line">        <span class="hl-string">&quot;&quot;&quot;Grid update / refinement: new grid on the data range, refit by lstsq.&quot;&quot;&quot;</span></span>
+<span class="line">        lo, hi = x.<span class="hl-built_in">min</span>(<span class="hl-number">0</span>), x.<span class="hl-built_in">max</span>(<span class="hl-number">0</span>)</span>
+<span class="line">        pad = <span class="hl-number">0.1</span> * (hi - lo)</span>
+<span class="line">        lo, hi = lo - pad, hi + pad</span>
+<span class="line">        B, _ = bspline(x, self.t, self.k)</span>
+<span class="line">        old = np.einsum(<span class="hl-string">&quot;nim,ijm-&gt;nij&quot;</span>, B, self.p[<span class="hl-string">&quot;c&quot;</span>])  <span class="hl-comment"># current spline part</span></span>
+<span class="line">        self.G, self.t = G, knots(lo, hi, G, self.k)</span>
+<span class="line">        self.x = <span class="hl-literal">None</span>                             <span class="hl-comment"># invalidate cached basis</span></span>
+<span class="line">        Bn, _ = bspline(x, self.t, self.k)</span>
+<span class="line">        c = np.empty((x.shape[<span class="hl-number">1</span>], old.shape[<span class="hl-number">2</span>], G + self.k))</span>
+<span class="line">        <span class="hl-keyword">for</span> i <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(x.shape[<span class="hl-number">1</span>]):</span>
+<span class="line">            c[i] = np.linalg.lstsq(Bn[:, i, :], old[:, i, :], rcond=<span class="hl-literal">None</span>)[<span class="hl-number">0</span>].T</span>
+<span class="line">        self.p[<span class="hl-string">&quot;c&quot;</span>] = c</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">class</span> <span class="hl-title class_">Dense</span>:</span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">__init__</span>(<span class="hl-params">self, d_in, d_out, act</span>):</span>
+<span class="line">        self.act = act</span>
+<span class="line">        self.p = {<span class="hl-string">&quot;W&quot;</span>: rng.normal(<span class="hl-number">0</span>, <span class="hl-number">1</span> / np.sqrt(d_in), (d_in, d_out)),</span>
+<span class="line">                  <span class="hl-string">&quot;b&quot;</span>: np.zeros(d_out)}</span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">forward</span>(<span class="hl-params">self, x</span>):</span>
+<span class="line">        self.x = x</span>
+<span class="line">        self.z = x @ self.p[<span class="hl-string">&quot;W&quot;</span>] + self.p[<span class="hl-string">&quot;b&quot;</span>]</span>
+<span class="line">        <span class="hl-keyword">return</span> np.tanh(self.z) <span class="hl-keyword">if</span> self.act <span class="hl-keyword">else</span> self.z</span>
+<span class="line">    <span class="hl-keyword">def</span> <span class="hl-title function_">backward</span>(<span class="hl-params">self, g</span>):</span>
+<span class="line">        <span class="hl-keyword">if</span> self.act:</span>
+<span class="line">            g = g * (<span class="hl-number">1</span> - np.tanh(self.z) ** <span class="hl-number">2</span>)</span>
+<span class="line">        self.g = {<span class="hl-string">&quot;W&quot;</span>: self.x.T @ g, <span class="hl-string">&quot;b&quot;</span>: g.<span class="hl-built_in">sum</span>(<span class="hl-number">0</span>)}</span>
+<span class="line">        <span class="hl-keyword">return</span> g @ self.p[<span class="hl-string">&quot;W&quot;</span>].T</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">n_params</span>(<span class="hl-params">layers</span>):</span>
+<span class="line">    <span class="hl-keyword">return</span> <span class="hl-built_in">sum</span>(v.size <span class="hl-keyword">for</span> L <span class="hl-keyword">in</span> layers <span class="hl-keyword">for</span> v <span class="hl-keyword">in</span> L.p.values())</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">predict</span>(<span class="hl-params">layers, x</span>):</span>
+<span class="line">    <span class="hl-keyword">for</span> L <span class="hl-keyword">in</span> layers:</span>
+<span class="line">        x = L.forward(x)</span>
+<span class="line">    <span class="hl-keyword">return</span> x</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">train</span>(<span class="hl-params">layers, steps, lr</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;Full-batch Adam on MSE, gradients by hand-written backprop.&quot;&quot;&quot;</span></span>
+<span class="line">    m = [{k: np.zeros_like(v) <span class="hl-keyword">for</span> k, v <span class="hl-keyword">in</span> L.p.items()} <span class="hl-keyword">for</span> L <span class="hl-keyword">in</span> layers]</span>
+<span class="line">    v = [{k: np.zeros_like(v) <span class="hl-keyword">for</span> k, v <span class="hl-keyword">in</span> L.p.items()} <span class="hl-keyword">for</span> L <span class="hl-keyword">in</span> layers]</span>
+<span class="line">    <span class="hl-keyword">for</span> s <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(<span class="hl-number">1</span>, steps + <span class="hl-number">1</span>):</span>
+<span class="line">        err = predict(layers, Xtr) - ytr</span>
+<span class="line">        g = <span class="hl-number">2</span> * err / <span class="hl-built_in">len</span>(Xtr)</span>
+<span class="line">        <span class="hl-keyword">for</span> L <span class="hl-keyword">in</span> <span class="hl-built_in">reversed</span>(layers):</span>
+<span class="line">            g = L.backward(g)</span>
+<span class="line">        <span class="hl-keyword">for</span> L, mi, vi <span class="hl-keyword">in</span> <span class="hl-built_in">zip</span>(layers, m, v):</span>
+<span class="line">            <span class="hl-keyword">for</span> k <span class="hl-keyword">in</span> L.p:</span>
+<span class="line">                mi[k] = <span class="hl-number">0.9</span> * mi[k] + <span class="hl-number">0.1</span> * L.g[k]</span>
+<span class="line">                vi[k] = <span class="hl-number">0.999</span> * vi[k] + <span class="hl-number">0.001</span> * L.g[k] ** <span class="hl-number">2</span></span>
+<span class="line">                mh, vh = mi[k] / (<span class="hl-number">1</span> - <span class="hl-number">0.9</span> ** s), vi[k] / (<span class="hl-number">1</span> - <span class="hl-number">0.999</span> ** s)</span>
+<span class="line">                L.p[k] -= lr * mh / (np.sqrt(vh) + <span class="hl-number">1e-8</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">mse</span>(<span class="hl-params">layers, X, y</span>):</span>
+<span class="line">    <span class="hl-keyword">return</span> <span class="hl-built_in">float</span>(np.mean((predict(layers, X) - y) ** <span class="hl-number">2</span>))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># ---- KAN [2, 5, 1], cubic splines ------------------------------------------</span></span>
+<span class="line">kan = [KANLayer(<span class="hl-number">2</span>, <span class="hl-number">5</span>, G=<span class="hl-number">5</span>), KANLayer(<span class="hl-number">5</span>, <span class="hl-number">1</span>, G=<span class="hl-number">5</span>)]</span>
+<span class="line"></span>
+<span class="line">p_kan_before = n_params(kan)</span>
+<span class="line">t_kan = time.time()</span>
+<span class="line"><span class="hl-comment"># Hidden activations wander outside the second layer&#x27;s initial [-1, 1] grid,</span></span>
+<span class="line"><span class="hl-comment"># so every few hundred steps that grid is moved onto the range the data</span></span>
+<span class="line"><span class="hl-comment"># actually occupies. Halfway through, both grids are refined G = 5 -&gt; 10 (the</span></span>
+<span class="line"><span class="hl-comment"># paper&#x27;s &quot;grid extension&quot;). Each regrid refits the splines by least squares.</span></span>
+<span class="line"><span class="hl-keyword">for</span> phase <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(<span class="hl-number">8</span>):</span>
+<span class="line">    G = <span class="hl-number">5</span> <span class="hl-keyword">if</span> phase &lt; <span class="hl-number">4</span> <span class="hl-keyword">else</span> <span class="hl-number">10</span></span>
+<span class="line">    <span class="hl-keyword">if</span> phase == <span class="hl-number">4</span>:</span>
+<span class="line">        kan[<span class="hl-number">0</span>].regrid(Xtr, G)</span>
+<span class="line">    kan[<span class="hl-number">1</span>].regrid(kan[<span class="hl-number">0</span>].forward(Xtr), G)</span>
+<span class="line">    train(kan, <span class="hl-number">150</span>, <span class="hl-number">1e-2</span>)</span>
+<span class="line">p_kan = n_params(kan)</span>
+<span class="line">t_kan = time.time() - t_kan</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># ---- MLP [2, H, H, 1] with tanh, sized to match the final KAN -------------</span></span>
+<span class="line"><span class="hl-comment"># A KAN step costs about 3x an MLP step, so the MLP gets 3x the steps:</span></span>
+<span class="line"><span class="hl-comment"># roughly the same wall-clock budget for both.</span></span>
+<span class="line">H = <span class="hl-number">12</span></span>
+<span class="line">mlp = [Dense(<span class="hl-number">2</span>, H, <span class="hl-literal">True</span>), Dense(H, H, <span class="hl-literal">True</span>), Dense(H, <span class="hl-number">1</span>, <span class="hl-literal">False</span>)]</span>
+<span class="line">t_mlp = time.time()</span>
+<span class="line">train(mlp, <span class="hl-number">3600</span>, <span class="hl-number">1e-2</span>)</span>
+<span class="line">t_mlp = time.time() - t_mlp</span>
+<span class="line"></span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;target: f(x,y) = exp(sin(pi x) + y^2), 500 train / 2000 test points&quot;</span>)</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;KAN [2,5,1]  params <span class="hl-subst">{p_kan_before}</span> -&gt; <span class="hl-subst">{p_kan}</span> (grid 5 -&gt; 10), 1200 steps&quot;</span></span>
+<span class="line">      <span class="hl-string">f&quot;   train MSE <span class="hl-subst">{mse(kan, Xtr, ytr):<span class="hl-number">.2</span>e}</span>   test MSE <span class="hl-subst">{mse(kan, Xte, yte):<span class="hl-number">.2</span>e}</span>   <span class="hl-subst">{t_kan:<span class="hl-number">.1</span>f}</span>s&quot;</span>)</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;MLP [2,<span class="hl-subst">{H}</span>,<span class="hl-subst">{H}</span>,1] params <span class="hl-subst">{n_params(mlp)}</span>, 3600 steps&quot;</span></span>
+<span class="line">      <span class="hl-string">f&quot;                     train MSE <span class="hl-subst">{mse(mlp, Xtr, ytr):<span class="hl-number">.2</span>e}</span>   test MSE <span class="hl-subst">{mse(mlp, Xte, yte):<span class="hl-number">.2</span>e}</span>   <span class="hl-subst">{t_mlp:<span class="hl-number">.1</span>f}</span>s&quot;</span>)</span></code></pre>
+
+<textarea class="run-source" hidden spellcheck="false">import time
+import numpy as np
+
+rng = np.random.default_rng(0)
+
+# ---- data: f(x, y) = exp(sin(pi x) + y^2) on [-1, 1]^2 ----------------------
+def target(X):
+    return np.exp(np.sin(np.pi * X[:, 0]) + X[:, 1] ** 2)[:, None]
+
+Xtr = rng.uniform(-1, 1, (500, 2)); ytr = target(Xtr)
+Xte = rng.uniform(-1, 1, (2000, 2)); yte = target(Xte)
+
+def silu(x):  return x / (1 + np.exp(-x))
+def dsilu(x):
+    s = 1 / (1 + np.exp(-x))
+    return s * (1 + x * (1 - s))
+
+# ---- B-splines (Cox-de Boor), vectorised over samples and inputs ------------
+def knots(lo, hi, G, k):
+    &quot;&quot;&quot;One uniform grid per input: lo, hi have shape (d,). Returns (d, G+2k+1).&quot;&quot;&quot;
+    h = (hi - lo) / G
+    return lo[:, None] + h[:, None] * np.arange(-k, G + k + 1)
+
+def bspline(x, t, k):
+    &quot;&quot;&quot;x: (N, d). Returns B (N, d, G+k) of order k and B' (its derivative).&quot;&quot;&quot;
+    x = x[..., None]
+    B = ((x &gt;= t[:, :-1]) &amp; (x &lt; t[:, 1:])).astype(float)  # order 0
+    for p in range(1, k + 1):
+        if p == k:
+            Bprev = B
+        left = (x - t[:, :-(p + 1)]) / (t[:, p:-1] - t[:, :-(p + 1)])
+        right = (t[:, p + 1:] - x) / (t[:, p + 1:] - t[:, 1:-p])
+        B = left * B[..., :-1] + right * B[..., 1:]
+    a = k / (t[:, k:-1] - t[:, :-(k + 1)])
+    b = k / (t[:, k + 1:] - t[:, 1:-k])
+    dB = a * Bprev[..., :-1] - b * Bprev[..., 1:]
+    return B, dB
+
+class KANLayer:
+    &quot;&quot;&quot;phi_ij(x) = wb_ij * silu(x) + sum_m c_ijm B_m(x), one per edge i -&gt; j.&quot;&quot;&quot;
+    def __init__(self, d_in, d_out, G=5, k=3, lo=-1.0, hi=1.0):
+        self.k, self.G = k, G
+        self.t = knots(np.full(d_in, lo), np.full(d_in, hi), G, k)
+        self.p = {
+            &quot;c&quot;: rng.normal(0, 0.1, (d_in, d_out, G + k)),
+            &quot;wb&quot;: rng.normal(0, 1 / np.sqrt(d_in), (d_in, d_out)),
+        }
+
+    def forward(self, x):
+        if x is not getattr(self, &quot;x&quot;, None):    # first layer: input never changes
+            self.B, self.dB = bspline(x, self.t, self.k)
+        self.x = x
+        return silu(x) @ self.p[&quot;wb&quot;] + np.einsum(&quot;nim,ijm-&gt;nj&quot;, self.B, self.p[&quot;c&quot;])
+
+    def backward(self, g):
+        x = self.x
+        self.g = {
+            &quot;c&quot;: np.einsum(&quot;nim,nj-&gt;ijm&quot;, self.B, g),
+            &quot;wb&quot;: silu(x).T @ g,
+        }
+        dphi = np.einsum(&quot;nim,ijm-&gt;nij&quot;, self.dB, self.p[&quot;c&quot;])
+        return (g @ self.p[&quot;wb&quot;].T) * dsilu(x) + np.einsum(&quot;nj,nij-&gt;ni&quot;, g, dphi)
+
+    def regrid(self, x, G):
+        &quot;&quot;&quot;Grid update / refinement: new grid on the data range, refit by lstsq.&quot;&quot;&quot;
+        lo, hi = x.min(0), x.max(0)
+        pad = 0.1 * (hi - lo)
+        lo, hi = lo - pad, hi + pad
+        B, _ = bspline(x, self.t, self.k)
+        old = np.einsum(&quot;nim,ijm-&gt;nij&quot;, B, self.p[&quot;c&quot;])  # current spline part
+        self.G, self.t = G, knots(lo, hi, G, self.k)
+        self.x = None                             # invalidate cached basis
+        Bn, _ = bspline(x, self.t, self.k)
+        c = np.empty((x.shape[1], old.shape[2], G + self.k))
+        for i in range(x.shape[1]):
+            c[i] = np.linalg.lstsq(Bn[:, i, :], old[:, i, :], rcond=None)[0].T
+        self.p[&quot;c&quot;] = c
+
+class Dense:
+    def __init__(self, d_in, d_out, act):
+        self.act = act
+        self.p = {&quot;W&quot;: rng.normal(0, 1 / np.sqrt(d_in), (d_in, d_out)),
+                  &quot;b&quot;: np.zeros(d_out)}
+    def forward(self, x):
+        self.x = x
+        self.z = x @ self.p[&quot;W&quot;] + self.p[&quot;b&quot;]
+        return np.tanh(self.z) if self.act else self.z
+    def backward(self, g):
+        if self.act:
+            g = g * (1 - np.tanh(self.z) ** 2)
+        self.g = {&quot;W&quot;: self.x.T @ g, &quot;b&quot;: g.sum(0)}
+        return g @ self.p[&quot;W&quot;].T
+
+def n_params(layers):
+    return sum(v.size for L in layers for v in L.p.values())
+
+def predict(layers, x):
+    for L in layers:
+        x = L.forward(x)
+    return x
+
+def train(layers, steps, lr):
+    &quot;&quot;&quot;Full-batch Adam on MSE, gradients by hand-written backprop.&quot;&quot;&quot;
+    m = [{k: np.zeros_like(v) for k, v in L.p.items()} for L in layers]
+    v = [{k: np.zeros_like(v) for k, v in L.p.items()} for L in layers]
+    for s in range(1, steps + 1):
+        err = predict(layers, Xtr) - ytr
+        g = 2 * err / len(Xtr)
+        for L in reversed(layers):
+            g = L.backward(g)
+        for L, mi, vi in zip(layers, m, v):
+            for k in L.p:
+                mi[k] = 0.9 * mi[k] + 0.1 * L.g[k]
+                vi[k] = 0.999 * vi[k] + 0.001 * L.g[k] ** 2
+                mh, vh = mi[k] / (1 - 0.9 ** s), vi[k] / (1 - 0.999 ** s)
+                L.p[k] -= lr * mh / (np.sqrt(vh) + 1e-8)
+
+def mse(layers, X, y):
+    return float(np.mean((predict(layers, X) - y) ** 2))
+
+# ---- KAN [2, 5, 1], cubic splines ------------------------------------------
+kan = [KANLayer(2, 5, G=5), KANLayer(5, 1, G=5)]
+
+p_kan_before = n_params(kan)
+t_kan = time.time()
+# Hidden activations wander outside the second layer's initial [-1, 1] grid,
+# so every few hundred steps that grid is moved onto the range the data
+# actually occupies. Halfway through, both grids are refined G = 5 -&gt; 10 (the
+# paper's &quot;grid extension&quot;). Each regrid refits the splines by least squares.
+for phase in range(8):
+    G = 5 if phase &lt; 4 else 10
+    if phase == 4:
+        kan[0].regrid(Xtr, G)
+    kan[1].regrid(kan[0].forward(Xtr), G)
+    train(kan, 150, 1e-2)
+p_kan = n_params(kan)
+t_kan = time.time() - t_kan
+
+# ---- MLP [2, H, H, 1] with tanh, sized to match the final KAN -------------
+# A KAN step costs about 3x an MLP step, so the MLP gets 3x the steps:
+# roughly the same wall-clock budget for both.
+H = 12
+mlp = [Dense(2, H, True), Dense(H, H, True), Dense(H, 1, False)]
+t_mlp = time.time()
+train(mlp, 3600, 1e-2)
+t_mlp = time.time() - t_mlp
+
+print(&quot;target: f(x,y) = exp(sin(pi x) + y^2), 500 train / 2000 test points&quot;)
+print(f&quot;KAN [2,5,1]  params {p_kan_before} -&gt; {p_kan} (grid 5 -&gt; 10), 1200 steps&quot;
+      f&quot;   train MSE {mse(kan, Xtr, ytr):.2e}   test MSE {mse(kan, Xte, yte):.2e}   {t_kan:.1f}s&quot;)
+print(f&quot;MLP [2,{H},{H},1] params {n_params(mlp)}, 3600 steps&quot;
+      f&quot;                     train MSE {mse(mlp, Xtr, ytr):.2e}   test MSE {mse(mlp, Xte, yte):.2e}   {t_mlp:.1f}s&quot;)
+</textarea>
+<div class="run-bar">
+<button type="button" class="widget-btn run-btn">Run</button>
+<button type="button" class="widget-btn run-edit">Edit</button>
+<span class="run-status muted"></span>
+</div>
+<pre class="run-output" hidden></pre>
+<noscript><p class="widget-fallback">This snippet can be run in the browser with JavaScript enabled.</p></noscript>
+</figure>
+<p><span>When I ran it in Pyodide, it printed:</span></p>
+
+<figure class="code-block">
+
+
+<pre><code><span class="line">KAN [2,5,1]  params 135 -&gt; 210 (grid 5 -&gt; 10), 1200 steps   train MSE 2.15e-06   test MSE 7.34e-06   3.0s</span>
+<span class="line">MLP [2,12,12,1] params 205, 3600 steps                     train MSE 1.39e-04   test MSE 3.11e-04   3.0s</span></code></pre>
+
+</figure>
+<p><span>(Native NumPy gives the same KAN numbers and an MLP test MSE of</span>
+<span>$3.6 \times 10^{-4}$. The MLP</span>&rsquo;<span>s trajectory is sensitive enough that</span>
+<span>floating-point differences between NumPy builds show up.)</span></p>
+<p><span>So on this problem the KAN wins by more than an order of magnitude in test MSE</span>
+<span>at roughly the same parameter count and compute. Changing the seed moves the</span>
+<span>numbers around (KAN test MSE between about $7 \times 10^{-6}$ and</span>
+<span>$4 \times 10^{-5}$, MLP between about $3 \times 10^{-4}$ and</span>
+<span>$3 \times 10^{-3}$), but not the ordering. Widening the MLP to 337</span>
+<span>parameters and training it for 10,000 steps (on 1000 training points) got it to about</span>
+<span>$5 \times 10^{-5}$, which narrows the gap but does not close it. I also tried</span>
+<span>a target without additive structure, $\sin(4xy)/(1+x^2)$, and the KAN still</span>
+<span>came out ahead.</span></p>
+<p><span>I want to be honest about what this does and doesn</span>&rsquo;<span>t show:</span></p>
+<ul>
+<li>
+<strong><strong><span>This is the KAN</span>&rsquo;<span>s home turf.</span></strong></strong><span> A smooth, two-dimensional function that is</span>
+<em><span>literally</span></em><span> a composition of univariate functions and a sum. It is the</span>
+<span>paper</span>&rsquo;<span>s own showcase. Low-dimensional smooth regression is where splines</span>
+<span>have always been excellent, KAN or not.</span>
+</li>
+<li>
+<strong><strong><span>The KAN needed babysitting.</span></strong></strong><span> With a fixed grid, hidden activations drift</span>
+<span>outside the second layer</span>&rsquo;<span>s grid, where the splines vanish. In an early</span>
+<span>version of this script, some test points landed outside the grid and test</span>
+<span>MSE jumped to about $10^2$. The periodic grid updates are not optional</span>
+<span>decoration.</span>
+</li>
+<li>
+<strong><strong><span>The KAN is slower.</span></strong></strong><span> Each step takes 3 to 4 times as long as an MLP</span>
+<span>step here, and that is with a vectorized basis on a tiny network. The MLP</span>
+<span>is a couple of matrix multiplies. At matched width, the KAN</span>&rsquo;<span>s matrix</span>
+<span>multiply is also $G + k + 1$ times larger, on top of evaluating the basis.</span>
+</li>
+</ul>
+<p><span>Edit the </span><code>target</code><span> function and try something without additive structure, or</span>
+<span>add noise to </span><code>ytr</code><span>. It is the quickest way to form your own opinion.</span></p>
+<hr>
+</section>
+<section id="Where-KANs-stand">
+
+    <h2>
+    <a href="#Where-KANs-stand"><span>Where KANs stand</span> </a><a class="heading-anchor" href="#Where-KANs-stand" aria-label="Link to this section">#</a>
+    </h2>
+<p><strong><strong><span>Interpretability and symbolic regression.</span></strong></strong><span> This is the most distinctive</span>
+<span>part of the paper. After training with a sparsity penalty, you prune unused</span>
+<span>edges and look at each remaining $\phi$. If it looks like $\sin$ or $x^2$ or</span>
+<span>$\exp$, you snap it to that symbolic form (fitting an affine</span>
+<span>reparameterization) and continue training. On toy physics and math problems</span>
+<span>this recovers exact formulas, which an MLP cannot give you so directly. The</span>
+<span>follow-up, KAN 2.0, leans fully into this </span>&ldquo;<span>AI for science</span>&rdquo;<span> angle. It adds</span>
+<span>multiplication nodes and tools for putting domain knowledge into KANs and</span>
+<span>pulling formulas out. But this is interpretability of small networks on</span>
+<span>low-dimensional, mostly symbolic problems. A KAN with thousands of edges is no</span>
+<span>easier to read than an MLP.</span></p>
+<p><strong><strong><span>Fair comparisons.</span></strong></strong><span> Yu, Yu and Wang (2024) compared KANs and MLPs at matched</span>
+<span>parameters and FLOPs across machine learning, vision, audio, NLP, and symbolic</span>
+<span>formula tasks. MLPs generally won everywhere </span><em><span>except</span></em><span> symbolic formula</span>
+<span>representation. Their ablations attribute that advantage mainly to the B-spline</span>
+<span>activation itself, and giving an MLP B-spline activations closed most of</span>
+<span>that gap. They also found that KANs forget </span><em><span>more</span></em><span> in class-incremental</span>
+<span>continual learning, which contradicts one of the original paper</span>&rsquo;<span>s claims. My</span>
+<span>toy result above is consistent with this: splines are great at smooth</span>
+<span>low-dimensional functions.</span></p>
+<p><strong><strong><span>Training cost and speed.</span></strong></strong><span> The original paper is upfront that its KANs train</span>
+<span>about 10 times slower than MLPs with the same number of parameters.</span>
+<span>Evaluating a spline basis is not a single fused matrix multiply, and grid</span>
+<span>updates add extra machinery to training. A lot of follow-up work is about</span>
+<span>speed. FastKAN, for example, replaces the cubic B-splines with Gaussian</span>
+<span>radial basis functions (they look very similar) and observes that the result</span>
+<span>is a radial basis function network. That observation is a useful corrective in</span>
+<span>itself: a lot of the KAN design space is old ideas (splines, basis expansions,</span>
+<span>RBF networks, additive models) arranged in a new way.</span></p>
+<p><strong><strong><span>My take.</span></strong></strong><span> KANs are a genuinely nice idea for small scientific problems where</span>
+<span>you want accuracy on smooth low-dimensional functions </span><em><span>and</span></em><span> a formula at the</span>
+<span>end. As a general replacement for MLPs, the evidence just isn</span>&rsquo;<span>t there yet, and</span>
+<span>the original framing oversold it. That</span>&rsquo;<span>s fine. A good idea with an oversized</span>
+<span>launch is still a good idea, and I expect the useful parts (learnable</span>
+<span>activations, grid refinement, spline features) to survive in other</span>
+<span>architectures.</span></p>
+<hr>
+</section>
+<section id="References">
+
+    <h2>
+    <a href="#References"><span>References</span> </a><a class="heading-anchor" href="#References" aria-label="Link to this section">#</a>
+    </h2>
+<ul>
+<li>
+<span>Ziming Liu, Yixuan Wang, Sachin Vaidya, Fabian Ruehle, James Halverson, Marin Soljačić, Thomas Y. Hou, Max Tegmark. </span><em><span>KAN: Kolmogorov-Arnold Networks.</span></em><span> 2024. arXiv:2404.19756. </span><a href="https://arxiv.org/abs/2404.19756" class="url">https://arxiv.org/abs/2404.19756</a>
+</li>
+<li>
+<span>Ziming Liu, Pingchuan Ma, Yixuan Wang, Wojciech Matusik, Max Tegmark. </span><em><span>KAN 2.0: Kolmogorov-Arnold Networks Meet Science.</span></em><span> 2024. arXiv:2408.10205. </span><a href="https://arxiv.org/abs/2408.10205" class="url">https://arxiv.org/abs/2408.10205</a>
+</li>
+<li>
+<span>Runpeng Yu, Weihao Yu, Xinchao Wang. </span><em><span>KAN or MLP: A Fairer Comparison.</span></em><span> 2024. arXiv:2407.16674. </span><a href="https://arxiv.org/abs/2407.16674" class="url">https://arxiv.org/abs/2407.16674</a>
+</li>
+<li>
+<span>Ziyao Li. </span><em><span>Kolmogorov-Arnold Networks are Radial Basis Function Networks.</span></em><span> 2024. arXiv:2405.06721. </span><a href="https://arxiv.org/abs/2405.06721" class="url">https://arxiv.org/abs/2405.06721</a>
+</li>
+<li>
+<span>Johannes Schmidt-Hieber. </span><em><span>The Kolmogorov-Arnold representation theorem revisited.</span></em><span> 2020. arXiv:2007.15884. </span><a href="https://arxiv.org/abs/2007.15884" class="url">https://arxiv.org/abs/2007.15884</a>
+</li>
+<li>
+<span>Federico Girosi, Tomaso Poggio. </span><em><span>Representation Properties of Networks: Kolmogorov</span>&rsquo;<span>s Theorem Is Irrelevant.</span></em><span> Neural Computation 1(4), 1989.</span>
+</li>
+<li>
+<span>Andrey N. Kolmogorov. </span><em><span>On the representation of continuous functions of many variables by superposition of continuous functions of one variable and addition.</span></em><span> Doklady Akademii Nauk SSSR 114, 1957.</span>
+</li>
+<li>
+<span>Carl de Boor. </span><em><span>A Practical Guide to Splines.</span></em><span> Springer, 1978.</span>
+</li>
+</ul>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/kan.html">#kan</a><a class="tag" href="/tags/architecture.html">#architecture</a></div>
+      <section class="related">
+        <h2>Related posts</h2>
+        <ul class="related-list">
+          <li>
+              <a href="/2025/08/04/moe.html">Mixture of Experts</a>
+              <span class="muted"><time datetime="2025-08-04">Aug 4, 2025</time> · Frontier LLMs &amp; Architectures</span>
+            </li><li>
+              <a href="/2024/07/21/llm-archs.html">Encoder vs Decoder vs EncoderDecoder Architectures</a>
+              <span class="muted"><time datetime="2024-07-21">Jul 21, 2024</time> · Frontier LLMs &amp; Architectures</span>
+            </li><li>
+              <a href="/2024/01/08/Transformer.html">Implementing the Transformer in Python</a>
+              <span class="muted"><time datetime="2024-01-08">Jan 8, 2024</time> · Frontier LLMs &amp; Architectures</span>
+            </li>
+        </ul>
+      </section><nav class="post-nav" aria-label="Chronological">
+        <a class="post-nav__link post-nav__prev" href="/2024/09/17/divergences.html">
+          <span class="post-nav__label">← Older</span>
+          <span class="post-nav__title">Some common divergences</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/09/29/llm-quant.html">
+          <span class="post-nav__label">Newer →</span>
+          <span class="post-nav__title">Quantization of LLMs</span>
+        </a>
+      </nav><nav class="post-nav post-nav--theme" aria-label="Same theme">
+        <a class="post-nav__link post-nav__prev" href="/2024/08/27/rag.html">
+          <span class="post-nav__label">← Older in theme</span>
+          <span class="post-nav__title">Understanding and Implementing RAG (Retrieval-Augmented Generation)</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/09/29/llm-quant.html">
+          <span class="post-nav__label">Newer in theme →</span>
+          <span class="post-nav__title">Quantization of LLMs</span>
+        </a>
+      </nav>
+      
+    <section class="comments" id="comments">
+      <h2>Comments</h2>
+      <div class="giscus"></div>
+      <noscript><p class="muted">Comments are powered by <a href="https://giscus.app">giscus</a> and need JavaScript.</p></noscript>
+    </section>
+    <script>
+    (function () {
+      // Inject giscus with the theme the site is actually using (the toggle
+      // persists in localStorage), rather than the OS preference.
+      var siteTheme = function () {
+        var t = document.documentElement.getAttribute("data-theme");
+        if (t) return t === "dark" ? "dark" : "light";
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark" : "light";
+      };
+      var s = document.createElement("script");
+      s.src = "https://giscus.app/client.js";
+      var attrs = {
+        "data-repo": "mbottoni/mbottoni.github.io",
+        "data-repo-id": "R_kgDOKv71Lg",
+        "data-category": "General",
+        "data-category-id": "DIC_kwDOKv71Ls4DEBYr",
+        "data-mapping": "pathname",
+        "data-strict": "1",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "top",
+        "data-theme": siteTheme(),
+        "data-lang": "en",
+        "data-loading": "lazy",
+        "crossorigin": "anonymous"
+      };
+      for (var k in attrs) s.setAttribute(k, attrs[k]);
+      s.async = true;
+      document.getElementById("comments").appendChild(s);
+
+      // Follow the dark-mode toggle after load.
+      new MutationObserver(function () {
+        var frame = document.querySelector("iframe.giscus-frame");
+        if (!frame) return;
+        frame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: siteTheme() } } },
+          "https://giscus.app");
+      }).observe(document.documentElement,
+        { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+    </script>
+  
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-09-21-kan.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        // Widgets build their own DOM and style their spans.
+        if (span.closest(".widget")) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  <script defer src="/widgets/kan-spline.js"></script>
+<script defer src="/js/runner.js"></script>
+<script>
+(function () {
+  var bar = document.querySelector(".reading-progress__bar");
+  var article = document.querySelector("article");
+  if (bar && article) {
+    var update = function () {
+      var top = article.offsetTop;
+      var h = article.offsetHeight - window.innerHeight;
+      var p = h > 0 ? (window.scrollY - top) / h : 1;
+      bar.style.transform = "scaleX(" + Math.min(1, Math.max(0, p)) + ")";
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
+  var toc = document.querySelector(".toc");
+  if (!toc || !("IntersectionObserver" in window)) return;
+  var links = {};
+  toc.querySelectorAll("a[href^='#']").forEach(function (a) {
+    links[decodeURIComponent(a.getAttribute("href").slice(1))] = a;
+  });
+  var ids = Object.keys(links);
+  if (!ids.length) return;
+  var visible = {};
+  var setActive = function () {
+    var first = null;
+    for (var i = 0; i < ids.length; i++) {
+      if (visible[ids[i]]) { first = ids[i]; break; }
+    }
+    ids.forEach(function (id) {
+      links[id].classList.toggle("active", id === first);
+    });
+  };
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    setActive();
+  }, { rootMargin: "-10% 0px -70% 0px", threshold: 0 });
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>
+</body>
+
+</html>

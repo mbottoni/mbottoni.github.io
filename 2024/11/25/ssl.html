@@ -1,0 +1,949 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scarf: Self Supervised Learning for Tabular Data</title>
+  <meta name="description" content="Machine learning often struggles with the scarcity of labeled data. While unlabeled datasets
+are abundant, obtaining high-quality labeled data remains expensive and time-consuming. SCARF
+emerges as a breakthrough methodology that transforms how we extract meaningful
+representations from raw, untagged information.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Scarf: Self Supervised Learning for Tabular Data">
+  <meta property="og:description" content="Machine learning often struggles with the scarcity of labeled data. While unlabeled datasets
+are abundant, obtaining high-quality labeled data remains expensive and time-consuming. SCARF
+emerges as a breakthrough methodology that transforms how we extract meaningful
+representations from raw, untagged information.">
+  <meta property="og:url" content="https://mbottoni.github.io/2024/11/25/ssl.html">
+  <meta property="og:image" content="/assets/frontier/scarf.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Scarf: Self Supervised Learning for Tabular Data">
+  <meta name="twitter:description" content="Machine learning often struggles with the scarcity of labeled data. While unlabeled datasets
+are abundant, obtaining high-quality labeled data remains expensive and time-consuming. SCARF
+emerges as a breakthrough methodology that transforms how we extract meaningful
+representations from raw, untagged information.">
+  <meta name="twitter:image" content="/assets/frontier/scarf.png">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2024/11/25/ssl.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/map.html">Map</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="reading-progress" aria-hidden="true"><div class="reading-progress__bar"></div></div>
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/frontier.html">
+          Frontier LLMs &amp; Architectures
+        </a>
+        <span class="post-meta"><time datetime="2024-11-25">Nov 25, 2024</time> · 20 min read</span>
+      </div>
+      
+    <aside class="series-box">
+      <div class="series-box__head">
+        <span class="series-box__label">Series</span>
+        <span class="series-box__title">Self-supervised learning</span>
+        <span class="muted">Part 2 of 2</span>
+      </div>
+      
+      <ol class="series-box__list"><li><a href="/2024/08/18/ssl.html">Self Supervised Learning</a></li><li class="series-box__current" aria-current="page">Scarf: Self Supervised Learning for Tabular Data</li></ol>
+    </aside>
+  
+      <p class="prereq-line">
+      <span class="prereq-line__label">Before reading this</span>
+      <a href="/2024/08/18/ssl.html">Self Supervised Learning</a>
+    </p>
+      
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <ul><li class="toc-l2"><a href="#Innovation">Innovation</a></li><li class="toc-l2"><a href="#Technical-Mechanism">Technical Mechanism</a></li><li class="toc-l2"><a href="#InfoNCE-is-a-bound-on-mutual-information">InfoNCE is a bound on mutual information</a></li><li class="toc-l2"><a href="#What-the-temperature-does">What the temperature does</a></li><li class="toc-l2"><a href="#Collapse-and-four-ways-to-prevent-it">Collapse, and four ways to prevent it</a></li><li class="toc-l2"><a href="#Alignment-and-uniformity">Alignment and uniformity</a></li><li class="toc-l2"><a href="#Try-it">Try it</a></li><li class="toc-l2"><a href="#What-SCARF-found">What SCARF found</a></li><li class="toc-l2"><a href="#References">References</a></li></ul>
+    </details>
+  
+      <article >
+
+    <h1 id="Scarf-Self-Supervised-Learning-for-Tabular-Data">
+    <a href="#Scarf-Self-Supervised-Learning-for-Tabular-Data"><span>Scarf: Self Supervised Learning for Tabular Data</span> <time datetime="2024-11-25">Nov 25, 2024</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/frontier/scarf.png">
+</figure>
+<p><span>Machine learning often struggles with the scarcity of labeled data. While unlabeled datasets</span>
+<span>are abundant, obtaining high-quality labeled data remains expensive and time-consuming. SCARF</span>
+<span>emerges as a breakthrough methodology that transforms how we extract meaningful</span>
+<span>representations from raw, untagged information.</span></p>
+<p><span>In part 1 of this series I wrote about </span><em><span>why</span></em><span> self-supervised learning matters: common sense,</span>
+<span>energy-based models, and the joint-embedding architectures that try to avoid collapse. This</span>
+<span>post is the </span><em><span>how</span></em><span>. I will use SCARF (Bahri et al., 2021) as the running example, because it</span>
+<span>is about the simplest contrastive method you can write down, and then go through the math</span>
+<span>that sits under it and under most modern SSL objectives: InfoNCE as a bound on mutual</span>
+<span>information, what the temperature actually does, why every joint-embedding method has to</span>
+<span>fight collapse and the four different ways people do it, and the alignment/uniformity view</span>
+<span>of what a contrastive loss is optimising.</span></p>
+<p><span>Tabular data is a good place to do this. Images come with a rich toolbox of augmentations</span>
+<span>(crops, colour jitter, blur) that encode decades of knowledge about which transformations</span>
+<span>leave the content unchanged. A table of loan applications has nothing like that. There is</span>
+<span>no </span>&ldquo;<span>horizontal flip</span>&rdquo;<span> for a row with an age, an income and a postcode. So whatever SCARF</span>
+<span>does has to work without domain knowledge, which makes the role of each piece much easier</span>
+<span>to see.</span></p>
+<section id="Innovation">
+
+    <h2>
+    <a href="#Innovation"><span>Innovation</span> </a><a class="heading-anchor" href="#Innovation" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>SCARF introduces a novel approach to generating data views by strategically corrupting</span>
+<span>input features. Unlike domain-specific augmentation techniques, this method works universally across datasets:</span></p>
+<ul>
+<li>
+<span>Randomly select a subset of features</span>
+</li>
+<li>
+<span>Replace selected features with samples from their empirical marginal distributions</span>
+</li>
+<li>
+<span>Leverage contrastive learning to maximize representation quality</span>
+</li>
+</ul>
+<p><span>Concretely, let $x \in \mathbb{R}^M$ be a row with $M$ features and $c \in (0, 1)$ the</span>
+<span>corruption rate. SCARF picks $q = \lfloor c M \rfloor$ feature indices $I \subset \{1, \dots, M\}$</span>
+<span>uniformly at random and builds the corrupted view</span></p>
+<p><span>$$\tilde{x}_j = \begin{cases} x_j &amp; j \notin I \\ v_j \sim \hat{\mathcal{X}}_j &amp; j \in I \end{cases}$$</span></p>
+<p><span>where $\hat{\mathcal{X}}_j$ is the empirical marginal of feature $j$: the uniform distribution</span>
+<span>over the values that column $j$ takes in the training set. In practice that means </span>&ldquo;<span>copy the</span>
+<span>value from a random other row</span>&rdquo;<span>. The defaults in the paper are $c = 0.6$, and only </span><em><span>one</span></em><span> of</span>
+<span>the two views is corrupted; the anchor is the clean row itself.</span></p>
+<p><span>Why marginals and not, say, Gaussian noise? Three reasons, all of which the paper</span>&rsquo;<span>s ablations</span>
+<span>support:</span></p>
+<ul>
+<li>
+<strong><strong><span>Every corrupted value is a plausible value.</span></strong></strong><span> A replaced age is still an age that occurs</span>
+<span>in the data, a replaced category is still a valid category. The view stays on the support</span>
+<span>of each feature, so the encoder cannot detect corruption just by spotting out-of-range values.</span>
+</li>
+<li>
+<strong><strong><span>It is invariant to feature scaling.</span></strong></strong><span> Additive noise has to be scaled to each column, and</span>
+<span>any rescaling of the inputs changes what the noise means. Marginal resampling preserves the</span>
+&ldquo;<span>units</span>&rdquo;<span> of every feature and has no noise-scale hyperparameter at all.</span>
+</li>
+<li>
+<strong><strong><span>It destroys exactly the right thing.</span></strong></strong><span> Sampling each corrupted feature independently from</span>
+<span>its marginal keeps the per-feature statistics but breaks the </span><em><span>dependence</span></em><span> between the</span>
+<span>corrupted features and the rest of the row. To match $\tilde{x}$ with $x$ the encoder must</span>
+<span>rely on the 40% of features that were kept, and to do that it has to learn which feature</span>
+<span>combinations identify a row. Those cross-feature dependencies are what a downstream</span>
+<span>classifier also needs.</span>
+</li>
+</ul>
+<p><span>The paper also tried corrupting both views (worse: at $c = 0.6$ two independent corruptions</span>
+<span>leave very few features in common, so the task becomes too hard), mean imputation, additive</span>
+<span>Gaussian noise, zeroing features, a learned </span>&ldquo;<span>missing</span>&rdquo;<span> token, and copying the selected features</span>
+<span>from a single random row. Marginal sampling generally won.</span></p>
+</section>
+<section id="Technical-Mechanism">
+
+    <h2>
+    <a href="#Technical-Mechanism"><span>Technical Mechanism</span> </a><a class="heading-anchor" href="#Technical-Mechanism" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>The approach employs:</span></p>
+<ul>
+<li>
+<span>An encoder network (f)</span>
+</li>
+<li>
+<span>A pre-training head network (g)</span>
+</li>
+<li>
+<span>InfoNCE contrastive loss function</span>
+</li>
+</ul>
+<p><span>In the paper all three networks (plus a classification head $h$ used later for fine-tuning)</span>
+<span>are plain ReLU MLPs of width 256: $f$ has 4 layers, $g$ and $h$ have 2. Given a minibatch</span>
+<span>$\{x^{(i)}\}_{i=1}^N$ and its corrupted views, the embeddings are</span>
+<span>$z^{(i)} = g(f(x^{(i)}))$ and $\tilde{z}^{(i)} = g(f(\tilde{x}^{(i)}))$, the similarity is</span>
+<span>cosine, $s_{ij} = z^{(i)\top}\tilde{z}^{(j)} / (\|z^{(i)}\| \|\tilde{z}^{(j)}\|)$, and the loss is</span></p>
+<p><span>$$\mathcal{L}_{\text{SCARF}} = \frac{1}{N} \sum_{i=1}^N -\log \frac{\exp(s_{ii}/\tau)}{\frac{1}{N}\sum_{k=1}^N \exp(s_{ik}/\tau)}.$$</span></p>
+<p><span>Each row has to pick out its own corrupted view among the $N$ corrupted views in the batch.</span>
+<span>After pre-training, $g$ is thrown away and $f$ is fine-tuned with $h$ on the labeled data.</span>
+<span>The paper uses $N = 128$ and $\tau = 1$.</span></p>
+<p><span>The core objective is generating representations that maintain semantic integrity</span>
+<span>while being robust to feature perturbations.</span></p>
+<p><span>That sentence hides a precise statement. To make it precise we need to look at what</span>
+<span>InfoNCE is.</span></p>
+</section>
+<section id="InfoNCE-is-a-bound-on-mutual-information">
+
+    <h2>
+    <a href="#InfoNCE-is-a-bound-on-mutual-information"><span>InfoNCE is a bound on mutual information</span> </a><a class="heading-anchor" href="#InfoNCE-is-a-bound-on-mutual-information" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Forget SCARF for a moment and take any pair of random variables $(X, Y)$: two views of the</span>
+<span>same row, two crops of an image, a context and a future frame. Draw one positive pair</span>
+<span>$(x, y_1) \sim p(x, y)$ and $N - 1$ negatives $y_2, \dots, y_N \sim p(y)$ independently. For a</span>
+<em><span>critic</span></em><span> $f(x, y)$ (any function that scores compatibility; for us</span>
+<span>$f(x, y) = \operatorname{sim}(z_x, z_y)/\tau$), the InfoNCE loss of van den Oord et al. (2018) is</span></p>
+<p><span>$$\mathcal{L}_N = \mathbb{E}\left[ -\log \frac{e^{f(x, y_1)}}{\sum_{j=1}^N e^{f(x, y_j)}} \right].$$</span></p>
+<p><span>Read it as the cross-entropy of an $N$-way classifier whose job is to say which of the $N$</span>
+<span>candidates is the true partner of $x$. A classifier that guesses uniformly at random pays</span>
+<span>exactly $\log N$. The key result is</span></p>
+<p><span>$$I(X; Y) \;\ge\; \log N - \mathcal{L}_N .$$</span></p>
+<p><span>Every nat by which your classifier beats chance is a nat of mutual information that the</span>
+<span>critic has certified between the two views. Van den Oord et al. gave an approximate argument</span>
+<span>for this; Poole et al. (2019) proved it exactly, for any critic, by viewing InfoNCE as a</span>
+<span>multi-sample version of a variational lower bound on the KL divergence</span>
+<span>$I(X;Y) = \mathrm{KL}(p(x,y) \,\|\, p(x)p(y))$.</span></p>
+<p><span>The intuition for why the bound holds is in the optimal critic. The classifier is</span>
+<span>Bayes-optimal when it scores each candidate by how much more likely it is under the joint</span>
+<span>than under the product of marginals:</span></p>
+<p><span>$$f^*(x, y) = \log \frac{p(y \mid x)}{p(y)} + c(x).$$</span></p>
+<p><span>The posterior probability that candidate $j$ is the positive is then</span>
+<span>$e^{f^*(x,y_j)} / \sum_k e^{f^*(x,y_k)}$, the density ratio normalised over the batch. The</span>
+<span>expected log density ratio of the true pair </span><em><span>is</span></em><span> the mutual information, and the bound becomes</span>
+<span>tight as $N \to \infty$.</span></p>
+<p><span>Two consequences matter in practice.</span></p>
+<p><strong><strong><span>The bound saturates at $\log N$.</span></strong></strong><span> Since $\mathcal{L}_N \ge 0$, the right hand side can</span>
+<span>never exceed $\log N$. With a batch of 128 you can certify at most $\log 128 \approx 4.85$</span>
+<span>nats, no matter how much information the views share. That is one reason contrastive methods</span>
+<span>like big batches. And it is not a quirk of InfoNCE: McAllester and Stratos (2018) show that</span>
+<em><span>any</span></em><span> distribution-free high-confidence lower bound on mutual information needs a sample size</span>
+<span>exponential in the quantity it certifies.</span></p>
+<p><strong><strong><span>SCARF</span>&rsquo;<span>s normalisation.</span></strong></strong><span> Note the $\frac{1}{N}$ inside SCARF</span>&rsquo;<span>s denominator. It simply shifts</span>
+<span>the loss: $\mathcal{L}_{\text{SCARF}} = \mathcal{L}_N - \log N$, so the bound reads</span>
+<span>$I \ge -\mathcal{L}_{\text{SCARF}}$. Same objective, same gradients.</span></p>
+<p><span>There is a caveat worth stating plainly. Maximising a mutual information bound is </span><em><span>not</span></em>
+<span>obviously why these methods work. Tschannen et al. (2019) show that you can get better MI</span>
+<span>bounds with worse representations, and that the inductive biases of the encoder and the</span>
+<span>critic seem to matter at least as much as the MI value itself. I find it most useful to think</span>
+<span>of the MI bound as a sanity check (it tells you what collapse costs, see below) rather than as</span>
+<span>the explanation.</span></p>
+</section>
+<section id="What-the-temperature-does">
+
+    <h2>
+    <a href="#What-the-temperature-does"><span>What the temperature does</span> </a><a class="heading-anchor" href="#What-the-temperature-does" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>With normalised embeddings the critic is $f = \cos(z, z')/\tau$. Take one anchor with</span>
+<span>positive similarity $s_+$ and negative similarities $s_j$. The gradient of its loss with</span>
+<span>respect to the anchor embedding $u$ is</span></p>
+<p><span>$$\frac{\partial \mathcal{L}}{\partial u} = \frac{1}{\tau}\left( -(1 - p_+)\, v_+ + \sum_{j \ne +} p_j\, v_j \right),
+\qquad p_j = \frac{e^{s_j/\tau}}{\sum_k e^{s_k/\tau}},$$</span></p>
+<p><span>where $v_j$ are the (normalised) candidate embeddings. So each negative is pushed away with a</span>
+<span>weight equal to its softmax probability. The temperature decides how that weight is spread:</span></p>
+<ul>
+<li>
+<strong><strong><span>Small $\tau$</span></strong></strong><span>: the softmax is peaked, almost all the weight goes to the few hardest</span>
+<span>negatives (the ones most similar to the anchor). As $\tau \to 0$ the loss behaves like a</span>
+<span>hinge on the single hardest negative. Wang and Liu (2020) show this is what makes low</span>
+<span>temperatures produce more uniform embeddings, and also what makes them intolerant of</span>
+<span>negatives that are actually semantically similar to the anchor.</span>
+</li>
+<li>
+<strong><strong><span>Large $\tau$</span></strong></strong><span>: the weights become uniform, every negative is pushed equally, and the</span>
+<span>loss approaches a linear function of the mean similarity. The signal from hard negatives</span>
+<span>is diluted.</span>
+</li>
+</ul>
+<p><span>There is a second, less-discussed effect. Cosines live in $[-1, 1]$, so the logits live in</span>
+<span>$[-1/\tau, 1/\tau]$. Even a perfect encoder, with $s_+ = 1$ and every $s_j = -1$, pays</span>
+<span>$\log(1 + (N-1)e^{-2/\tau})$, and therefore</span></p>
+<p><span>$$\log N - \mathcal{L}_N \;\le\; \log N - \log\!\left(1 + (N-1)e^{-2/\tau}\right) \;\le\; \frac{2}{\tau}.$$</span></p>
+<p><span>The temperature caps the amount of information the loss can certify. At SCARF</span>&rsquo;<span>s $\tau = 1$</span>
+<span>and $N = 128$ the cap is about 1.95 nats instead of 4.85. SCARF reports that $\tau = 1$ works</span>
+<span>best on its tabular benchmark, and that results are not very sensitive to it. My speculation is</span>
+<span>that these two facts are related: tabular rows simply have far fewer bits of </span>&ldquo;<span>identity</span>&rdquo;<span> to</span>
+<span>learn than images, so a loss that cannot demand more than a couple of nats is not a handicap,</span>
+<span>and the softer weighting of negatives helps with the many near-duplicate rows that real tables</span>
+<span>contain. I have not tested this.</span></p>
+</section>
+<section id="Collapse-and-four-ways-to-prevent-it">
+
+    <h2>
+    <a href="#Collapse-and-four-ways-to-prevent-it"><span>Collapse, and four ways to prevent it</span> </a><a class="heading-anchor" href="#Collapse-and-four-ways-to-prevent-it" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Every joint-embedding method has to deal with the same failure mode. If the only thing the</span>
+<span>loss asked for were </span>&ldquo;<span>make the two views of the same input close</span>&rdquo;<span>, the encoder could map</span>
+<em><span>every</span></em><span> input to the same point and get zero loss. This is collapse, and it is the reason</span>
+<span>part 1 spent so much time on contrastive versus non-contrastive energy-based methods.</span></p>
+<p><span>InfoNCE makes the cost of collapse explicit: if $f(x, y)$ is constant, every candidate gets</span>
+<span>probability $1/N$, $\mathcal{L}_N = \log N$, and the certified information is exactly zero.</span>
+<span>Here are the four main families of fixes.</span></p>
+<p><strong><strong><span>1. Negatives (SimCLR, and SCARF).</span></strong></strong><span> SimCLR (Chen et al., 2020) uses the InfoNCE loss above,</span>
+<span>symmetrised over two augmented views, with the other $2(N-1)$ augmented images in the batch</span>
+<span>as negatives. Collapse is impossible because a collapsed encoder cannot tell the positive from</span>
+<span>the negatives. The price is the batch: you need many negatives to get a useful bound and a</span>
+<span>useful gradient, and SimCLR</span>&rsquo;<span>s best results used batches in the thousands. SCARF is SimCLR</span>&rsquo;<span>s</span>
+<span>recipe with a tabular augmentation, and interestingly it found no gain beyond $N = 128$.</span></p>
+<p><strong><strong><span>2. Stop-gradient and a predictor (BYOL, SimSiam).</span></strong></strong><span> BYOL (Grill et al., 2020) has no</span>
+<span>negatives at all. An </span><em><span>online</span></em><span> network (encoder, projector and an extra predictor $q_\theta$)</span>
+<span>is trained to predict the output of a </span><em><span>target</span></em><span> network on another view:</span></p>
+<p><span>$$\mathcal{L}_{\text{BYOL}} = \left\| \frac{q_\theta(z_\theta)}{\|q_\theta(z_\theta)\|} - \frac{z'_\xi}{\|z'_\xi\|} \right\|^2 = 2 - 2\cos\big(q_\theta(z_\theta), z'_\xi\big),$$</span></p>
+<p><span>where no gradient flows into the target, whose weights are an exponential moving average of</span>
+<span>the online weights, $\xi \leftarrow m\xi + (1-m)\theta$. SimSiam (Chen and He, 2020) shows the</span>
+<span>moving average is not essential: one shared network, a predictor $h$, and a stop-gradient,</span></p>
+<p><span>$$\mathcal{L}_{\text{SimSiam}} = -\tfrac{1}{2}\cos\big(h(z_1), \operatorname{sg}(z_2)\big) - \tfrac{1}{2}\cos\big(h(z_2), \operatorname{sg}(z_1)\big),$$</span></p>
+<p><span>already avoids collapse, while removing the stop-gradient makes it collapse immediately. Why</span>
+<span>this works is still not fully settled. Nothing in the loss forbids the constant solution; it</span>
+<span>is the </span><em><span>training dynamics</span></em><span> that avoid it. Chen and He hypothesise that SimSiam behaves like an</span>
+<span>alternating, EM-like optimisation in which the stop-gradient branch plays the role of a fixed</span>
+<span>target that is re-estimated at each step. I would treat that as a useful picture, not a proof.</span></p>
+<p><strong><strong><span>3. Explicit variance and covariance terms (VICReg).</span></strong></strong><span> VICReg (Bardes et al., 2021) takes the</span>
+<span>opposite approach and writes the anti-collapse condition into the loss. For two batches of</span>
+<span>embeddings $Z, Z' \in \mathbb{R}^{n \times d}$:</span></p>
+<p><span>$$\mathcal{L} = \lambda\, s(Z, Z') + \mu\,[v(Z) + v(Z')] + \nu\,[c(Z) + c(Z')]$$</span></p>
+<p><span>with</span></p>
+<p><span>$$\begin{aligned}
+s(Z, Z') &amp;= \frac{1}{n}\sum_i \|z_i - z'_i\|^2, \\
+v(Z) &amp;= \frac{1}{d}\sum_{j=1}^d \max\!\big(0, \gamma - \sqrt{\operatorname{Var}(z^j) + \epsilon}\big), \\
+c(Z) &amp;= \frac{1}{d}\sum_{i \ne j} [C(Z)]_{ij}^2 .
+\end{aligned}$$</span></p>
+<p><span>The invariance term $s$ pulls views together. The variance term $v$ is a hinge that keeps the</span>
+<span>standard deviation of every embedding dimension, across the batch, above $\gamma = 1$, which</span>
+<span>rules out the constant solution directly. The covariance term $c$ penalises the off-diagonal</span>
+<span>entries of the covariance matrix $C(Z)$, which rules out the subtler </span><em><span>dimensional</span></em><span> collapse in</span>
+<span>which all dimensions carry the same information. The paper</span>&rsquo;<span>s ImageNet setting is</span>
+<span>$\lambda = \mu = 25$, $\nu = 1$. No negatives, no stop-gradient, no moving average.</span></p>
+<p><strong><strong><span>4. Centering and sharpening (DINO).</span></strong></strong><span> DINO (Caron et al., 2021) is a self-distillation</span>
+<span>method: a student network $g_{\theta_s}$ is trained to match a teacher $g_{\theta_t}$ (a moving</span>
+<span>average of the student) across different crops. Both output $K$-dimensional probability</span>
+<span>vectors and the loss is the cross-entropy $-\sum_k P_t^{(k)} \log P_s^{(k)}$, with</span></p>
+<p><span>$$\begin{aligned}
+P_s &amp;= \operatorname{softmax}\big(g_{\theta_s}(x)/\tau_s\big), \\
+P_t &amp;= \operatorname{softmax}\big((g_{\theta_t}(x) - c)/\tau_t\big), \\
+c &amp;\leftarrow m c + (1 - m)\frac{1}{B}\sum_{i=1}^B g_{\theta_t}(x_i).
+\end{aligned}$$</span></p>
+<p><span>The two operations on the teacher pull in opposite directions. </span><em><span>Centering</span></em><span> (subtracting the</span>
+<span>running mean $c$) stops any one output dimension from dominating, but on its own pushes the</span>
+<span>teacher towards the uniform distribution. </span><em><span>Sharpening</span></em><span> (a low teacher temperature, $\tau_t$</span>
+<span>warmed up from 0.04 to 0.07, versus $\tau_s = 0.1$) pushes towards a one-hot output, but on its</span>
+<span>own lets one dimension win for every input. Each is a different kind of collapse; the paper</span>
+<span>shows that with only one of the two, training collapses, and with both it does not.</span></p>
+<p><span>It is worth noticing what these four have in common. Each, in its own way, forces the</span>
+<span>embedding distribution to stay </span><em><span>spread out</span></em><span>: through negatives that must be distinguishable,</span>
+<span>through dynamics that never settle on a constant, through a hinge on the variance, or through</span>
+<span>a running mean that is subtracted. The next section makes </span>&ldquo;<span>spread out</span>&rdquo;<span> precise.</span></p>
+</section>
+<section id="Alignment-and-uniformity">
+
+    <h2>
+    <a href="#Alignment-and-uniformity"><span>Alignment and uniformity</span> </a><a class="heading-anchor" href="#Alignment-and-uniformity" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Wang and Isola (2020) give what I think is the cleanest picture of what a contrastive loss is</span>
+<span>optimising. For an encoder $f$ that maps onto the unit hypersphere, define</span></p>
+<p><span>$$\mathcal{L}_{\text{align}} = \mathbb{E}_{(x, y) \sim p_{\text{pos}}} \big\|f(x) - f(y)\big\|^2,
+\qquad
+\mathcal{L}_{\text{uniform}} = \log \mathbb{E}_{x, y \sim p_{\text{data}}} \, e^{-t \|f(x) - f(y)\|^2}, \quad t = 2.$$</span></p>
+<p><span>Alignment asks that positive pairs map to nearby points. Uniformity asks that the embeddings of</span>
+<em><span>unrelated</span></em><span> inputs be spread over the sphere; it is the log of a Gaussian-kernel average over</span>
+<span>pairs, which is smallest when the points are uniformly distributed.</span></p>
+<p><span>Their main theorem says that as the number of negatives grows, InfoNCE decomposes into exactly</span>
+<span>these two forces:</span></p>
+<p><span>$$\mathcal{L}_N - \log N \;\xrightarrow{N \to \infty}\;
+-\frac{1}{\tau}\,\mathbb{E}_{\text{pos}}\big[f(x)^\top f(y)\big]
++ \mathbb{E}_{x}\left[\log \mathbb{E}_{x^-}\, e^{f(x)^\top f(x^-)/\tau}\right].$$</span></p>
+<p><span>On the sphere $\|u - v\|^2 = 2 - 2u^\top v$, so the first term is alignment. The second term</span>
+<span>is minimised by a uniform distribution of embeddings, and it is precisely the term that a</span>
+<span>collapsed encoder makes as large as possible. They also show empirically that the two metrics,</span>
+<span>measured directly, predict downstream linear-probe accuracy well, and that optimising</span>
+<span>$\mathcal{L}_{\text{align}} + \mathcal{L}_{\text{uniform}}$ directly works about as well as</span>
+<span>InfoNCE.</span></p>
+<p><span>This view explains one of SCARF</span>&rsquo;<span>s ablations nicely. With </span><em><span>no</span></em><span> corruption, $\tilde{x} = x$ and</span>
+<span>the positive similarity is always 1: the alignment term is already solved, and all the</span>
+<span>pre-training can do is spread rows uniformly on the sphere. The paper points out that this</span>
+<span>alone still learns something, but less than with corruption. Alignment is where the</span>
+<span>corruption injects knowledge about which features belong together.</span></p>
+</section>
+<section id="Try-it">
+
+    <h2>
+    <a href="#Try-it"><span>Try it</span> </a><a class="heading-anchor" href="#Try-it" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>The block below runs in your browser (Python via Pyodide, with NumPy). The first part checks</span>
+<span>the bound on a case where the true mutual information is known: two correlated Gaussian</span>
+<span>vectors with $I(X;Y) = -\frac{d}{2}\log(1-\rho^2)$, scored with the optimal critic</span>
+<span>$\log p(y|x)/p(y)$. Watch $\log N - \mathcal{L}_N$ climb towards the true value but stay</span>
+<span>below both it and $\log N$.</span></p>
+<p><span>The second part takes a toy </span>&ldquo;<span>encoder output</span>&rdquo;<span> (two noisy views of 256 points on the sphere)</span>
+<span>and a collapsed encoder, and reports alignment, uniformity, the loss at several temperatures,</span>
+<span>and the </span><em><span>effective number of negatives</span></em><span> each anchor is pushed away from (the exponentiated</span>
+<span>entropy of the softmax weights over negatives).</span></p>
+
+<figure class="code-block runnable" data-lang="python">
+
+
+<pre><code><span class="line"><span class="hl-keyword">import</span> numpy <span class="hl-keyword">as</span> np</span>
+<span class="line"></span>
+<span class="line">rng = np.random.default_rng(<span class="hl-number">0</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">logsumexp</span>(<span class="hl-params">a, axis</span>):</span>
+<span class="line">    m = a.<span class="hl-built_in">max</span>(axis=axis, keepdims=<span class="hl-literal">True</span>)</span>
+<span class="line">    <span class="hl-keyword">return</span> (m + np.log(np.exp(a - m).<span class="hl-built_in">sum</span>(axis=axis, keepdims=<span class="hl-literal">True</span>))).squeeze(axis)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">infonce</span>(<span class="hl-params">scores</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;scores[i, j] = f(x_i, y_j), positives on the diagonal.</span></span>
+<span class="line"><span class="hl-string">    Returns L = mean_i -log( e^{s_ii} / sum_j e^{s_ij} ).&quot;&quot;&quot;</span></span>
+<span class="line">    <span class="hl-keyword">return</span> np.mean(logsumexp(scores, <span class="hl-number">1</span>) - np.diag(scores))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># --- Part 1: the bound I(X;Y) &gt;= log N - L --------------------------------</span></span>
+<span class="line"><span class="hl-comment"># Correlated Gaussians: y = rho * x + sqrt(1 - rho^2) * noise, in d dims.</span></span>
+<span class="line"><span class="hl-comment"># The true MI is known in closed form, and so is the optimal critic</span></span>
+<span class="line"><span class="hl-comment"># f*(x, y) = log p(y|x) / p(y).</span></span>
+<span class="line">d, rho = <span class="hl-number">4</span>, <span class="hl-number">0.9</span></span>
+<span class="line">true_mi = -<span class="hl-number">0.5</span> * d * np.log(<span class="hl-number">1</span> - rho**<span class="hl-number">2</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">sample</span>(<span class="hl-params">n</span>):</span>
+<span class="line">    x = rng.standard_normal((n, d))</span>
+<span class="line">    y = rho * x + np.sqrt(<span class="hl-number">1</span> - rho**<span class="hl-number">2</span>) * rng.standard_normal((n, d))</span>
+<span class="line">    <span class="hl-keyword">return</span> x, y</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">optimal_critic</span>(<span class="hl-params">x, y</span>):</span>
+<span class="line">    <span class="hl-comment"># log N(y; rho x, (1-rho^2) I) - log N(y; 0, I), for every pair (i, j)</span></span>
+<span class="line">    diff = y[<span class="hl-literal">None</span>, :, :] - rho * x[:, <span class="hl-literal">None</span>, :]</span>
+<span class="line">    <span class="hl-keyword">return</span> (-(diff**<span class="hl-number">2</span>).<span class="hl-built_in">sum</span>(-<span class="hl-number">1</span>) / (<span class="hl-number">2</span> * (<span class="hl-number">1</span> - rho**<span class="hl-number">2</span>))</span>
+<span class="line">            + (y**<span class="hl-number">2</span>).<span class="hl-built_in">sum</span>(-<span class="hl-number">1</span>)[<span class="hl-literal">None</span>, :] / <span class="hl-number">2</span></span>
+<span class="line">            - <span class="hl-number">0.5</span> * d * np.log(<span class="hl-number">1</span> - rho**<span class="hl-number">2</span>))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;true I(X;Y) = <span class="hl-subst">{true_mi:<span class="hl-number">.3</span>f}</span> nats, optimal critic\n&quot;</span>)</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;<span class="hl-subst">{<span class="hl-string">&#x27;N&#x27;</span>:&gt;<span class="hl-number">5</span>}</span> <span class="hl-subst">{<span class="hl-string">&#x27;log N&#x27;</span>:&gt;<span class="hl-number">7</span>}</span> <span class="hl-subst">{<span class="hl-string">&#x27;L_N&#x27;</span>:&gt;<span class="hl-number">7</span>}</span> <span class="hl-subst">{<span class="hl-string">&#x27;log N - L_N&#x27;</span>:&gt;<span class="hl-number">12</span>}</span>&quot;</span>)</span>
+<span class="line"><span class="hl-keyword">for</span> N <span class="hl-keyword">in</span> [<span class="hl-number">2</span>, <span class="hl-number">8</span>, <span class="hl-number">32</span>, <span class="hl-number">128</span>, <span class="hl-number">512</span>]:</span>
+<span class="line">    reps = <span class="hl-built_in">max</span>(<span class="hl-number">1</span>, <span class="hl-number">4096</span> // N)</span>
+<span class="line">    L = np.mean([infonce(optimal_critic(*sample(N))) <span class="hl-keyword">for</span> _ <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(reps)])</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;<span class="hl-subst">{N:&gt;<span class="hl-number">5</span>}</span> <span class="hl-subst">{np.log(N):<span class="hl-number">7.3</span>f}</span> <span class="hl-subst">{L:<span class="hl-number">7.3</span>f}</span> <span class="hl-subst">{np.log(N) - L:<span class="hl-number">12.3</span>f}</span>&quot;</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># --- Part 2: temperature, alignment and uniformity -------------------------</span></span>
+<span class="line"><span class="hl-comment"># A toy &quot;encoder output&quot;: two noisy views of N points on the unit sphere,</span></span>
+<span class="line"><span class="hl-comment"># versus a collapsed encoder that maps everything to the same vector.</span></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">normalize</span>(<span class="hl-params">v</span>):</span>
+<span class="line">    <span class="hl-keyword">return</span> v / np.linalg.norm(v, axis=<span class="hl-number">1</span>, keepdims=<span class="hl-literal">True</span>)</span>
+<span class="line"></span>
+<span class="line">N, k = <span class="hl-number">256</span>, <span class="hl-number">16</span></span>
+<span class="line">u = normalize(rng.standard_normal((N, k)))</span>
+<span class="line">z1 = normalize(u + <span class="hl-number">0.15</span> * rng.standard_normal((N, k)))</span>
+<span class="line">z2 = normalize(u + <span class="hl-number">0.15</span> * rng.standard_normal((N, k)))</span>
+<span class="line">collapsed = np.tile(normalize(rng.standard_normal((<span class="hl-number">1</span>, k))), (N, <span class="hl-number">1</span>))</span>
+<span class="line">off = ~np.eye(N, dtype=<span class="hl-built_in">bool</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">align_unif</span>(<span class="hl-params">a, b</span>):</span>
+<span class="line">    al = np.mean(((a - b)**<span class="hl-number">2</span>).<span class="hl-built_in">sum</span>(<span class="hl-number">1</span>))</span>
+<span class="line">    sq = ((a[:, <span class="hl-literal">None</span>] - a[<span class="hl-literal">None</span>, :])**<span class="hl-number">2</span>).<span class="hl-built_in">sum</span>(-<span class="hl-number">1</span>)</span>
+<span class="line">    <span class="hl-keyword">return</span> al, np.log(np.mean(np.exp(-<span class="hl-number">2</span> * sq[off])))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;\n             alignment  uniformity   (both: lower is better)&quot;</span>)</span>
+<span class="line"><span class="hl-keyword">for</span> name, (a, b) <span class="hl-keyword">in</span> [(<span class="hl-string">&quot;views&quot;</span>, (z1, z2)), (<span class="hl-string">&quot;collapsed&quot;</span>, (collapsed, collapsed))]:</span>
+<span class="line">    al, un = align_unif(a, b)</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;<span class="hl-subst">{name:&gt;<span class="hl-number">10</span>}</span> <span class="hl-subst">{al:<span class="hl-number">11.3</span>f}</span> <span class="hl-subst">{un:<span class="hl-number">11.3</span>f}</span>&quot;</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;\n<span class="hl-subst">{<span class="hl-string">&#x27;tau&#x27;</span>:&gt;<span class="hl-number">5</span>}</span> <span class="hl-subst">{<span class="hl-string">&#x27;L views&#x27;</span>:&gt;<span class="hl-number">8</span>}</span> <span class="hl-subst">{<span class="hl-string">&#x27;L collapsed&#x27;</span>:&gt;<span class="hl-number">12</span>}</span> <span class="hl-subst">{<span class="hl-string">&#x27;top-1 acc&#x27;</span>:&gt;<span class="hl-number">10</span>}</span> <span class="hl-subst">{<span class="hl-string">&#x27;eff. #neg&#x27;</span>:&gt;<span class="hl-number">10</span>}</span>&quot;</span>)</span>
+<span class="line"><span class="hl-keyword">for</span> tau <span class="hl-keyword">in</span> [<span class="hl-number">0.05</span>, <span class="hl-number">0.1</span>, <span class="hl-number">0.2</span>, <span class="hl-number">0.5</span>, <span class="hl-number">1.0</span>]:</span>
+<span class="line">    s = z1 @ z2.T / tau</span>
+<span class="line">    sc = collapsed @ collapsed.T / tau</span>
+<span class="line">    acc = np.mean(s.argmax(<span class="hl-number">1</span>) == np.arange(N))</span>
+<span class="line">    <span class="hl-comment"># softmax weights each anchor puts on its negatives = their gradient weights</span></span>
+<span class="line">    neg = np.where(off, s, -np.inf)</span>
+<span class="line">    p = np.exp(neg - neg.<span class="hl-built_in">max</span>(<span class="hl-number">1</span>, keepdims=<span class="hl-literal">True</span>))</span>
+<span class="line">    p /= p.<span class="hl-built_in">sum</span>(<span class="hl-number">1</span>, keepdims=<span class="hl-literal">True</span>)</span>
+<span class="line">    ent = -np.<span class="hl-built_in">sum</span>(p * np.log(np.where(p &gt; <span class="hl-number">0</span>, p, <span class="hl-number">1.0</span>)), <span class="hl-number">1</span>)</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;<span class="hl-subst">{tau:<span class="hl-number">5.2</span>f}</span> <span class="hl-subst">{infonce(s):<span class="hl-number">8.3</span>f}</span> <span class="hl-subst">{infonce(sc):<span class="hl-number">12.3</span>f}</span> <span class="hl-subst">{acc:<span class="hl-number">10.2</span>f}</span> <span class="hl-subst">{np.mean(np.exp(ent)):<span class="hl-number">10.1</span>f}</span>&quot;</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">f&quot;\nlog N = <span class="hl-subst">{np.log(N):<span class="hl-number">.3</span>f}</span>. The collapsed encoder pays exactly log N at every&quot;</span>)</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;tau, so its bound log N - L on the mutual information is zero.&quot;</span>)</span></code></pre>
+
+<textarea class="run-source" hidden spellcheck="false">import numpy as np
+
+rng = np.random.default_rng(0)
+
+def logsumexp(a, axis):
+    m = a.max(axis=axis, keepdims=True)
+    return (m + np.log(np.exp(a - m).sum(axis=axis, keepdims=True))).squeeze(axis)
+
+def infonce(scores):
+    &quot;&quot;&quot;scores[i, j] = f(x_i, y_j), positives on the diagonal.
+    Returns L = mean_i -log( e^{s_ii} / sum_j e^{s_ij} ).&quot;&quot;&quot;
+    return np.mean(logsumexp(scores, 1) - np.diag(scores))
+
+# --- Part 1: the bound I(X;Y) &gt;= log N - L --------------------------------
+# Correlated Gaussians: y = rho * x + sqrt(1 - rho^2) * noise, in d dims.
+# The true MI is known in closed form, and so is the optimal critic
+# f*(x, y) = log p(y|x) / p(y).
+d, rho = 4, 0.9
+true_mi = -0.5 * d * np.log(1 - rho**2)
+
+def sample(n):
+    x = rng.standard_normal((n, d))
+    y = rho * x + np.sqrt(1 - rho**2) * rng.standard_normal((n, d))
+    return x, y
+
+def optimal_critic(x, y):
+    # log N(y; rho x, (1-rho^2) I) - log N(y; 0, I), for every pair (i, j)
+    diff = y[None, :, :] - rho * x[:, None, :]
+    return (-(diff**2).sum(-1) / (2 * (1 - rho**2))
+            + (y**2).sum(-1)[None, :] / 2
+            - 0.5 * d * np.log(1 - rho**2))
+
+print(f&quot;true I(X;Y) = {true_mi:.3f} nats, optimal critic\n&quot;)
+print(f&quot;{'N':&gt;5} {'log N':&gt;7} {'L_N':&gt;7} {'log N - L_N':&gt;12}&quot;)
+for N in [2, 8, 32, 128, 512]:
+    reps = max(1, 4096 // N)
+    L = np.mean([infonce(optimal_critic(*sample(N))) for _ in range(reps)])
+    print(f&quot;{N:&gt;5} {np.log(N):7.3f} {L:7.3f} {np.log(N) - L:12.3f}&quot;)
+
+# --- Part 2: temperature, alignment and uniformity -------------------------
+# A toy &quot;encoder output&quot;: two noisy views of N points on the unit sphere,
+# versus a collapsed encoder that maps everything to the same vector.
+def normalize(v):
+    return v / np.linalg.norm(v, axis=1, keepdims=True)
+
+N, k = 256, 16
+u = normalize(rng.standard_normal((N, k)))
+z1 = normalize(u + 0.15 * rng.standard_normal((N, k)))
+z2 = normalize(u + 0.15 * rng.standard_normal((N, k)))
+collapsed = np.tile(normalize(rng.standard_normal((1, k))), (N, 1))
+off = ~np.eye(N, dtype=bool)
+
+def align_unif(a, b):
+    al = np.mean(((a - b)**2).sum(1))
+    sq = ((a[:, None] - a[None, :])**2).sum(-1)
+    return al, np.log(np.mean(np.exp(-2 * sq[off])))
+
+print(&quot;\n             alignment  uniformity   (both: lower is better)&quot;)
+for name, (a, b) in [(&quot;views&quot;, (z1, z2)), (&quot;collapsed&quot;, (collapsed, collapsed))]:
+    al, un = align_unif(a, b)
+    print(f&quot;{name:&gt;10} {al:11.3f} {un:11.3f}&quot;)
+
+print(f&quot;\n{'tau':&gt;5} {'L views':&gt;8} {'L collapsed':&gt;12} {'top-1 acc':&gt;10} {'eff. #neg':&gt;10}&quot;)
+for tau in [0.05, 0.1, 0.2, 0.5, 1.0]:
+    s = z1 @ z2.T / tau
+    sc = collapsed @ collapsed.T / tau
+    acc = np.mean(s.argmax(1) == np.arange(N))
+    # softmax weights each anchor puts on its negatives = their gradient weights
+    neg = np.where(off, s, -np.inf)
+    p = np.exp(neg - neg.max(1, keepdims=True))
+    p /= p.sum(1, keepdims=True)
+    ent = -np.sum(p * np.log(np.where(p &gt; 0, p, 1.0)), 1)
+    print(f&quot;{tau:5.2f} {infonce(s):8.3f} {infonce(sc):12.3f} {acc:10.2f} {np.mean(np.exp(ent)):10.1f}&quot;)
+
+print(f&quot;\nlog N = {np.log(N):.3f}. The collapsed encoder pays exactly log N at every&quot;)
+print(&quot;tau, so its bound log N - L on the mutual information is zero.&quot;)
+</textarea>
+<div class="run-bar">
+<button type="button" class="widget-btn run-btn">Run</button>
+<button type="button" class="widget-btn run-edit">Edit</button>
+<span class="run-status muted"></span>
+</div>
+<pre class="run-output" hidden></pre>
+<noscript><p class="widget-fallback">This snippet can be run in the browser with JavaScript enabled.</p></noscript>
+</figure>
+<p><span>A few things to notice in the output. With $N = 2$ the bound can certify at most</span>
+<span>$\log 2 \approx 0.69$ nats of the 3.32 that are there; it takes hundreds of negatives to get</span>
+<span>close, exactly the saturation described above. The collapsed encoder has perfect alignment</span>
+<span>(zero) but the worst possible uniformity (zero is the maximum of a log-mean of numbers at most</span>
+<span>one), and it pays $\log N$ at every temperature. And for the non-collapsed views, the</span>
+<span>retrieval accuracy is the same at every $\tau$ (the ranking of the similarities does not</span>
+<span>depend on it), but the loss and the number of negatives that actually receive gradient change</span>
+<span>by orders of magnitude: at $\tau = 0.05$ each anchor is effectively pushed away from about 7</span>
+<span>of its 255 negatives, at $\tau = 1$ from nearly all of them.</span></p>
+</section>
+<section id="What-SCARF-found">
+
+    <h2>
+    <a href="#What-SCARF-found"><span>What SCARF found</span> </a><a class="heading-anchor" href="#What-SCARF-found" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>SCARF was tested on the OpenML-CC18 benchmark, a curated collection of 72 real-world</span>
+<span>classification datasets (the paper uses 69 of them, dropping MNIST, Fashion-MNIST and</span>
+<span>CIFAR-10 because they are not really tabular). Each was evaluated with fully labeled data,</span>
+<span>with only 25% of the training labels available, and with 30% of the training labels</span>
+<span>corrupted. It demonstrated significant improvements:</span></p>
+<ul>
+<li>
+<span>Enhanced classification accuracy</span>
+</li>
+<li>
+<span>Improved performance under label noise</span>
+</li>
+<li>
+<span>Effective semi-supervised learning capabilities</span>
+</li>
+<li>
+<span>Domain-agnostic representation learning</span>
+</li>
+<li>
+<span>Minimal sensitivity to feature scaling</span>
+</li>
+<li>
+<span>Hyperparameter stability</span>
+</li>
+<li>
+<span>Compatibility with existing machine learning techniques</span>
+</li>
+</ul>
+<p><span>On the stability point: performance was flat for corruption rates between 50% and 80%, for</span>
+<span>batch sizes beyond 128, and for the temperature, which is unusual for a contrastive method. On</span>
+<span>compatibility: SCARF pre-training stacked on top of existing remedies for label noise and for</span>
+<span>semi-supervised learning still improved them, and it beat autoencoder pre-training, which is</span>
+<span>the natural baseline for tabular data.</span></p>
+<p><span>It is worth being careful about what </span>&ldquo;<span>significant improvements</span>&rdquo;<span> means here. The gains are</span>
+<span>measured against the same MLP trained from scratch and reported as win matrices and relative</span>
+<span>improvements across datasets (SCARF lifts the label-noise baselines by roughly 2-3%, for</span>
+<span>example). The improvements are consistent, but the headline comparisons are between neural</span>
+<span>networks. The appendix does list absolute accuracies next to a default-settings XGBoost</span>
+<span>baseline, and gradient-boosted trees remain very strong on tabular data in general. Whether</span>
+<span>contrastive pre-training reliably closes that gap is, as far as I know, still an open question.</span></p>
+<p><span>SCARF represents a pivotal advancement in self-supervised learning, offering a flexible, powerful</span>
+<span>approach to extracting meaningful representations with minimal labeled data. The deeper lesson,</span>
+<span>for me, is how little of it is specific to tables. Strip the augmentation away and what remains</span>
+<span>is the general recipe of this post: define what should stay the same between two views</span>
+<span>(alignment), make sure the embedding cannot cheat by collapsing (uniformity, via negatives or</span>
+<span>one of the alternatives), and choose a temperature that decides how hard the negatives push.</span>
+<span>The augmentation is where the domain knowledge goes, and SCARF</span>&rsquo;<span>s contribution is an augmentation</span>
+<span>that needs almost none.</span></p>
+</section>
+<section id="References">
+
+    <h2>
+    <a href="#References"><span>References</span> </a><a class="heading-anchor" href="#References" aria-label="Link to this section">#</a>
+    </h2>
+<ul>
+<li>
+<span>Bahri, D., Jiang, H., Tay, Y., Metzler, D. (2021). SCARF: Self-Supervised Contrastive Learning using Random Feature Corruption. ICLR 2022. </span><a href="https://arxiv.org/abs/2106.15147" class="url">https://arxiv.org/abs/2106.15147</a>
+</li>
+<li>
+<span>van den Oord, A., Li, Y., Vinyals, O. (2018). Representation Learning with Contrastive Predictive Coding. </span><a href="https://arxiv.org/abs/1807.03748" class="url">https://arxiv.org/abs/1807.03748</a>
+</li>
+<li>
+<span>Poole, B., Ozair, S., van den Oord, A., Alemi, A. A., Tucker, G. (2019). On Variational Bounds of Mutual Information. ICML 2019. </span><a href="https://arxiv.org/abs/1905.06922" class="url">https://arxiv.org/abs/1905.06922</a>
+</li>
+<li>
+<span>McAllester, D., Stratos, K. (2018). Formal Limitations on the Measurement of Mutual Information. </span><a href="https://arxiv.org/abs/1811.04251" class="url">https://arxiv.org/abs/1811.04251</a>
+</li>
+<li>
+<span>Tschannen, M., Djolonga, J., Rubenstein, P. K., Gelly, S., Lucic, M. (2019). On Mutual Information Maximization for Representation Learning. ICLR 2020. </span><a href="https://arxiv.org/abs/1907.13625" class="url">https://arxiv.org/abs/1907.13625</a>
+</li>
+<li>
+<span>Wang, F., Liu, H. (2020). Understanding the Behaviour of Contrastive Loss. CVPR 2021. </span><a href="https://arxiv.org/abs/2012.09740" class="url">https://arxiv.org/abs/2012.09740</a>
+</li>
+<li>
+<span>Chen, T., Kornblith, S., Norouzi, M., Hinton, G. (2020). A Simple Framework for Contrastive Learning of Visual Representations. ICML 2020. </span><a href="https://arxiv.org/abs/2002.05709" class="url">https://arxiv.org/abs/2002.05709</a>
+</li>
+<li>
+<span>Grill, J.-B., et al. (2020). Bootstrap your own latent: A new approach to self-supervised Learning. </span><a href="https://arxiv.org/abs/2006.07733" class="url">https://arxiv.org/abs/2006.07733</a>
+</li>
+<li>
+<span>Chen, X., He, K. (2020). Exploring Simple Siamese Representation Learning. </span><a href="https://arxiv.org/abs/2011.10566" class="url">https://arxiv.org/abs/2011.10566</a>
+</li>
+<li>
+<span>Bardes, A., Ponce, J., LeCun, Y. (2021). VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning. ICLR 2022. </span><a href="https://arxiv.org/abs/2105.04906" class="url">https://arxiv.org/abs/2105.04906</a>
+</li>
+<li>
+<span>Caron, M., Touvron, H., Misra, I., Jégou, H., Mairal, J., Bojanowski, P., Joulin, A. (2021). Emerging Properties in Self-Supervised Vision Transformers. </span><a href="https://arxiv.org/abs/2104.14294" class="url">https://arxiv.org/abs/2104.14294</a>
+</li>
+<li>
+<span>Wang, T., Isola, P. (2020). Understanding Contrastive Representation Learning through Alignment and Uniformity on the Hypersphere. ICML 2020. </span><a href="https://arxiv.org/abs/2005.10242" class="url">https://arxiv.org/abs/2005.10242</a>
+</li>
+</ul>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/self-supervised.html">#self-supervised</a><a class="tag" href="/tags/representation-learning.html">#representation-learning</a></div>
+      <section class="related">
+        <h2>Related posts</h2>
+        <ul class="related-list">
+          <li>
+              <a href="/2024/08/18/ssl.html">Self Supervised Learning</a>
+              <span class="muted"><time datetime="2024-08-18">Aug 18, 2024</time> · Frontier LLMs &amp; Architectures</span>
+            </li><li>
+              <a href="/2025/07/08/neural-collapse.html">What is Neural Collapse? A Simpler Look</a>
+              <span class="muted"><time datetime="2025-07-08">Jul 8, 2025</time> · Frontier LLMs &amp; Architectures</span>
+            </li><li>
+              <a href="/2024/11/17/plato.html">The Platonic Representation Hypothesis: Are AI Models Converging on Universal Representations?</a>
+              <span class="muted"><time datetime="2024-11-17">Nov 17, 2024</time> · Math, Physics &amp; Foundations</span>
+            </li>
+        </ul>
+      </section><nav class="post-nav" aria-label="Chronological">
+        <a class="post-nav__link post-nav__prev" href="/2024/11/17/plato.html">
+          <span class="post-nav__label">← Older</span>
+          <span class="post-nav__title">The Platonic Representation Hypothesis: Are AI Models Converging on Universal Representations?</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/12/01/flow.html">
+          <span class="post-nav__label">Newer →</span>
+          <span class="post-nav__title">Flow Matching, a short overview</span>
+        </a>
+      </nav><nav class="post-nav post-nav--theme" aria-label="Same theme">
+        <a class="post-nav__link post-nav__prev" href="/2024/11/10/sae.html">
+          <span class="post-nav__label">← Older in theme</span>
+          <span class="post-nav__title">Sparse Autoencoders</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2024/12/28/deepseek.html">
+          <span class="post-nav__label">Newer in theme →</span>
+          <span class="post-nav__title">Deepseek, an overview and quick notes</span>
+        </a>
+      </nav>
+      
+    <section class="comments" id="comments">
+      <h2>Comments</h2>
+      <div class="giscus"></div>
+      <noscript><p class="muted">Comments are powered by <a href="https://giscus.app">giscus</a> and need JavaScript.</p></noscript>
+    </section>
+    <script>
+    (function () {
+      // Inject giscus with the theme the site is actually using (the toggle
+      // persists in localStorage), rather than the OS preference.
+      var siteTheme = function () {
+        var t = document.documentElement.getAttribute("data-theme");
+        if (t) return t === "dark" ? "dark" : "light";
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark" : "light";
+      };
+      var s = document.createElement("script");
+      s.src = "https://giscus.app/client.js";
+      var attrs = {
+        "data-repo": "mbottoni/mbottoni.github.io",
+        "data-repo-id": "R_kgDOKv71Lg",
+        "data-category": "General",
+        "data-category-id": "DIC_kwDOKv71Ls4DEBYr",
+        "data-mapping": "pathname",
+        "data-strict": "1",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "top",
+        "data-theme": siteTheme(),
+        "data-lang": "en",
+        "data-loading": "lazy",
+        "crossorigin": "anonymous"
+      };
+      for (var k in attrs) s.setAttribute(k, attrs[k]);
+      s.async = true;
+      document.getElementById("comments").appendChild(s);
+
+      // Follow the dark-mode toggle after load.
+      new MutationObserver(function () {
+        var frame = document.querySelector("iframe.giscus-frame");
+        if (!frame) return;
+        frame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: siteTheme() } } },
+          "https://giscus.app");
+      }).observe(document.documentElement,
+        { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+    </script>
+  
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2024-11-25-ssl.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        // Widgets build their own DOM and style their spans.
+        if (span.closest(".widget")) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  <script defer src="/js/runner.js"></script>
+<script>
+(function () {
+  var bar = document.querySelector(".reading-progress__bar");
+  var article = document.querySelector("article");
+  if (bar && article) {
+    var update = function () {
+      var top = article.offsetTop;
+      var h = article.offsetHeight - window.innerHeight;
+      var p = h > 0 ? (window.scrollY - top) / h : 1;
+      bar.style.transform = "scaleX(" + Math.min(1, Math.max(0, p)) + ")";
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
+  var toc = document.querySelector(".toc");
+  if (!toc || !("IntersectionObserver" in window)) return;
+  var links = {};
+  toc.querySelectorAll("a[href^='#']").forEach(function (a) {
+    links[decodeURIComponent(a.getAttribute("href").slice(1))] = a;
+  });
+  var ids = Object.keys(links);
+  if (!ids.length) return;
+  var visible = {};
+  var setActive = function () {
+    var first = null;
+    for (var i = 0; i < ids.length; i++) {
+      if (visible[ids[i]]) { first = ids[i]; break; }
+    }
+    ids.forEach(function (id) {
+      links[id].classList.toggle("active", id === first);
+    });
+  };
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    setActive();
+  }, { rootMargin: "-10% 0px -70% 0px", threshold: 0 });
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>
+</body>
+
+</html>

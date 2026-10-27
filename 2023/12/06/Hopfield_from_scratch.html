@@ -1,0 +1,883 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Understanding Cover's Universal Portfolio</title>
+  <meta name="description" content="I always wanted to understand the concept of a universal portfolio from
+Cover. This topic has fascinated me since I first heard about it in my
+information theory lectures, and you know what they say... the best way to
+learn is to practice. So here's my attempt.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Understanding Cover's Universal Portfolio">
+  <meta property="og:description" content="I always wanted to understand the concept of a universal portfolio from
+Cover. This topic has fascinated me since I first heard about it in my
+information theory lectures, and you know what they say... the best way to
+learn is to practice. So here's my attempt.">
+  <meta property="og:url" content="https://mbottoni.github.io/2023/12/06/Hopfield_from_scratch.html">
+  <meta property="og:image" content="/assets/foundations/meme_stock_res.jpg">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Understanding Cover's Universal Portfolio">
+  <meta name="twitter:description" content="I always wanted to understand the concept of a universal portfolio from
+Cover. This topic has fascinated me since I first heard about it in my
+information theory lectures, and you know what they say... the best way to
+learn is to practice. So here's my attempt.">
+  <meta name="twitter:image" content="/assets/foundations/meme_stock_res.jpg">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2023/12/06/Hopfield_from_scratch.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/map.html">Map</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="reading-progress" aria-hidden="true"><div class="reading-progress__bar"></div></div>
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/foundations.html">
+          Math, Physics &amp; Foundations
+        </a>
+        <span class="post-meta"><time datetime="2023-12-06">Dec 6, 2023</time> · 16 min read</span>
+      </div>
+      
+      <p class="prereq-line">
+      <span class="prereq-line__label">Before reading this</span>
+      <a href="/2024/12/23/prob.html">Probability Paradigms</a>
+    </p>
+      
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <ul><li class="toc-l2"><a href="#The-setup">The setup</a></li><li class="toc-l2"><a href="#Volatility-pumping-money-from-assets-that-go-nowhere">Volatility pumping: money from assets that go nowhere</a></li><li class="toc-l2"><a href="#The-universal-portfolio">The universal portfolio</a></li><li class="toc-l2"><a href="#The-regret-bound">The regret bound</a></li><li class="toc-l3"><a href="#Proof-for-two-assets">Proof for two assets</a></li><li class="toc-l3"><a href="#Where-the-log-T-comes-from-and-a-better-prior">Where the log T comes from, and a better prior</a></li><li class="toc-l2"><a href="#Connections-Kelly-betting-and-universal-coding">Connections: Kelly betting and universal coding</a></li><li class="toc-l2"><a href="#Try-it">Try it</a></li><li class="toc-l2"><a href="#The-code">The code</a></li><li class="toc-l2"><a href="#Caveats">Caveats</a></li><li class="toc-l2"><a href="#References">References</a></li></ul>
+    </details>
+  
+      <article >
+
+    <h1 id="Understanding-Cover-s-Universal-Portfolio">
+    <a href="#Understanding-Cover-s-Universal-Portfolio"><span>Understanding Cover</span>&rsquo;<span>s Universal Portfolio</span> <time datetime="2023-12-06">Dec 6, 2023</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/foundations/meme_stock_res.jpg">
+</figure>
+<p><span>I always wanted to understand the concept of a universal portfolio from</span>
+<span>Cover. This topic has fascinated me since I first heard about it in my</span>
+<span>information theory lectures, and you know what they say</span>&hellip;<span> the best way to</span>
+<span>learn is to practice. So here</span>&rsquo;<span>s my attempt.</span></p>
+<p><span>Following the words of the original paper: </span><em>&ldquo;<span>We exhibit an algorithm that</span>
+<span>outperforms the best stock in the market</span>&rdquo;</em><span> (to first order in the exponent, as</span>
+<span>we</span>&rsquo;<span>ll see). The algorithm is online: the portfolio is updated every period from</span>
+<span>what has happened so far, so it follows drifts and shifts of the market. And it</span>
+<span>is </span><em><span>model agnostic</span></em><span>: it makes no assumption at all about the statistics of the</span>
+<span>returns. The guarantee holds for every sequence of prices, including one chosen</span>
+<span>by an adversary. That</span>&rsquo;<span>s fantastic and sounds almost too good to be true, so</span>
+<span>let</span>&rsquo;<span>s see exactly what is being promised and why it holds.</span></p>
+<p><span>Here is the link to the original paper: </span><a href="https://web.mit.edu/6.454/www/www_fall_2001/shaas/universal_portfolios.pdf"><span>Paper</span></a><span>.</span></p>
+<section id="The-setup">
+
+    <h2>
+    <a href="#The-setup"><span>The setup</span> </a><a class="heading-anchor" href="#The-setup" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>There are $m$ assets and $T$ trading periods. All that matters about period</span>
+<span>$t$ is the vector of </span><em><span>price relatives</span></em></p>
+<p><span>$$x_t = (x_{t,1}, \dots, x_{t,m}), \qquad x_{t,i} = \frac{p_{t,i}}{p_{t-1,i}} \ge 0,$$</span></p>
+<p><span>the factor by which asset $i$</span>&rsquo;<span>s price moves from one close to the next. A</span>
+<em><span>portfolio</span></em><span> is a point of the simplex</span>
+<span>$\Delta_m = \{ b \in \mathbb{R}^m : b_i \ge 0, \ \sum_i b_i = 1 \}$, the</span>
+<span>fraction of current wealth held in each asset. If you hold $b$ during period</span>
+<span>$t$, your wealth is multiplied by $b \cdot x_t = \sum_i b_i x_{t,i}$.</span></p>
+<p><span>A </span><em><span>constant-rebalanced portfolio</span></em><span> (CRP) uses the same $b$ every period. That</span>
+<span>is not buy-and-hold: as prices move the weights drift, and each period you</span>
+<span>trade back to $b$, selling some of what went up and buying some of what went</span>
+<span>down. Starting from one dollar, its wealth after $T$ periods is</span></p>
+<p><span>$$S_T(b) = \prod_{t=1}^{T} b \cdot x_t .$$</span></p>
+<p><span>The vertices of the simplex are CRPs too: $b = e_i$ is simply </span>&ldquo;<span>hold asset $i$</span>&rdquo;<span>.</span>
+<span>The benchmark is the </span><em><span>best CRP in hindsight</span></em><span>,</span></p>
+<p><span>$$b^* = \arg\max_{b \in \Delta_m} S_T(b), \qquad S_T^* = S_T(b^*) \ \ge\ \max_i S_T(e_i),$$</span></p>
+<p><span>so beating $S_T^*$ means beating the best single stock as well. Of course</span>
+<span>$b^*$ depends on the whole future, so nobody can actually play it. The question</span>
+<span>is how close a strategy that only sees the past can get.</span></p>
+</section>
+<section id="Volatility-pumping-money-from-assets-that-go-nowhere">
+
+    <h2>
+    <a href="#Volatility-pumping-money-from-assets-that-go-nowhere"><span>Volatility pumping: money from assets that go nowhere</span> </a><a class="heading-anchor" href="#Volatility-pumping-money-from-assets-that-go-nowhere" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>The reason rebalancing can beat every stock is the gap between arithmetic and</span>
+<span>geometric growth. Wealth compounds multiplicatively, so what matters is</span>
+<span>$\mathbb{E} \log(b \cdot x)$, and for small log-returns with mean $\mu$ and</span>
+<span>variance $\sigma^2$ the growth rate of a single asset is roughly $\mu$ while</span>
+<span>its arithmetic mean return is $\mu + \sigma^2/2$. That half-variance is drag</span>
+<span>you pay for volatility. Mixing assets and rebalancing reduces the variance of</span>
+<span>the portfolio below that of its components (as long as they are not perfectly</span>
+<span>correlated), so it recovers part of the drag.</span></p>
+<p><span>The classic example makes this stark. Take cash ($x_{t,1} = 1$ always) and a</span>
+<span>stock that doubles, then halves, then doubles, forever:</span></p>
+<p><span>$$x_1 = (1, 2), \quad x_2 = (1, \tfrac12), \quad x_3 = (1, 2), \quad \dots$$</span></p>
+<p><span>Both assets stagnate: after every pair of periods the stock is back where it</span>
+<span>started, and cash never moves. Now rebalance to half and half. In an up period</span>
+<span>wealth is multiplied by $\tfrac12 \cdot 1 + \tfrac12 \cdot 2 = \tfrac32$, in a</span>
+<span>down period by $\tfrac12 + \tfrac12 \cdot \tfrac12 = \tfrac34$, so every pair of</span>
+<span>periods multiplies wealth by $\tfrac32 \cdot \tfrac34 = \tfrac98$. Over $T$</span>
+<span>periods that is $(9/8)^{T/2}$: exponential growth from two assets that each</span>
+<span>end where they started. More generally, with weight $b$ on the stock, each pair</span>
+<span>of periods gives $(1+b)(1-b/2) = 1 + b/2 - b^2/2$, which is maximised at</span>
+<span>$b^* = \tfrac12$, so $\tfrac98$ is the best a CRP can do here.</span></p>
+<p><span>This is neither a </span>&ldquo;<span>mean-reversion</span>&rdquo;<span> nor a </span>&ldquo;<span>momentum</span>&rdquo;<span> bet. Every CRP is</span>
+<span>mean-reverting at the level of trades (it sells winners), but you then let the</span>
+<span>CRPs that happen to suit the market run, which is the momentum part, and that</span>
+<span>is exactly what Cover</span>&rsquo;<span>s algorithm does.</span></p>
+<p><span>Real data shows the same thing. In Cover</span>&rsquo;<span>s 1991 paper, Iroquois Brands and Kin</span>
+<span>Ark, two volatile NYSE stocks, grew by factors of 8.92 and 4.13 over 22 years</span>
+<span>ending in 1985. The best CRP in hindsight, $b^* = (0.55, 0.45)$, grew by 73.6,</span>
+<span>and the universal portfolio below, which never saw the future, grew by 38.7.</span></p>
+</section>
+<section id="The-universal-portfolio">
+
+    <h2>
+    <a href="#The-universal-portfolio"><span>The universal portfolio</span> </a><a class="heading-anchor" href="#The-universal-portfolio" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>We cannot know $b^*$, but we can hedge over all of them. Put a prior $\mu$ on the</span>
+<span>simplex (uniform, to start with) and at time $t+1$ hold the wealth-weighted</span>
+<span>average of all CRPs:</span></p>
+<p><span>$$\hat b_{t+1} = \frac{\int_{\Delta_m} b \, S_t(b) \, d\mu(b)}{\int_{\Delta_m} S_t(b) \, d\mu(b)}, \qquad \hat b_1 = \int b \, d\mu(b), \qquad S_0 \equiv 1 .$$</span></p>
+<p><span>A CRP</span>&rsquo;<span>s weight is proportional to how much money it has made so far, so this is a</span>
+<span>Bayesian posterior mean, with $S_t(b)$ playing the role of the likelihood. No</span>
+<span>step size, no window, no tuning.</span></p>
+<p><span>The wealth of this strategy has a closed form. Since</span>
+<span>$\hat b_{t+1} \cdot x_{t+1} = \int S_t(b) \, (b \cdot x_{t+1}) \, d\mu / \int S_t \, d\mu = \int S_{t+1} \, d\mu / \int S_t \, d\mu$,</span>
+<span>the product telescopes:</span></p>
+<p><span>$$\hat S_T = \prod_{t=1}^{T} \hat b_t \cdot x_t = \int_{\Delta_m} S_T(b) \, d\mu(b).$$</span></p>
+<p><span>So the universal portfolio</span>&rsquo;<span>s wealth is </span><em><span>the average wealth of all CRPs</span></em><span>. That</span>
+<span>gives a second, more physical description: split your dollar among a continuum</span>
+<span>of fund managers, manager $b$ getting $d\mu(b)$, let each run CRP $b$ forever,</span>
+<span>and never move money between them. This buy-and-hold over CRPs is the same</span>
+<span>strategy, period by period.</span></p>
+<p><span>Now the trick is visible. An average is at least as large as the contribution</span>
+<span>of the best region, and $S_T(b)$ grows exponentially, so the average is</span>
+<span>dominated by the CRPs near $b^*$. What we lose is only the prior mass that sits</span>
+<span>close enough to $b^*$, and that turns out to be polynomial in $T$, not</span>
+<span>exponential.</span></p>
+</section>
+<section id="The-regret-bound">
+
+    <h2>
+    <a href="#The-regret-bound"><span>The regret bound</span> </a><a class="heading-anchor" href="#The-regret-bound" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Define the regret as the log-wealth gap, $R_T = \log S_T^* - \log \hat S_T$.</span></p>
+<p><strong><span>Theorem</span></strong><span> (Cover and Ordentlich 1996). With the uniform prior on $\Delta_m$,</span>
+<span>for every $T$ and every sequence $x_1, \dots, x_T$,</span></p>
+<p><span>$$\frac{S_T^*}{\hat S_T} \le \binom{T+m-1}{m-1} \le (T+1)^{m-1},
+\qquad\text{so}\qquad
+R_T \le (m-1) \log(T+1).$$</span></p>
+<p><span>The regret grows only logarithmically, so the per-period regret</span>
+<span>$R_T / T \le (m-1)\log(T+1)/T \to 0$: the universal portfolio has the same</span>
+<span>exponential growth rate as the best CRP in hindsight, on every sequence. It</span>
+<span>does not say that $\hat S_T \ge S_T^*$, or even that it beats the best stock in</span>
+<span>any given finite window, only that it falls short by a factor that grows</span>
+<span>polynomially while $S_T^*$ itself can grow exponentially.</span></p>
+<section id="Proof-for-two-assets">
+
+    <h3>
+    <a href="#Proof-for-two-assets"><span>Proof for two assets</span> </a><a class="heading-anchor" href="#Proof-for-two-assets" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Write $b$ for the weight on asset 1, so the prior is uniform on $[0,1]$ and</span>
+<span>$S_T(b) = \prod_t \big(b \, x_{t,1} + (1-b) \, x_{t,2}\big)$. Expand the product:</span>
+<span>choosing one term from each factor gives a sum over all $2^T$ sequences</span>
+<span>$j = (j_1, \dots, j_T) \in \{1,2\}^T$,</span></p>
+<p><span>$$S_T(b) = \sum_{j} b^{k(j)} (1-b)^{T-k(j)} \, x(j), \qquad x(j) = \prod_{t=1}^{T} x_{t, j_t} \ge 0,$$</span></p>
+<p><span>where $k(j)$ is the number of 1s in $j$. Integrating term by term with the beta</span>
+<span>integral $\int_0^1 b^k (1-b)^{T-k} db = \frac{k!\,(T-k)!}{(T+1)!}$,</span></p>
+<p><span>$$\hat S_T = \sum_j x(j) \, \frac{k!\,(T-k)!}{(T+1)!},
+\qquad
+S_T^* = \sum_j x(j) \, (b^*)^{k} (1-b^*)^{T-k}.$$</span></p>
+<p><span>Both are sums of nonnegative terms with the same weights $x(j)$, and a ratio of</span>
+<span>two such sums is at least the smallest termwise ratio (terms whose</span>
+<span>denominator vanishes only help). For each $k$, bound the</span>
+<span>denominator by its maximum over $b$, which is attained at $b = k/T$:</span></p>
+<p><span>$$\begin{aligned}
+\frac{k!\,(T-k)!/(T+1)!}{(b^*)^k (1-b^*)^{T-k}}
+&amp;\ge \frac{k!\,(T-k)!}{(T+1)! \, (k/T)^k \, (1-k/T)^{T-k}} \\
+&amp;= \frac{1}{(T+1) \, \binom{T}{k} \left(\frac{k}{T}\right)^{k} \left(1-\frac{k}{T}\right)^{T-k}}
+\ \ge\ \frac{1}{T+1}.
+\end{aligned}$$</span></p>
+<p><span>The last step is that $\binom{T}{k} p^k (1-p)^{T-k}$ is a binomial probability</span>
+<span>and so at most 1. Hence $\hat S_T \ge S_T^* / (T+1)$, that is $R_T \le \log(T+1)$,</span>
+<span>for every market sequence. $\blacksquare$</span></p>
+<p><span>For $m$ assets the same argument works: expand into sequences with counts</span>
+<span>$n_1, \dots, n_m$, use the Dirichlet integral</span>
+<span>$\int_{\Delta_m} \prod_i b_i^{n_i} \, d\mu(b) = (m-1)! \prod_i n_i! / (T+m-1)!$,</span>
+<span>and bound a multinomial probability by 1. This gives</span>
+<span>$\binom{T+m-1}{m-1} = \prod_{i=1}^{m-1} \frac{T+i}{i} \le (T+1)^{m-1}$.</span></p>
+<p><span>The proof shows something else: the bound does not depend on $b^*$ or on the</span>
+<span>size of the price moves. The only properties used are that wealth is a product</span>
+<span>of linear functions of $b$ and that the prior is uniform.</span></p>
+</section>
+<section id="Where-the-log-T-comes-from-and-a-better-prior">
+
+    <h3>
+    <a href="#Where-the-log-T-comes-from-and-a-better-prior"><span>Where the log T comes from, and a better prior</span> </a><a class="heading-anchor" href="#Where-the-log-T-comes-from-and-a-better-prior" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>The Laplace method shows where the logarithm comes from. Write</span>
+<span>$\log S_T(b) = T \, W_T(b)$ with $W_T(b) = \frac{1}{T}\sum_t \log(b \cdot x_t)$,</span>
+<span>a concave function. If $b^*$ is in the interior and</span>
+<span>$J = -W_T''(b^*) &gt; 0$, then near the peak</span>
+<span>$S_T(b) \approx S_T^* \, e^{-T J (b-b^*)^2/2}$, a bump of width $1/\sqrt{TJ}$,</span>
+<span>so</span></p>
+<p><span>$$\hat S_T = \int_0^1 S_T(b) \, db \approx S_T^* \sqrt{\frac{2\pi}{T J}},
+\qquad R_T \approx \tfrac12 \log T + \tfrac12 \log \frac{J}{2\pi}.$$</span></p>
+<p><span>This is the content of Cover</span>&rsquo;<span>s 1991 main theorem. Under regularity conditions</span>
+<span>(price relatives bounded away from 0 and $\infty$, $b^*$ interior, a strictly</span>
+<span>concave limit $W$), he showed</span>
+<span>$\hat S_T / S_T^* \sim (m-1)! \, (2\pi/T)^{(m-1)/2} / |J|^{1/2}$, which is</span>
+<span>half a $\log T$ per degree of freedom.</span></p>
+<p><span>So why does the theorem say $(m-1)\log(T+1)$ and not half of it? Because of the</span>
+<span>boundary. If one asset dominates, $b^*$ is a vertex, $W_T$ falls off</span>
+<em><span>linearly</span></em><span> away from it, the bump has width $1/T$ instead of $1/\sqrt T$, and</span>
+<span>the uniform prior gives it only $1/T$ of its mass. The bound is then nearly</span>
+<span>attained: if asset 1 doubles every period and asset 2 is flat, then</span>
+<span>$\hat S_T = \int_0^1 (1+b)^T db = (2^{T+1}-1)/(T+1)$ and</span>
+<span>$R_T \approx \log\frac{T+1}{2}$.</span></p>
+<p><span>The fix is to put more prior mass near the boundary. Cover and Ordentlich use the</span>
+<span>Dirichlet$(\tfrac12, \dots, \tfrac12)$ prior, density</span>
+<span>$\propto \prod_i b_i^{-1/2}$, and prove</span></p>
+<p><span>$$\frac{S_T^*}{\hat S_T} \le 2\,(T+1)^{(m-1)/2},
+\qquad\text{so}\qquad
+R_T \le \frac{m-1}{2}\log(T+1) + \log 2 ,$$</span></p>
+<p><span>which is $\frac{m-1}{2}\log T + O(1)$, uniformly over all sequences. They also show</span>
+<span>both bounds are essentially tight, so the Dirichlet(1/2) weighting has the</span>
+<span>better worst case. It has to be said that this is a worst-case statement: on a</span>
+<span>market with an interior $b^*$, the uniform prior is often slightly better (you</span>
+<span>can see it in the code below).</span></p>
+</section>
+</section>
+<section id="Connections-Kelly-betting-and-universal-coding">
+
+    <h2>
+    <a href="#Connections-Kelly-betting-and-universal-coding"><span>Connections: Kelly betting and universal coding</span> </a><a class="heading-anchor" href="#Connections-Kelly-betting-and-universal-coding" aria-label="Link to this section">#</a>
+    </h2>
+<p><em><span>Kelly / log-optimal growth.</span></em><span> If the $x_t$ are i.i.d. from some distribution</span>
+<span>$F$, Kelly</span>&rsquo;<span>s log-optimal portfolio maximises $W(b) = \mathbb{E}_F \log(b \cdot x)$,</span>
+<span>and the best constant portfolio has growth rate $W^* = \max_b W(b)$. Knowing</span>
+<span>$F$, you would play the maximiser $b_F$ and by the law of large numbers</span>
+<span>$\frac1T \log S_T(b_F) \to W^*$. But $S_T^* \ge S_T(b_F)$ on every sample path,</span>
+<span>so</span></p>
+<p><span>$$\frac1T \log \hat S_T \ \ge\ \frac1T \log S_T(b_F) - \frac{(m-1)\log(T+1)}{T} \ \longrightarrow\ W^* \quad \text{a.s.}$$</span></p>
+<p><span>The universal portfolio reaches Kelly</span>&rsquo;<span>s growth rate without knowing $F$, and</span>
+<span>without even assuming that a distribution exists.</span></p>
+<p><em><span>Universal coding.</span></em><span> Take a </span>&ldquo;<span>horse race</span>&rdquo;<span> market where in each period exactly one</span>
+<span>asset pays off, $x_t = e_{j_t}$. Then $S_T(b) = \prod_i b_i^{n_i}$ is the</span>
+<span>probability that the i.i.d. distribution $b$ assigns to the sequence</span>
+<span>$j_1, \dots, j_T$, the best CRP is the maximum-likelihood distribution, and</span>
+<span>$\hat S_T = \int \prod_i b_i^{n_i} \, d\mu(b)$ is the Bayesian mixture</span>
+<span>probability. Regret is then exactly the code length, in nats, that the mixture code</span>
+<span>loses against the best i.i.d. code chosen in hindsight. The portfolio update</span>
+<span>becomes a sequential predictor. With the uniform prior it is Laplace</span>&rsquo;<span>s rule</span>
+<span>$\hat b_{t+1,i} = (n_i + 1)/(t + m)$. With the Dirichlet(1/2) prior it is</span>
+<span>$\hat b_{t+1,i} = (n_i + \tfrac12)/(t + \tfrac m2)$, the</span>
+<span>Krichevsky–Trofimov estimator, whose redundancy of $\frac{m-1}{2}\log T + O(1)$</span>
+<span>is the classic universal-coding result. Cover and Ordentlich show that this</span>
+<span>horse-race market is the least favourable case: the general bounds are exactly the</span>
+<span>worst-case redundancies of these mixture codes. Investing well and compressing</span>
+<span>well are the same problem.</span></p>
+</section>
+<section id="Try-it">
+
+    <h2>
+    <a href="#Try-it"><span>Try it</span> </a><a class="heading-anchor" href="#Try-it" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Below, two stocks with independent, roughly driftless log-returns. The top plot</span>
+<span>is the final wealth $S_T(b)$ of every CRP. Its two endpoints are the stocks</span>
+<span>themselves, and the hump in between is the rebalancing bonus. The dashed line is the</span>
+<span>universal portfolio, which is just the average height of that curve. Raise the</span>
+<span>volatility and the hump grows, roughly like $T\sigma^2/4$ in log-wealth for an</span>
+<span>even split. Raise $T$ and watch the regret: it creeps up like $\log T$ while</span>
+<span>the wealth itself moves exponentially. Then press </span><em><span>New market</span></em><span> a few</span>
+<span>times. Quite often one stock simply runs away, $b^*$ lands at 0 or 1, and the</span>
+<span>universal portfolio trails it. At these settings a stock</span>&rsquo;<span>s random walk</span>
+<span>($\sigma\sqrt T \approx 1.3$ in log-wealth) is larger than the rebalancing</span>
+<span>bonus ($T\sigma^2/4 \approx 0.45$). The guarantee still holds in every case,</span>
+<span>because it is a promise about the gap to the best CRP, not about winning.</span></p>
+
+<figure class="widget" data-widget="universal-portfolio">
+<div class="widget-mount"></div>
+<noscript><p class="widget-fallback">This figure is interactive and needs JavaScript.</p></noscript>
+<figcaption class="title">Wealth of every constant-rebalanced portfolio on a randomly generated two-stock market (log scale), with the best one in hindsight, b*, and the universal portfolio's wealth, which is the average of the curve under a uniform prior. The lower plot replays the same market over time. The regret meter is measured against the guaranteed ceiling log(T+1).</figcaption>
+</figure>
+</section>
+<section id="The-code">
+
+    <h2>
+    <a href="#The-code"><span>The code</span> </a><a class="heading-anchor" href="#The-code" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Here is the whole algorithm for two assets, with the integral over $b$</span>
+<span>replaced by a fine midpoint grid on $[0,1]$. It runs four markets: the</span>
+<span>double-or-halve example, a random two-stock market with the uniform and the</span>
+<span>Dirichlet(1/2) prior, and the boundary case where the uniform bound is nearly</span>
+<span>tight. It also checks the telescoping identity: the wealth obtained by actually</span>
+<span>trading $\hat b_t$ period by period matches the prior average of $S_T(b)$.</span></p>
+
+<figure class="code-block runnable" data-lang="python">
+
+
+<pre><code><span class="line"><span class="hl-keyword">import</span> numpy <span class="hl-keyword">as</span> np</span>
+<span class="line"></span>
+<span class="line">K = <span class="hl-number">2000</span></span>
+<span class="line">grid = (np.arange(K) + <span class="hl-number">0.5</span>) / K   <span class="hl-comment"># midpoints of [0,1]: b = weight on asset 1</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">crp_log_wealth</span>(<span class="hl-params">x, grid</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;log S_t(b) for every t and every b on the grid, shape (T, K).&quot;&quot;&quot;</span></span>
+<span class="line">    per_step = np.log(np.outer(x[:, <span class="hl-number">0</span>], grid) + np.outer(x[:, <span class="hl-number">1</span>], <span class="hl-number">1</span> - grid))</span>
+<span class="line">    <span class="hl-keyword">return</span> np.cumsum(per_step, axis=<span class="hl-number">0</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">universal</span>(<span class="hl-params">x, grid, prior</span>):</span>
+<span class="line">    <span class="hl-string">&quot;&quot;&quot;Play Cover&#x27;s portfolio day by day; return log wealth and the b_hat path.&quot;&quot;&quot;</span></span>
+<span class="line">    logS = crp_log_wealth(x, grid)</span>
+<span class="line">    prev = np.zeros(<span class="hl-built_in">len</span>(grid))            <span class="hl-comment"># log S_0(b) = 0 for every b</span></span>
+<span class="line">    log_wealth, path = <span class="hl-number">0.0</span>, []</span>
+<span class="line">    <span class="hl-keyword">for</span> t <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(<span class="hl-built_in">len</span>(x)):</span>
+<span class="line">        w = prior * np.exp(prev - prev.<span class="hl-built_in">max</span>())   <span class="hl-comment"># posterior weight ~ prior * S_{t-1}(b)</span></span>
+<span class="line">        b_hat = (grid * w).<span class="hl-built_in">sum</span>() / w.<span class="hl-built_in">sum</span>()      <span class="hl-comment"># wealth-weighted average of all CRPs</span></span>
+<span class="line">        path.append(b_hat)</span>
+<span class="line">        log_wealth += np.log(b_hat * x[t, <span class="hl-number">0</span>] + (<span class="hl-number">1</span> - b_hat) * x[t, <span class="hl-number">1</span>])</span>
+<span class="line">        prev = logS[t]</span>
+<span class="line">    <span class="hl-keyword">return</span> log_wealth, np.array(path), logS</span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">report</span>(<span class="hl-params">name, x, prior=<span class="hl-literal">None</span>, bound=<span class="hl-literal">None</span></span>):</span>
+<span class="line">    T = <span class="hl-built_in">len</span>(x)</span>
+<span class="line">    prior = np.ones(K) <span class="hl-keyword">if</span> prior <span class="hl-keyword">is</span> <span class="hl-literal">None</span> <span class="hl-keyword">else</span> prior</span>
+<span class="line">    prior = prior / prior.<span class="hl-built_in">sum</span>()</span>
+<span class="line">    log_up, path, logS = universal(x, grid, prior)</span>
+<span class="line">    <span class="hl-comment"># best CRP in hindsight: grid search, plus the two endpoints b = 0, 1</span></span>
+<span class="line">    cands = np.concatenate([[<span class="hl-number">0.0</span>], grid, [<span class="hl-number">1.0</span>]])</span>
+<span class="line">    final = np.concatenate([[np.log(x[:, <span class="hl-number">1</span>]).<span class="hl-built_in">sum</span>()], logS[-<span class="hl-number">1</span>],</span>
+<span class="line">                            [np.log(x[:, <span class="hl-number">0</span>]).<span class="hl-built_in">sum</span>()]])</span>
+<span class="line">    i = np.argmax(final)</span>
+<span class="line">    b_star, log_star = cands[i], final[i]</span>
+<span class="line">    <span class="hl-comment"># telescoping check: wealth of the played strategy = prior-average of S_T(b)</span></span>
+<span class="line">    m = logS[-<span class="hl-number">1</span>].<span class="hl-built_in">max</span>()</span>
+<span class="line">    log_mix = m + np.log((prior * np.exp(logS[-<span class="hl-number">1</span>] - m)).<span class="hl-built_in">sum</span>())</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;--- <span class="hl-subst">{name}</span>  (T = <span class="hl-subst">{T}</span>)&quot;</span>)</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;  asset 1 buy-and-hold : <span class="hl-subst">{np.prod(x[:, <span class="hl-number">0</span>]):<span class="hl-number">10.4</span>g}</span>&quot;</span>)</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;  asset 2 buy-and-hold : <span class="hl-subst">{np.prod(x[:, <span class="hl-number">1</span>]):<span class="hl-number">10.4</span>g}</span>&quot;</span>)</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;  best CRP  b* = <span class="hl-subst">{b_star:<span class="hl-number">.3</span>f}</span> : <span class="hl-subst">{np.exp(log_star):<span class="hl-number">10.4</span>g}</span>&quot;</span>)</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;  universal portfolio  : <span class="hl-subst">{np.exp(log_up):<span class="hl-number">10.4</span>g}</span>&quot;</span></span>
+<span class="line">          <span class="hl-string">f&quot;   (mixture of CRPs: <span class="hl-subst">{np.exp(log_mix):<span class="hl-number">.4</span>g}</span>)&quot;</span>)</span>
+<span class="line">    regret = log_star - log_up</span>
+<span class="line">    <span class="hl-keyword">if</span> bound <span class="hl-keyword">is</span> <span class="hl-literal">None</span>:</span>
+<span class="line">        bound = np.log(T + <span class="hl-number">1</span>)</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;  regret log S* - log S_up = <span class="hl-subst">{regret:<span class="hl-number">.3</span>f}</span>  &lt;=  bound <span class="hl-subst">{bound:<span class="hl-number">.3</span>f}</span>&quot;</span>)</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;  per-period regret       = <span class="hl-subst">{regret / T:<span class="hl-number">.5</span>f}</span>&quot;</span>)</span>
+<span class="line">    <span class="hl-built_in">print</span>(<span class="hl-string">f&quot;  final b_hat = <span class="hl-subst">{path[-<span class="hl-number">1</span>]:<span class="hl-number">.3</span>f}</span>&quot;</span>)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 1) Cash plus a stock that doubles, then halves, forever. Both are flat.</span></span>
+<span class="line">T = <span class="hl-number">40</span></span>
+<span class="line">stock = np.where(np.arange(T) % <span class="hl-number">2</span> == <span class="hl-number">0</span>, <span class="hl-number">2.0</span>, <span class="hl-number">0.5</span>)</span>
+<span class="line">x = np.column_stack([stock, np.ones(T)])</span>
+<span class="line">report(<span class="hl-string">&quot;cash + double/halve stock&quot;</span>, x)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 2) Two volatile, driftless, independent stocks.</span></span>
+<span class="line">rng = np.random.default_rng(<span class="hl-number">1991</span>)</span>
+<span class="line">T = <span class="hl-number">1000</span></span>
+<span class="line">logret = rng.normal([<span class="hl-number">0.0</span>, <span class="hl-number">0.0</span>], [<span class="hl-number">0.08</span>, <span class="hl-number">0.08</span>], size=(T, <span class="hl-number">2</span>))</span>
+<span class="line">x = np.exp(logret)                       <span class="hl-comment"># price relatives x_t = p_t / p_{t-1}</span></span>
+<span class="line">report(<span class="hl-string">&quot;two random stocks, uniform prior&quot;</span>, x)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 3) Same market with the Dirichlet(1/2, 1/2) prior of Cover &amp; Ordentlich.</span></span>
+<span class="line">jeffreys = <span class="hl-number">1</span> / np.sqrt(grid * (<span class="hl-number">1</span> - grid))</span>
+<span class="line">report(<span class="hl-string">&quot;two random stocks, Dirichlet(1/2) prior&quot;</span>, x, prior=jeffreys,</span>
+<span class="line">       bound=<span class="hl-number">0.5</span> * np.log(T + <span class="hl-number">1</span>) + np.log(<span class="hl-number">2</span>))</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># 4) Worst case for the uniform prior: asset 1 beats asset 2 every single day,</span></span>
+<span class="line"><span class="hl-comment">#    so b* = 1 sits on the boundary and the bound is almost attained.</span></span>
+<span class="line">T = <span class="hl-number">1000</span></span>
+<span class="line">x = np.column_stack([np.full(T, <span class="hl-number">2.0</span>), np.ones(T)])</span>
+<span class="line">report(<span class="hl-string">&quot;asset 1 always doubles, asset 2 flat&quot;</span>, x)</span></code></pre>
+
+<textarea class="run-source" hidden spellcheck="false">import numpy as np
+
+K = 2000
+grid = (np.arange(K) + 0.5) / K   # midpoints of [0,1]: b = weight on asset 1
+
+def crp_log_wealth(x, grid):
+    &quot;&quot;&quot;log S_t(b) for every t and every b on the grid, shape (T, K).&quot;&quot;&quot;
+    per_step = np.log(np.outer(x[:, 0], grid) + np.outer(x[:, 1], 1 - grid))
+    return np.cumsum(per_step, axis=0)
+
+def universal(x, grid, prior):
+    &quot;&quot;&quot;Play Cover's portfolio day by day; return log wealth and the b_hat path.&quot;&quot;&quot;
+    logS = crp_log_wealth(x, grid)
+    prev = np.zeros(len(grid))            # log S_0(b) = 0 for every b
+    log_wealth, path = 0.0, []
+    for t in range(len(x)):
+        w = prior * np.exp(prev - prev.max())   # posterior weight ~ prior * S_{t-1}(b)
+        b_hat = (grid * w).sum() / w.sum()      # wealth-weighted average of all CRPs
+        path.append(b_hat)
+        log_wealth += np.log(b_hat * x[t, 0] + (1 - b_hat) * x[t, 1])
+        prev = logS[t]
+    return log_wealth, np.array(path), logS
+
+def report(name, x, prior=None, bound=None):
+    T = len(x)
+    prior = np.ones(K) if prior is None else prior
+    prior = prior / prior.sum()
+    log_up, path, logS = universal(x, grid, prior)
+    # best CRP in hindsight: grid search, plus the two endpoints b = 0, 1
+    cands = np.concatenate([[0.0], grid, [1.0]])
+    final = np.concatenate([[np.log(x[:, 1]).sum()], logS[-1],
+                            [np.log(x[:, 0]).sum()]])
+    i = np.argmax(final)
+    b_star, log_star = cands[i], final[i]
+    # telescoping check: wealth of the played strategy = prior-average of S_T(b)
+    m = logS[-1].max()
+    log_mix = m + np.log((prior * np.exp(logS[-1] - m)).sum())
+    print(f&quot;--- {name}  (T = {T})&quot;)
+    print(f&quot;  asset 1 buy-and-hold : {np.prod(x[:, 0]):10.4g}&quot;)
+    print(f&quot;  asset 2 buy-and-hold : {np.prod(x[:, 1]):10.4g}&quot;)
+    print(f&quot;  best CRP  b* = {b_star:.3f} : {np.exp(log_star):10.4g}&quot;)
+    print(f&quot;  universal portfolio  : {np.exp(log_up):10.4g}&quot;
+          f&quot;   (mixture of CRPs: {np.exp(log_mix):.4g})&quot;)
+    regret = log_star - log_up
+    if bound is None:
+        bound = np.log(T + 1)
+    print(f&quot;  regret log S* - log S_up = {regret:.3f}  &lt;=  bound {bound:.3f}&quot;)
+    print(f&quot;  per-period regret       = {regret / T:.5f}&quot;)
+    print(f&quot;  final b_hat = {path[-1]:.3f}&quot;)
+
+# 1) Cash plus a stock that doubles, then halves, forever. Both are flat.
+T = 40
+stock = np.where(np.arange(T) % 2 == 0, 2.0, 0.5)
+x = np.column_stack([stock, np.ones(T)])
+report(&quot;cash + double/halve stock&quot;, x)
+
+# 2) Two volatile, driftless, independent stocks.
+rng = np.random.default_rng(1991)
+T = 1000
+logret = rng.normal([0.0, 0.0], [0.08, 0.08], size=(T, 2))
+x = np.exp(logret)                       # price relatives x_t = p_t / p_{t-1}
+report(&quot;two random stocks, uniform prior&quot;, x)
+
+# 3) Same market with the Dirichlet(1/2, 1/2) prior of Cover &amp; Ordentlich.
+jeffreys = 1 / np.sqrt(grid * (1 - grid))
+report(&quot;two random stocks, Dirichlet(1/2) prior&quot;, x, prior=jeffreys,
+       bound=0.5 * np.log(T + 1) + np.log(2))
+
+# 4) Worst case for the uniform prior: asset 1 beats asset 2 every single day,
+#    so b* = 1 sits on the boundary and the bound is almost attained.
+T = 1000
+x = np.column_stack([np.full(T, 2.0), np.ones(T)])
+report(&quot;asset 1 always doubles, asset 2 flat&quot;, x)
+</textarea>
+<div class="run-bar">
+<button type="button" class="widget-btn run-btn">Run</button>
+<button type="button" class="widget-btn run-edit">Edit</button>
+<span class="run-status muted"></span>
+</div>
+<pre class="run-output" hidden></pre>
+<noscript><p class="widget-fallback">This snippet can be run in the browser with JavaScript enabled.</p></noscript>
+</figure>
+<p><span>What to expect: in the double-or-halve market both assets end at 1.0 and the</span>
+<span>best CRP ($b^* = 0.5$) at $(9/8)^{20} \approx 10.5$, while the universal</span>
+<span>portfolio reaches about 6.0 with no knowledge of the pattern. On the random</span>
+<span>market (seed 1991) the two stocks end at about 4.0 and 2.2, and the universal</span>
+<span>portfolio at about 8.6 beats both, with a regret of 0.41 nats against a ceiling of</span>
+<span>6.9. In the last market the regret is 6.22, close to the ceiling of 6.91 and</span>
+<span>to the exact value $\log\frac{T+1}{2} \approx 6.22$.</span></p>
+</section>
+<section id="Caveats">
+
+    <h2>
+    <a href="#Caveats"><span>Caveats</span> </a><a class="heading-anchor" href="#Caveats" aria-label="Link to this section">#</a>
+    </h2>
+<ul>
+<li>
+<em><span>Computation.</span></em><span> The update is an integral over an $(m-1)$-dimensional simplex.</span>
+<span>A grid is fine for two or three assets but grows exponentially with $m$. Kalai</span>
+<span>and Vempala (2002) showed how to sample from the wealth-weighted distribution</span>
+<span>over CRPs with a random walk, which gives an implementation polynomial in $m$</span>
+<span>and $T$. This works because $S_t(b)$ is log-concave in $b$.</span>
+</li>
+<li>
+<em><span>Transaction costs.</span></em><span> All of the above assumes free rebalancing. Every CRP</span>
+<span>trades every period, and a real implementation has to pay for that.</span>
+</li>
+<li>
+<em><span>Time scale.</span></em><span> $R_T / T \to 0$ is a statement about exponents. With $m$</span>
+<span>assets the uniform prior can cost a factor of up to $(T+1)^{m-1}$, which is</span>
+<span>enormous for moderate $m$ and $T$. The rebalancing bonus has to be large</span>
+<span>compared to that before the universal portfolio gets ahead of the best</span>
+<span>stock. In practice it pays off with a few volatile, weakly correlated assets</span>
+<span>over long horizons.</span>
+</li>
+<li>
+<em><span>The benchmark.</span></em><span> </span>&ldquo;<span>Universal</span>&rdquo;<span> is relative to the class of CRPs. It is a</span>
+<span>strong benchmark (the best CRP beats the best stock, and is Kelly-optimal for</span>
+<span>i.i.d. markets), but it is not the best possible strategy for a market with</span>
+<span>structure, say, trends that a predictive model could exploit.</span>
+</li>
+</ul>
+<p><span>Here is the colab where I first tested the ideas: </span><a href="https://colab.research.google.com/drive/14i_T9KRUh05b9EaTbksWOap6RvJgB27l?usp=sharing"><span>colab</span></a></p>
+</section>
+<section id="References">
+
+    <h2>
+    <a href="#References"><span>References</span> </a><a class="heading-anchor" href="#References" aria-label="Link to this section">#</a>
+    </h2>
+<ul>
+<li>
+<ol start="20" type="A">
+<li>
+<ol start="13" type="A">
+<li>
+<span>Cover. Universal Portfolios. </span><em><span>Mathematical Finance</span></em><span>, 1(1):1–29, 1991. </span><a href="https://doi.org/10.1111/j.1467-9965.1991.tb00002.x"><span>doi:10.1111/j.1467-9965.1991.tb00002.x</span></a>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>
+<ol start="20" type="A">
+<li>
+<ol start="13" type="A">
+<li>
+<span>Cover and E. Ordentlich. Universal Portfolios with Side Information. </span><em><span>IEEE Transactions on Information Theory</span></em><span>, 42(2):348–363, 1996.</span>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>
+<ol type="A">
+<li>
+<span>Kalai and S. Vempala. Efficient Algorithms for Universal Portfolios. </span><em><span>Journal of Machine Learning Research</span></em><span>, 3:423–440, 2002.</span>
+</li>
+</ol>
+</li>
+<li>
+<ol start="10" type="A">
+<li>
+<ol start="12" type="A">
+<li>
+<span>Kelly, Jr. A New Interpretation of Information Rate. </span><em><span>Bell System Technical Journal</span></em><span>, 35(4):917–926, 1956.</span>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>
+<ol start="18" type="A">
+<li>
+<span>Krichevsky and V. Trofimov. The Performance of Universal Encoding. </span><em><span>IEEE Transactions on Information Theory</span></em><span>, 27(2):199–207, 1981.</span>
+</li>
+</ol>
+</li>
+</ul>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/online-learning.html">#online-learning</a><a class="tag" href="/tags/portfolio-theory.html">#portfolio-theory</a><a class="tag" href="/tags/information-theory.html">#information-theory</a></div>
+      <section class="related">
+        <h2>Related posts</h2>
+        <ul class="related-list">
+          <li>
+              <a href="/2026/01/25/epiplexity.html">From Entropy to Epiplexity</a>
+              <span class="muted"><time datetime="2026-01-25">Jan 25, 2026</time> · Math, Physics &amp; Foundations</span>
+            </li><li>
+              <a href="/2024/10/20/IIT.html">Integrated Information Theory (IIT)</a>
+              <span class="muted"><time datetime="2024-10-20">Oct 20, 2024</time> · Math, Physics &amp; Foundations</span>
+            </li><li>
+              <a href="/2024/09/17/divergences.html">Some common divergences</a>
+              <span class="muted"><time datetime="2024-09-17">Sep 17, 2024</time> · Math, Physics &amp; Foundations</span>
+            </li>
+        </ul>
+      </section><nav class="post-nav" aria-label="Chronological">
+        <a class="post-nav__link post-nav__prev" href="/2023/12/04/Hopfield.html">
+          <span class="post-nav__label">← Older</span>
+          <span class="post-nav__title">Hopfield Networks for dummies</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2023/12/12/UP.html">
+          <span class="post-nav__label">Newer →</span>
+          <span class="post-nav__title">Implementing from scratch a Hopfield Network</span>
+        </a>
+      </nav><nav class="post-nav post-nav--theme" aria-label="Same theme">
+        <a class="post-nav__link post-nav__prev" href="/2023/12/04/Hopfield.html">
+          <span class="post-nav__label">← Older in theme</span>
+          <span class="post-nav__title">Hopfield Networks for dummies</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2023/12/12/UP.html">
+          <span class="post-nav__label">Newer in theme →</span>
+          <span class="post-nav__title">Implementing from scratch a Hopfield Network</span>
+        </a>
+      </nav>
+      
+    <section class="comments" id="comments">
+      <h2>Comments</h2>
+      <div class="giscus"></div>
+      <noscript><p class="muted">Comments are powered by <a href="https://giscus.app">giscus</a> and need JavaScript.</p></noscript>
+    </section>
+    <script>
+    (function () {
+      // Inject giscus with the theme the site is actually using (the toggle
+      // persists in localStorage), rather than the OS preference.
+      var siteTheme = function () {
+        var t = document.documentElement.getAttribute("data-theme");
+        if (t) return t === "dark" ? "dark" : "light";
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark" : "light";
+      };
+      var s = document.createElement("script");
+      s.src = "https://giscus.app/client.js";
+      var attrs = {
+        "data-repo": "mbottoni/mbottoni.github.io",
+        "data-repo-id": "R_kgDOKv71Lg",
+        "data-category": "General",
+        "data-category-id": "DIC_kwDOKv71Ls4DEBYr",
+        "data-mapping": "pathname",
+        "data-strict": "1",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "top",
+        "data-theme": siteTheme(),
+        "data-lang": "en",
+        "data-loading": "lazy",
+        "crossorigin": "anonymous"
+      };
+      for (var k in attrs) s.setAttribute(k, attrs[k]);
+      s.async = true;
+      document.getElementById("comments").appendChild(s);
+
+      // Follow the dark-mode toggle after load.
+      new MutationObserver(function () {
+        var frame = document.querySelector("iframe.giscus-frame");
+        if (!frame) return;
+        frame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: siteTheme() } } },
+          "https://giscus.app");
+      }).observe(document.documentElement,
+        { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+    </script>
+  
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2023-12-06-Hopfield_from_scratch.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        // Widgets build their own DOM and style their spans.
+        if (span.closest(".widget")) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  <script defer src="/widgets/universal-portfolio.js"></script>
+<script defer src="/js/runner.js"></script>
+<script>
+(function () {
+  var bar = document.querySelector(".reading-progress__bar");
+  var article = document.querySelector("article");
+  if (bar && article) {
+    var update = function () {
+      var top = article.offsetTop;
+      var h = article.offsetHeight - window.innerHeight;
+      var p = h > 0 ? (window.scrollY - top) / h : 1;
+      bar.style.transform = "scaleX(" + Math.min(1, Math.max(0, p)) + ")";
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
+  var toc = document.querySelector(".toc");
+  if (!toc || !("IntersectionObserver" in window)) return;
+  var links = {};
+  toc.querySelectorAll("a[href^='#']").forEach(function (a) {
+    links[decodeURIComponent(a.getAttribute("href").slice(1))] = a;
+  });
+  var ids = Object.keys(links);
+  if (!ids.length) return;
+  var visible = {};
+  var setActive = function () {
+    var first = null;
+    for (var i = 0; i < ids.length; i++) {
+      if (visible[ids[i]]) { first = ids[i]; break; }
+    }
+    ids.forEach(function (id) {
+      links[id].classList.toggle("active", id === first);
+    });
+  };
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    setActive();
+  }, { rootMargin: "-10% 0px -70% 0px", threshold: 0 });
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>
+</body>
+
+</html>

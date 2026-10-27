@@ -1,0 +1,839 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hopfield Networks for dummies</title>
+  <meta name="description" content="Hopfield Networks, a type of Recurrent Neural Network (RNN), are renowned for their unique ability to
+store and retrieve patterns through associative memory. This means they can recall a complete memory from
+just a partial input. Inspired by the Ising model in physics, which explains magnetic behaviors in
+certain materials, Hopfield Networks use a system of interconnected neurons, each able to be in
+one of two states, akin to magnetic dipoles. These neurons are fully connected, each influencing the other
+based on the strength of their connections. The network dynamically evolves to a stable state where the
+system's energy is minimized, representing a memory. The overall network state thus can represent binary information, like
+an image or a pattern, making Hopfield Networks particularly effective in pattern recognition
+and completion tasks.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Hopfield Networks for dummies">
+  <meta property="og:description" content="Hopfield Networks, a type of Recurrent Neural Network (RNN), are renowned for their unique ability to
+store and retrieve patterns through associative memory. This means they can recall a complete memory from
+just a partial input. Inspired by the Ising model in physics, which explains magnetic behaviors in
+certain materials, Hopfield Networks use a system of interconnected neurons, each able to be in
+one of two states, akin to magnetic dipoles. These neurons are fully connected, each influencing the other
+based on the strength of their connections. The network dynamically evolves to a stable state where the
+system's energy is minimized, representing a memory. The overall network state thus can represent binary information, like
+an image or a pattern, making Hopfield Networks particularly effective in pattern recognition
+and completion tasks.">
+  <meta property="og:url" content="https://mbottoni.github.io/2023/12/04/Hopfield.html">
+  <meta property="og:image" content="/assets/foundations/hopfield.gif">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Hopfield Networks for dummies">
+  <meta name="twitter:description" content="Hopfield Networks, a type of Recurrent Neural Network (RNN), are renowned for their unique ability to
+store and retrieve patterns through associative memory. This means they can recall a complete memory from
+just a partial input. Inspired by the Ising model in physics, which explains magnetic behaviors in
+certain materials, Hopfield Networks use a system of interconnected neurons, each able to be in
+one of two states, akin to magnetic dipoles. These neurons are fully connected, each influencing the other
+based on the strength of their connections. The network dynamically evolves to a stable state where the
+system's energy is minimized, representing a memory. The overall network state thus can represent binary information, like
+an image or a pattern, making Hopfield Networks particularly effective in pattern recognition
+and completion tasks.">
+  <meta name="twitter:image" content="/assets/foundations/hopfield.gif">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/2023/12/04/Hopfield.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/news.html">News</a><a href="/archive.html">Archive</a><a href="/map.html">Map</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/links.html">Links</a><a href="/arcade.html">Arcade</a>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <div class="reading-progress" aria-hidden="true"><div class="reading-progress__bar"></div></div>
+      <div class="theme-banner">
+        <span>Filed under</span>
+        <a class="theme-pill" href="/themes/foundations.html">
+          Math, Physics &amp; Foundations
+        </a>
+        <span class="post-meta"><time datetime="2023-12-04">Dec 4, 2023</time> · 12 min read</span>
+      </div>
+      
+    <aside class="series-box">
+      <div class="series-box__head">
+        <span class="series-box__label">Series</span>
+        <span class="series-box__title">Hopfield networks</span>
+        <span class="muted">Part 1 of 2</span>
+      </div>
+      <p class="muted">From the energy-based picture to a from-scratch implementation.</p>
+      <ol class="series-box__list"><li class="series-box__current" aria-current="page">Hopfield Networks for dummies</li><li><a href="/2023/12/12/UP.html">Implementing from scratch a Hopfield Network</a></li></ol>
+    </aside>
+  
+      
+      
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <ul><li class="toc-l2"><a href="#Introduction-to-Hopfield-Networks">Introduction to Hopfield Networks</a></li><li class="toc-l2"><a href="#The-classical-network-formally">The classical network, formally</a></li><li class="toc-l3"><a href="#State-weights-and-energy">State, weights and energy</a></li><li class="toc-l3"><a href="#Asynchronous-updates-never-increase-the-energy">Asynchronous updates never increase the energy</a></li><li class="toc-l3"><a href="#The-Hebbian-rule">The Hebbian rule</a></li><li class="toc-l3"><a href="#Capacity-about-0-138-N">Capacity: about 0.138 N</a></li><li class="toc-l2"><a href="#Hopfield-Networks-is-all-you-need">Hopfield Networks is all you need</a></li><li class="toc-l3"><a href="#The-modern-energy-and-why-its-update-is-attention">The modern energy, and why its update is attention</a></li><li class="toc-l2"><a href="#Checking-it-numerically">Checking it numerically</a></li><li class="toc-l2"><a href="#References">References</a></li></ul>
+    </details>
+  
+      <article >
+
+    <h1 id="Hopfield-Networks-for-dummies">
+    <a href="#Hopfield-Networks-for-dummies"><span>Hopfield Networks for dummies</span> <time datetime="2023-12-04">Dec 4, 2023</time></a>
+    </h1>
+
+<figure>
+
+<img alt="" src="/assets/foundations/hopfield.gif">
+</figure>
+<section id="Introduction-to-Hopfield-Networks">
+
+    <h2>
+    <a href="#Introduction-to-Hopfield-Networks"><span>Introduction to Hopfield Networks</span> </a><a class="heading-anchor" href="#Introduction-to-Hopfield-Networks" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Hopfield Networks, a type of Recurrent Neural Network (RNN), are renowned for their unique ability to</span>
+<span>store and retrieve patterns through associative memory. This means they can recall a complete memory from</span>
+<span>just a partial input. Inspired by the Ising model in physics, which explains magnetic behaviors in</span>
+<span>certain materials, Hopfield Networks use a system of interconnected neurons, each able to be in</span>
+<span>one of two states, akin to magnetic dipoles. These neurons are fully connected, each influencing the other</span>
+<span>based on the strength of their connections. The network dynamically evolves to a stable state where the</span>
+<span>system</span>&rsquo;<span>s </span>&lsquo;<span>energy</span>&rsquo;<span> is minimized, representing a memory. The overall network state thus can represent binary information, like</span>
+<span>an image or a pattern, making Hopfield Networks particularly effective in pattern recognition</span>
+<span>and completion tasks.</span></p>
+<p><span>That last sentence is much easier to believe once you have watched it happen, so</span>
+<span>here is a real one </span>&mdash;<span> 144 neurons, three stored patterns, Hebbian weights, and</span>
+<span>the asynchronous update rule running in your browser. Draw on the grid, corrupt</span>
+<span>a memory, and press Recall.</span></p>
+
+<figure class="widget" data-widget="hopfield">
+<div class="widget-mount"></div>
+<noscript><p class="widget-fallback">This figure is interactive and needs JavaScript.</p></noscript>
+<figcaption class="title">A Hopfield network with three stored patterns. Recall runs asynchronous sign updates in random order; the energy is a Lyapunov function, so it can only fall. Starting from noise you will occasionally land in a spurious mixture instead of a stored memory.</figcaption>
+</figure>
+</section>
+<section id="The-classical-network-formally">
+
+    <h2>
+    <a href="#The-classical-network-formally"><span>The classical network, formally</span> </a><a class="heading-anchor" href="#The-classical-network-formally" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Before going modern, I want to write down the three facts that make the widget</span>
+<span>above work: the energy, the reason it can only go down, and where the weights</span>
+<span>come from.</span></p>
+<section id="State-weights-and-energy">
+
+    <h3>
+    <a href="#State-weights-and-energy"><span>State, weights and energy</span> </a><a class="heading-anchor" href="#State-weights-and-energy" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>The network has $N$ neurons with states $s_i \in \{-1, +1\}$, collected in a</span>
+<span>vector $s \in \{-1,+1\}^N$. The weights form a matrix $W \in \mathbb{R}^{N \times N}$</span>
+<span>that is </span><strong><strong><span>symmetric</span></strong></strong><span> ($w_{ij} = w_{ji}$) with </span><strong><strong><span>zero diagonal</span></strong></strong><span> ($w_{ii} = 0$),</span>
+<span>and each neuron has a threshold $\theta_i$. The energy of a state is</span></p>
+<p><span>$$E(s) = -\frac{1}{2} s^\top W s + \theta^\top s = -\frac{1}{2}\sum_{i \neq j} w_{ij} s_i s_j + \sum_i \theta_i s_i .$$</span></p>
+<p><span>This is exactly the Ising energy with couplings $w_{ij}$ and external field</span>
+<span>$-\theta_i$, which is the physics connection from the introduction.</span></p>
+</section>
+<section id="Asynchronous-updates-never-increase-the-energy">
+
+    <h3>
+    <a href="#Asynchronous-updates-never-increase-the-energy"><span>Asynchronous updates never increase the energy</span> </a><a class="heading-anchor" href="#Asynchronous-updates-never-increase-the-energy" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>Define the local field of neuron $i$ as $h_i = \sum_{j} w_{ij} s_j - \theta_i$.</span>
+<span>The asynchronous rule picks one neuron $i$ at a time and sets</span></p>
+<p><span>$$s_i' = \operatorname{sgn}(h_i),$$</span></p>
+<p><span>leaving $s_i$ unchanged when $h_i = 0$. Only the terms of $E$ that contain</span>
+<span>$s_i$ can change. Using symmetry and $w_{ii} = 0$, those terms are</span>
+<span>$-s_i \sum_{j \neq i} w_{ij} s_j + \theta_i s_i = -s_i h_i$ (the factor</span>
+<span>$\tfrac{1}{2}$ disappears because $s_i$ shows up once as $s_i s_j$ and once as $s_j s_i$).</span>
+<span>So flipping $s_i$ to $s_i'$ changes the energy by</span></p>
+<p><span>$$\Delta E = -(s_i' - s_i)\, h_i .$$</span></p>
+<p><span>There are two cases. If $s_i' = s_i$ then $\Delta E = 0$. Otherwise</span>
+<span>$s_i' - s_i = 2 s_i' = 2\operatorname{sgn}(h_i)$, and</span></p>
+<p><span>$$\Delta E = -2\operatorname{sgn}(h_i)\, h_i = -2|h_i| &lt; 0 .$$</span></p>
+<p><span>So every update leaves $E$ unchanged or strictly lowers it. Since there are only</span>
+<span>$2^N$ states, $E$ is bounded below and the dynamics must stop at a state where</span>
+<span>no single flip lowers the energy, a local minimum. That is why $E$ is a</span>
+<strong><strong><span>Lyapunov function</span></strong></strong><span>. Both assumptions are needed. With asymmetric weights the</span>
+<span>argument breaks and the network can cycle. With synchronous updates (all neurons</span>
+<span>at once) it can oscillate between two states.</span></p>
+</section>
+<section id="The-Hebbian-rule">
+
+    <h3>
+    <a href="#The-Hebbian-rule"><span>The Hebbian rule</span> </a><a class="heading-anchor" href="#The-Hebbian-rule" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>To store $P$ patterns $\xi^1, \dots, \xi^P \in \{-1,+1\}^N$ we use Hebb</span>&rsquo;<span>s</span>
+&ldquo;<span>fire together, wire together</span>&rdquo;<span>:</span></p>
+<p><span>$$w_{ij} = \frac{1}{N} \sum_{\mu=1}^{P} \xi^\mu_i \xi^\mu_j \quad (i \neq j), \qquad w_{ii} = 0 .$$</span></p>
+<p><span>In matrix form this is $W = \frac{1}{N}\sum_\mu \xi^\mu (\xi^\mu)^\top - \frac{P}{N} I$.</span>
+<span>With $\theta = 0$, ask whether a stored pattern $\xi^\nu$ is a fixed point.</span>
+<span>Its local field is</span></p>
+<p><span>$$h_i = \frac{1}{N}\sum_{j \neq i}\sum_{\mu} \xi^\mu_i \xi^\mu_j \xi^\nu_j
+    = \underbrace{\frac{N-1}{N}\,\xi^\nu_i}_{\text{signal}}
+    + \underbrace{\frac{1}{N}\sum_{\mu \neq \nu}\sum_{j \neq i} \xi^\mu_i \xi^\mu_j \xi^\nu_j}_{\text{crosstalk } C^\nu_i} .$$</span></p>
+<p><span>The signal term points the right way. The crosstalk term is what the other</span>
+<span>memories contribute.</span></p>
+</section>
+<section id="Capacity-about-0-138-N">
+
+    <h3>
+    <a href="#Capacity-about-0-138-N"><span>Capacity: about 0.138 N</span> </a><a class="heading-anchor" href="#Capacity-about-0-138-N" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>For random patterns, the crosstalk $C^\nu_i$ is a sum of about $(P-1)(N-1)$</span>
+<span>independent $\pm 1$ terms divided by $N$. By the central limit theorem it is</span>
+<span>roughly Gaussian with mean $0$ and variance $\approx P/N$. Bit $i$ of</span>
+<span>$\xi^\nu$ is unstable when the crosstalk beats the signal, i.e. when</span>
+<span>$\xi^\nu_i C^\nu_i &lt; -1$, which happens with probability about</span></p>
+<p><span>$$P_{\text{error}} \approx \Phi\!\left(-\sqrt{N/P}\right),$$</span></p>
+<p><span>where $\Phi$ is the standard normal CDF. So what matters is the load</span>
+<span>$\alpha = P/N$. As $\alpha$ grows, the noise standard deviation $\sqrt{\alpha}$</span>
+<span>approaches the signal, and the stored patterns stop being minima.</span></p>
+<p><span>This one-step picture ignores something: an early flip changes the field seen by</span>
+<span>the other neurons, and errors can snowball. The exact answer comes from a</span>
+<span>statistical-mechanics (replica) analysis by Amit, Gutfreund and Sompolinsky.</span>
+<span>I</span>&rsquo;<span>ll state it as a result. In the limit $N \to \infty$, retrieval states close</span>
+<span>to the stored patterns exist only for</span></p>
+<p><span>$$\alpha = \frac{P}{N} &lt; \alpha_c \approx 0.138 .$$</span></p>
+<p><span>Even below that, the retrieved state has a small fraction of wrong bits. Above</span>
+<span>$\alpha_c$ the memory collapses into spurious </span>&ldquo;<span>spin-glass</span>&rdquo;<span> states. So a classical</span>
+<span>network with 144 neurons, like the one in the widget, can hold only about 20</span>
+<span>random patterns. That linear scaling is the limitation the modern version removes.</span></p>
+</section>
+</section>
+<section id="Hopfield-Networks-is-all-you-need">
+
+    <h2>
+    <a href="#Hopfield-Networks-is-all-you-need"><span>Hopfield Networks is all you need</span> </a><a class="heading-anchor" href="#Hopfield-Networks-is-all-you-need" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Now with a little bit of more context of Hopfield Networks</span>&rsquo;<span>s we will</span>
+<span>dive into a quick summary of the</span>
+<a href="https://arxiv.org/abs/2008.02217"><span>Paper</span></a><span>. To put it simply the main</span>
+<span>message of the paper is the following: </span><strong><span>By introducing a modern Hopfield</span>
+<span>Network with continuous states we can store exponentially many patterns,</span>
+<span>retrieve them with only one update and the update rule is equivalent to</span>
+<span>the attention mechanism used in transformers</span></strong><span>.</span></p>
+<p><span>Now let</span>&rsquo;<span>s dive little deep into the details. The basic architecture is on</span>
+<img alt="" src="/assets/foundations/modern_hopfield.png"></p>
+<p><span>The evolution of Hopfield Networks towards modern architectures involves a transition from binary to continuous neuron states, allowing for more complex and</span>
+<span>nuanced representations. This advancement closely aligns with the mechanisms used in transformer models in deep learning.</span>
+<span>The modern approach introduces a new energy function to accommodate these continuous states, fundamentally</span>
+<span>changing the network dynamics. The update rule in these modern networks parallels the attention mechanism in</span>
+<span>transformer and BERT models, marking a significant innovation. Modern Hopfield Networks not only enhance</span>
+<span>the capacity for pattern storage and retrieval but also exhibit improved efficiency in these processes. The</span>
+<span>research also presents several theorems to explain the behavior of these networks, including</span>
+<span>their convergence, storage capacity, pattern retrieval efficiency, and error rates. These networks extend beyond</span>
+<span>mimicking transformer attention, offering potential applications in a wide range of deep learning architectures</span>
+<span>and providing new tools for designing advanced neural network systems.</span></p>
+<p><span>The paper introduces 5 theorems to characterize the introduced hopfield network.</span></p>
+<ul>
+<li>
+<p><span>Theorem 1: It states that the update rule for these networks</span>
+<span>converges globally. This means for a given sequence of states, the</span>
+<span>energy will eventually converge to a stable value at a fixed point,</span>
+<span>even as time tends to infinity. The proof involves the</span>
+<span>Concave-Convex Procedure (CCCP) to ensure this global convergence.</span></p>
+</li>
+<li>
+<p><span>Theorem 2: This theorem extends Theorem 1, stating that not only</span>
+<span>does the energy converge, but the sequence of states either</span>
+<span>converges or its limit points form a connected and compact set of</span>
+<span>stationary points. If this set is finite, the sequence will converge</span>
+<span>to a specific stationary point.</span></p>
+</li>
+<li>
+<p><span>Theorem 3: This theorem discusses the storage capacity of the</span>
+<span>network. It defines conditions under which a certain number of</span>
+<span>random patterns can be stored with a high probability. The</span>
+<span>calculations involve complex functions like the Lambert W function</span>
+<span>and take into account the dimensions of the pattern space and a</span>
+<span>failure probability.</span></p>
+</li>
+<li>
+<p><span>Theorem 4: It states that the network is capable of retrieving</span>
+<span>patterns efficiently with just one update, particularly if the</span>
+<span>patterns are well-separated. The theorem quantifies the retrieval</span>
+<span>capability in terms of the separation of patterns.</span></p>
+</li>
+<li>
+<p><span>Theorem 5: This theorem addresses the retrieval error, which is</span>
+<span>found to be exponentially small relative to the pattern separation.</span>
+<span>It provides bounds on this error, demonstrating the effectiveness of</span>
+<span>the network in accurately retrieving patterns.</span></p>
+</li>
+</ul>
+<section id="The-modern-energy-and-why-its-update-is-attention">
+
+    <h3>
+    <a href="#The-modern-energy-and-why-its-update-is-attention"><span>The modern energy, and why its update is attention</span> </a><a class="heading-anchor" href="#The-modern-energy-and-why-its-update-is-attention" aria-label="Link to this section">#</a>
+    </h3>
+<p><span>The bullet points above are easier to understand once the equations are written</span>
+<span>out, so here they are. Store $N$ continuous patterns $x_1, \dots, x_N \in \mathbb{R}^d$</span>
+<span>as the columns of $X = (x_1, \dots, x_N) \in \mathbb{R}^{d \times N}$, and let the</span>
+<span>state (the query) be $\xi \in \mathbb{R}^d$. For an inverse temperature</span>
+<span>$\beta &gt; 0$, define the log-sum-exp</span></p>
+<p><span>$$\operatorname{lse}(\beta, z) = \beta^{-1} \log \sum_{l=1}^{N} \exp(\beta z_l), \qquad z \in \mathbb{R}^N ,$$</span></p>
+<p><span>which is a smooth maximum: as $\beta \to \infty$ it tends to $\max_l z_l$. The energy</span>
+<span>of Ramsauer et al. is</span></p>
+<p><span>$$E(\xi) = -\operatorname{lse}(\beta, X^\top \xi) + \frac{1}{2}\xi^\top \xi + \beta^{-1}\log N + \frac{1}{2} M^2 ,$$</span></p>
+<p><span>where $M = \max_i \lVert x_i \rVert$. The last two terms are constants that keep</span>
+<span>$E$ bounded and non-negative. The first term rewards a state that has a large</span>
+<span>dot product with </span><strong><span>some</span></strong><span> stored pattern. The second term keeps $\xi$ from</span>
+<span>running off to infinity.</span></p>
+<p><strong><strong><span>Deriving the update.</span></strong></strong><span> $E$ is a convex function minus a convex function:</span>
+<span>$\frac{1}{2}\xi^\top\xi$ is convex, and so is $\operatorname{lse}$ composed with the</span>
+<span>linear map $\xi \mapsto X^\top\xi$. The Concave-Convex Procedure (CCCP) minimises</span>
+<span>such a difference by linearising the concave part, $-\operatorname{lse}$, at the</span>
+<span>current point and minimising the convex surrogate that results. Setting the</span>
+<span>gradient of the surrogate to zero gives</span></p>
+<p><span>$$\nabla_\xi \Big(\tfrac{1}{2}\xi^\top\xi\Big)\Big|_{\xi^{\text{new}}}
+= \nabla_\xi \operatorname{lse}(\beta, X^\top\xi)\Big|_{\xi} .$$</span></p>
+<p><span>The left side is just $\xi^{\text{new}}$. For the right side, the gradient of</span>
+<span>$\operatorname{lse}(\beta, z)$ with respect to $z$ is $\operatorname{softmax}(\beta z)$, and the</span>
+<span>chain rule through $z = X^\top \xi$ multiplies by $X$. So</span></p>
+<p><span>$$\xi^{\text{new}} = X \operatorname{softmax}(\beta X^\top \xi) .$$</span></p>
+<p><span>CCCP guarantees $E(\xi^{\text{new}}) \le E(\xi)$, the continuous version of the</span>
+<span>monotonicity proof above. This is the starting point for Theorems 1 and 2.</span></p>
+<p><strong><strong><span>Why this is attention.</span></strong></strong><span> Read the update literally. It scores the query against</span>
+<span>every stored pattern with a dot product ($X^\top\xi$), turns the scores into weights</span>
+<span>with a softmax, and returns the weighted average of the stored patterns. Now stack</span>
+<span>several queries as rows. Let the queries be projections of inputs $R$,</span>
+<span>$Q = R W_Q$, and the stored patterns be projections of $Y$, $K = Y W_K$. Set</span>
+<span>$\beta = 1/\sqrt{d_k}$, apply the update to every query at once (softmax row-wise),</span>
+<span>and project the result with $W_V$. The result is</span></p>
+<p><span>$$Z = \operatorname{softmax}\!\left(\frac{1}{\sqrt{d_k}} Q K^\top\right) V, \qquad V = K W_V ,$$</span></p>
+<p><span>which is transformer attention. One attention layer is therefore one step of</span>
+<span>energy descent on a modern Hopfield network. The paper</span>&rsquo;<span>s capacity results say the</span>
+<span>number of patterns that can be stored grows exponentially in $d$, and a</span>
+<span>well-separated pattern is retrieved after this single step. The temperature</span>
+<span>also explains the fixed points listed below. With small $\beta$ the softmax is</span>
+<span>nearly uniform and $\xi^{\text{new}}$ lands near the mean of the patterns (the</span>
+<span>global fixed point). With large $\beta$ it is nearly one-hot and recovers a</span>
+<span>single pattern. In between, it averages over a cluster of similar patterns</span>
+<span>(a metastable state).</span></p>
+<p><span>Finally it is interesting to note the following.</span></p>
+<ol>
+<li>
+<span>In modern Hopfield networks, the dynamics of pattern convergence are</span>
+<span>characterized by:</span>
+<ul>
+<li>
+<p><span>If patterns xi are not well separated, the iteration</span>
+<span>converges to a global fixed point near the average of all</span>
+<span>vectors.</span></p>
+</li>
+<li>
+<p><span>In cases where some patterns are similar yet distinct from</span>
+<span>others, a metastable state near these patterns is formed.</span>
+<span>Iterations converge to this metastable state.</span></p>
+</li>
+</ul>
+</li>
+<li>
+<span>Hopfield Update Rule as Transformer Attention</span>
+<ul>
+<li>
+<p><span>The Hopfield network update rule parallels the attention</span>
+<span>mechanism in transformer and BERT models.</span></p>
+</li>
+<li>
+<p><span>With stored (key) patterns yi and state (query) patterns</span>
+<span>ri, and using transformations with weight matrices WK,</span>
+<span>WQ, and WV, the update rule resembles transformer</span>
+<span>attention.</span></p>
+</li>
+<li>
+<p><span>The equivalence is shown in the formulation of transformer</span>
+<span>self-attention, where modifications in weight matrices and</span>
+<span>softmax function applications are highlighted.</span></p>
+</li>
+</ul>
+</li>
+<li>
+<span>Applications in Deep Network Architectures Hopfield networks extend</span>
+<span>beyond the attention mechanism, offering additional functionalities</span>
+<span>in deep learning architectures through specific layers.</span>
+</li>
+</ol>
+</section>
+</section>
+<section id="Checking-it-numerically">
+
+    <h2>
+    <a href="#Checking-it-numerically"><span>Checking it numerically</span> </a><a class="heading-anchor" href="#Checking-it-numerically" aria-label="Link to this section">#</a>
+    </h2>
+<p><span>Here is the monotonicity proof and the one-step retrieval claim tested in a few</span>
+<span>lines of NumPy. The first half stores five patterns with the Hebbian rule,</span>
+<span>corrupts one, and records the energy after every single asynchronous update.</span>
+<span>The second half runs one modern-Hopfield update on 1000 stored patterns.</span></p>
+
+<figure class="code-block runnable" data-lang="python">
+
+
+<pre><code><span class="line"><span class="hl-keyword">import</span> numpy <span class="hl-keyword">as</span> np</span>
+<span class="line"></span>
+<span class="line">rng = np.random.default_rng(<span class="hl-number">0</span>)</span>
+<span class="line">N, P = <span class="hl-number">100</span>, <span class="hl-number">5</span>                                  <span class="hl-comment"># neurons, stored patterns</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Hebbian weights with zero diagonal</span></span>
+<span class="line">patterns = rng.choice([-<span class="hl-number">1</span>, <span class="hl-number">1</span>], size=(P, N))</span>
+<span class="line">W = patterns.T @ patterns / N</span>
+<span class="line">np.fill_diagonal(W, <span class="hl-number">0.0</span>)</span>
+<span class="line">theta = np.zeros(N)                            <span class="hl-comment"># thresholds</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">energy</span>(<span class="hl-params">s</span>):</span>
+<span class="line">    <span class="hl-keyword">return</span> -<span class="hl-number">0.5</span> * s @ W @ s + theta @ s</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># corrupt pattern 0 by flipping 30% of its bits</span></span>
+<span class="line">s = patterns[<span class="hl-number">0</span>].copy()</span>
+<span class="line">flip = rng.choice(N, size=<span class="hl-number">30</span>, replace=<span class="hl-literal">False</span>)</span>
+<span class="line">s[flip] *= -<span class="hl-number">1</span></span>
+<span class="line"></span>
+<span class="line">energies = [energy(s)]</span>
+<span class="line"><span class="hl-keyword">for</span> sweep <span class="hl-keyword">in</span> <span class="hl-built_in">range</span>(<span class="hl-number">5</span>):</span>
+<span class="line">    <span class="hl-keyword">for</span> i <span class="hl-keyword">in</span> rng.permutation(N):               <span class="hl-comment"># asynchronous updates</span></span>
+<span class="line">        h = W[i] @ s - theta[i]</span>
+<span class="line">        <span class="hl-keyword">if</span> h != <span class="hl-number">0</span>:</span>
+<span class="line">            s[i] = <span class="hl-number">1</span> <span class="hl-keyword">if</span> h &gt; <span class="hl-number">0</span> <span class="hl-keyword">else</span> -<span class="hl-number">1</span></span>
+<span class="line">        energies.append(energy(s))</span>
+<span class="line"></span>
+<span class="line">steps = np.diff(energies)</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;energy: start %.3f, end %.3f&quot;</span> % (energies[<span class="hl-number">0</span>], energies[-<span class="hl-number">1</span>]))</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;largest single-step change: %.2e (never positive)&quot;</span> % steps.<span class="hl-built_in">max</span>())</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;overlap with stored pattern:&quot;</span>, <span class="hl-built_in">int</span>(s @ patterns[<span class="hl-number">0</span>]), <span class="hl-string">&quot;/&quot;</span>, N)</span>
+<span class="line"></span>
+<span class="line"><span class="hl-comment"># Modern Hopfield: one update xi_new = X softmax(beta X^T xi) is attention</span></span>
+<span class="line">d, M = <span class="hl-number">64</span>, <span class="hl-number">1000</span>                                <span class="hl-comment"># dimension, stored patterns</span></span>
+<span class="line">X = rng.standard_normal((d, M))                <span class="hl-comment"># stored patterns as columns</span></span>
+<span class="line">target = <span class="hl-number">123</span></span>
+<span class="line">xi = X[:, target] + <span class="hl-number">0.5</span> * rng.standard_normal(d)   <span class="hl-comment"># noisy query</span></span>
+<span class="line"></span>
+<span class="line"><span class="hl-keyword">def</span> <span class="hl-title function_">softmax</span>(<span class="hl-params">z</span>):</span>
+<span class="line">    z = z - z.<span class="hl-built_in">max</span>()</span>
+<span class="line">    e = np.exp(z)</span>
+<span class="line">    <span class="hl-keyword">return</span> e / e.<span class="hl-built_in">sum</span>()</span>
+<span class="line"></span>
+<span class="line">beta = <span class="hl-number">1.0</span></span>
+<span class="line">xi_new = X @ softmax(beta * X.T @ xi)</span>
+<span class="line">best = np.argmax(X.T @ xi_new)</span>
+<span class="line">err = np.linalg.norm(xi_new - X[:, target]) / np.linalg.norm(X[:, target])</span>
+<span class="line"><span class="hl-built_in">print</span>(<span class="hl-string">&quot;one-step retrieval picks pattern&quot;</span>, best, <span class="hl-string">&quot;(target %d), relative error %.1e&quot;</span> % (target, err))</span></code></pre>
+
+<textarea class="run-source" hidden spellcheck="false">import numpy as np
+
+rng = np.random.default_rng(0)
+N, P = 100, 5                                  # neurons, stored patterns
+
+# Hebbian weights with zero diagonal
+patterns = rng.choice([-1, 1], size=(P, N))
+W = patterns.T @ patterns / N
+np.fill_diagonal(W, 0.0)
+theta = np.zeros(N)                            # thresholds
+
+def energy(s):
+    return -0.5 * s @ W @ s + theta @ s
+
+# corrupt pattern 0 by flipping 30% of its bits
+s = patterns[0].copy()
+flip = rng.choice(N, size=30, replace=False)
+s[flip] *= -1
+
+energies = [energy(s)]
+for sweep in range(5):
+    for i in rng.permutation(N):               # asynchronous updates
+        h = W[i] @ s - theta[i]
+        if h != 0:
+            s[i] = 1 if h &gt; 0 else -1
+        energies.append(energy(s))
+
+steps = np.diff(energies)
+print(&quot;energy: start %.3f, end %.3f&quot; % (energies[0], energies[-1]))
+print(&quot;largest single-step change: %.2e (never positive)&quot; % steps.max())
+print(&quot;overlap with stored pattern:&quot;, int(s @ patterns[0]), &quot;/&quot;, N)
+
+# Modern Hopfield: one update xi_new = X softmax(beta X^T xi) is attention
+d, M = 64, 1000                                # dimension, stored patterns
+X = rng.standard_normal((d, M))                # stored patterns as columns
+target = 123
+xi = X[:, target] + 0.5 * rng.standard_normal(d)   # noisy query
+
+def softmax(z):
+    z = z - z.max()
+    e = np.exp(z)
+    return e / e.sum()
+
+beta = 1.0
+xi_new = X @ softmax(beta * X.T @ xi)
+best = np.argmax(X.T @ xi_new)
+err = np.linalg.norm(xi_new - X[:, target]) / np.linalg.norm(X[:, target])
+print(&quot;one-step retrieval picks pattern&quot;, best, &quot;(target %d), relative error %.1e&quot; % (target, err))
+</textarea>
+<div class="run-bar">
+<button type="button" class="widget-btn run-btn">Run</button>
+<button type="button" class="widget-btn run-edit">Edit</button>
+<span class="run-status muted"></span>
+</div>
+<pre class="run-output" hidden></pre>
+<noscript><p class="widget-fallback">This snippet can be run in the browser with JavaScript enabled.</p></noscript>
+</figure>
+</section>
+<section id="References">
+
+    <h2>
+    <a href="#References"><span>References</span> </a><a class="heading-anchor" href="#References" aria-label="Link to this section">#</a>
+    </h2>
+<ul>
+<li>
+<ol start="10" type="A">
+<li>
+<ol start="10" type="A">
+<li>
+<span>Hopfield (1982). </span><strong><span>Neural networks and physical systems with emergent collective computational abilities</span></strong><span>. PNAS 79(8), 2554</span>&ndash;<span>2558.</span>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>
+<ol start="4" type="A">
+<li>
+<ol start="10" type="A">
+<li>
+<span>Amit, H. Gutfreund, H. Sompolinsky (1985). </span><strong><span>Storing infinite numbers of patterns in a spin-glass model of neural networks</span></strong><span>. Physical Review Letters 55, 1530.</span>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>
+<ol start="10" type="A">
+<li>
+<span>Hertz, A. Krogh, R. G. Palmer (1991). </span><strong><span>Introduction to the Theory of Neural Computation</span></strong><span>. Addison-Wesley.</span>
+</li>
+</ol>
+</li>
+<li>
+<ol start="4" type="A">
+<li>
+<span>Krotov, J. J. Hopfield (2016). </span><strong><span>Dense Associative Memory for Pattern Recognition</span></strong><span>. NeurIPS. </span><a href="https://arxiv.org/abs/1606.01164"><span>arXiv:1606.01164</span></a>
+</li>
+</ol>
+</li>
+<li>
+<ol start="13" type="A">
+<li>
+<span>Demircigil, J. Heusel, M. Löwe, S. Upgang, F. Vermet (2017). </span><strong><span>On a model of associative memory with huge storage capacity</span></strong><span>. J. Stat. Phys. 168, 288</span>&ndash;<span>299. </span><a href="https://arxiv.org/abs/1702.01929"><span>arXiv:1702.01929</span></a>
+</li>
+</ol>
+</li>
+<li>
+<ol start="8" type="A">
+<li>
+<span>Ramsauer et al. (2020). </span><strong><span>Hopfield Networks is All You Need</span></strong><span>. </span><a href="https://arxiv.org/abs/2008.02217"><span>arXiv:2008.02217</span></a>
+</li>
+</ol>
+</li>
+</ul>
+</section>
+</article>
+      <div class="tag-row"><a class="tag" href="/tags/hopfield.html">#hopfield</a><a class="tag" href="/tags/associative-memory.html">#associative-memory</a><a class="tag" href="/tags/energy-based.html">#energy-based</a></div>
+      <p class="prereq-line">
+      <span class="prereq-line__label">Read next</span>
+      <a href="/2023/12/12/UP.html">Implementing from scratch a Hopfield Network</a>
+    </p><section class="related">
+        <h2>Related posts</h2>
+        <ul class="related-list">
+          <li>
+              <a href="/2023/12/12/UP.html">Implementing from scratch a Hopfield Network</a>
+              <span class="muted"><time datetime="2023-12-12">Dec 12, 2023</time> · Math, Physics &amp; Foundations</span>
+            </li><li>
+              <a href="/2026/01/25/epiplexity.html">From Entropy to Epiplexity</a>
+              <span class="muted"><time datetime="2026-01-25">Jan 25, 2026</time> · Math, Physics &amp; Foundations</span>
+            </li><li>
+              <a href="/2024/12/23/prob.html">Probability Paradigms</a>
+              <span class="muted"><time datetime="2024-12-23">Dec 23, 2024</time> · Math, Physics &amp; Foundations</span>
+            </li>
+        </ul>
+      </section><nav class="post-nav" aria-label="Chronological">
+        <a class="post-nav__link post-nav__prev" href="/2023/12/03/Bertimbau.html">
+          <span class="post-nav__label">← Older</span>
+          <span class="post-nav__title">BERT and fine tunning</span>
+        </a>
+        <a class="post-nav__link post-nav__next" href="/2023/12/06/Hopfield_from_scratch.html">
+          <span class="post-nav__label">Newer →</span>
+          <span class="post-nav__title">Understanding Cover's Universal Portfolio</span>
+        </a>
+      </nav><nav class="post-nav post-nav--theme" aria-label="Same theme">
+        <span class="post-nav__link post-nav__prev post-nav__link--empty"></span>
+        <a class="post-nav__link post-nav__next" href="/2023/12/06/Hopfield_from_scratch.html">
+          <span class="post-nav__label">Newer in theme →</span>
+          <span class="post-nav__title">Understanding Cover's Universal Portfolio</span>
+        </a>
+      </nav>
+      
+    <section class="comments" id="comments">
+      <h2>Comments</h2>
+      <div class="giscus"></div>
+      <noscript><p class="muted">Comments are powered by <a href="https://giscus.app">giscus</a> and need JavaScript.</p></noscript>
+    </section>
+    <script>
+    (function () {
+      // Inject giscus with the theme the site is actually using (the toggle
+      // persists in localStorage), rather than the OS preference.
+      var siteTheme = function () {
+        var t = document.documentElement.getAttribute("data-theme");
+        if (t) return t === "dark" ? "dark" : "light";
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark" : "light";
+      };
+      var s = document.createElement("script");
+      s.src = "https://giscus.app/client.js";
+      var attrs = {
+        "data-repo": "mbottoni/mbottoni.github.io",
+        "data-repo-id": "R_kgDOKv71Lg",
+        "data-category": "General",
+        "data-category-id": "DIC_kwDOKv71Ls4DEBYr",
+        "data-mapping": "pathname",
+        "data-strict": "1",
+        "data-reactions-enabled": "1",
+        "data-emit-metadata": "0",
+        "data-input-position": "top",
+        "data-theme": siteTheme(),
+        "data-lang": "en",
+        "data-loading": "lazy",
+        "crossorigin": "anonymous"
+      };
+      for (var k in attrs) s.setAttribute(k, attrs[k]);
+      s.async = true;
+      document.getElementById("comments").appendChild(s);
+
+      // Follow the dark-mode toggle after load.
+      new MutationObserver(function () {
+        var frame = document.querySelector("iframe.giscus-frame");
+        if (!frame) return;
+        frame.contentWindow.postMessage(
+          { giscus: { setConfig: { theme: siteTheme() } } },
+          "https://giscus.app");
+      }).observe(document.documentElement,
+        { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+    </script>
+  
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/content/posts/2023-12-04-Hopfield.dj">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        // Widgets build their own DOM and style their spans.
+        if (span.closest(".widget")) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  <script defer src="/widgets/hopfield.js"></script>
+<script defer src="/js/runner.js"></script>
+<script>
+(function () {
+  var bar = document.querySelector(".reading-progress__bar");
+  var article = document.querySelector("article");
+  if (bar && article) {
+    var update = function () {
+      var top = article.offsetTop;
+      var h = article.offsetHeight - window.innerHeight;
+      var p = h > 0 ? (window.scrollY - top) / h : 1;
+      bar.style.transform = "scaleX(" + Math.min(1, Math.max(0, p)) + ")";
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
+  var toc = document.querySelector(".toc");
+  if (!toc || !("IntersectionObserver" in window)) return;
+  var links = {};
+  toc.querySelectorAll("a[href^='#']").forEach(function (a) {
+    links[decodeURIComponent(a.getAttribute("href").slice(1))] = a;
+  });
+  var ids = Object.keys(links);
+  if (!ids.length) return;
+  var visible = {};
+  var setActive = function () {
+    var first = null;
+    for (var i = 0; i < ids.length; i++) {
+      if (visible[ids[i]]) { first = ids[i]; break; }
+    }
+    ids.forEach(function (id) {
+      links[id].classList.toggle("active", id === first);
+    });
+  };
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
+    setActive();
+  }, { rootMargin: "-10% 0px -70% 0px", threshold: 0 });
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>
+</body>
+
+</html>
