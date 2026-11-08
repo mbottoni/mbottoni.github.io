@@ -3,7 +3,6 @@ import { MapData, Post, PostNav } from "./main.ts";
 import { comments } from "./comments.ts";
 import { type ThemeConfig } from "./themes.ts";
 import { type Project } from "./projects.ts";
-import { type NewsItem } from "./news.ts";
 import { tagPath } from "./tags.ts";
 
 const site_url = "https://mbottoni.github.io";
@@ -16,10 +15,34 @@ const socials = [
   { icon: "rss", href: "/feed.xml", label: "RSS" },
 ];
 
-const nav_links = [
+type NavLink = { href: string; label: string };
+type NavMenu = {
+  label: string;
+  items: { href: string; label: string; note: string }[];
+};
+
+// Live sites built by the git-scraping repos (scheduled GitHub Actions that
+// commit official open data as it changes), each served from its own Pages.
+const data_menu: NavMenu = {
+  label: "Data",
+  items: [
+    {
+      href: "https://mbottoni.github.io/political-eye/",
+      label: "Political Eye",
+      note: "Brazilian politics and public money",
+    },
+    {
+      href: "https://mbottoni.github.io/b3-radar/",
+      label: "B3 Radar",
+      note: "Daily screen of Brazilian stocks",
+    },
+  ],
+};
+
+const nav_links: (NavLink | NavMenu)[] = [
   { href: "/", label: "Blog" },
   { href: "/projects.html", label: "Projects" },
-  { href: "/news.html", label: "News" },
+  data_menu,
   { href: "/archive.html", label: "Archive" },
   { href: "/map.html", label: "Map" },
   { href: "/about.html", label: "About" },
@@ -32,6 +55,17 @@ const moon_svg =
   `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>`;
 const search_svg =
   `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg>`;
+
+function nav_menu(m: NavMenu): HtmlString {
+  return html`<details class="nav-menu">
+          <summary>${m.label}</summary>
+          <div class="nav-menu-list">${
+    m.items.map((i) =>
+      html`<a href="${i.href}"><span class="nav-menu-label">${i.label} <span aria-hidden="true">↗</span></span><span class="nav-menu-note">${i.note}</span></a>`
+    )
+  }</div>
+        </details>`;
+}
 
 export const base = (
   { content, src, title, path, description, extra_css, body_end, image }: {
@@ -122,7 +156,7 @@ export const base = (
       <div class="nav-links" id="nav-links">
         ${
     nav_links.map((l) =>
-      html`<a href="${l.href}"${
+      "items" in l ? nav_menu(l) : html`<a href="${l.href}"${
         l.href === path || (l.href === "/" && path === "")
           ? html` class="active"`
           : ""
@@ -191,6 +225,23 @@ export const base = (
           burger.setAttribute("aria-expanded", open ? "true" : "false");
         });
       }
+
+      // Nav dropdowns are <details>: they open without JS; this closes them
+      // on an outside click or Escape.
+      var menus = document.querySelectorAll(".nav-menu");
+      document.addEventListener("click", function (e) {
+        menus.forEach(function (m) {
+          if (m.open && !m.contains(e.target)) m.open = false;
+        });
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") return;
+        menus.forEach(function (m) {
+          if (!m.open) return;
+          m.open = false;
+          m.querySelector("summary").focus();
+        });
+      });
     })();
 
     function unwrapPlainSpans(root) {
@@ -294,7 +345,6 @@ function tag_pills(tags: string[], link = true): HtmlString {
 export const post_list = (
   groups: ThemeGroup[],
   posts: Post[],
-  news: NewsItem[],
 ): HtmlString => {
   const cards = groups.map((group) => {
     const latest = group.posts[0];
@@ -337,8 +387,6 @@ export const post_list = (
     }</div>
       </section>
 
-      ${news_block(news)}
-
       <section class="home-section">
         <h2>Topics</h2>
         <div class="theme-grid">
@@ -352,42 +400,6 @@ export const post_list = (
           ${recent}
         </ul>
         <p><a href="/archive.html">See all posts →</a></p>
-      </section>
-    `,
-  });
-};
-
-function news_block(news: NewsItem[]): HtmlString {
-  if (news.length === 0) return new HtmlString("");
-  const items = news.slice(0, 4).map((n) =>
-    html`<li><span class="news-date">${news_date(n.date)}</span><span>${
-      new HtmlString(n.html)
-    }</span></li>`
-  );
-  return html`
-    <section class="home-section">
-      <h2>News</h2>
-      <ul class="news-list">${items}</ul>
-      <p><a href="/news.html">All news →</a></p>
-    </section>
-  `;
-}
-
-export const news_page = (news: NewsItem[]): HtmlString => {
-  const items = news.map((n) =>
-    html`<li><span class="news-date">${news_date(n.date)}</span><span>${
-      new HtmlString(n.html)
-    }</span></li>`
-  );
-  return base({
-    path: "/news.html",
-    title: "News — mbottoni",
-    description: "Announcements and updates.",
-    src: "/src/news.ts",
-    content: html`
-      <section class="theme-page">
-        <header><h1>News</h1></header>
-        <ul class="news-list">${items}</ul>
       </section>
     `,
   });
@@ -1034,11 +1046,6 @@ export function time(date: Date): HtmlString {
   });
   const machine = yyyy_mm_dd(date);
   return html`<time datetime="${machine}">${human}</time>`;
-}
-
-function news_date(iso: string): HtmlString {
-  const date = new Date(`${iso}T00:00:00Z`);
-  return time(date);
 }
 
 function yyyy_mm_dd(date: Date): string {

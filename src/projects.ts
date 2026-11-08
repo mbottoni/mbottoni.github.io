@@ -188,7 +188,7 @@ export const projects: Project[] = [
     slug: "graph-corr-embedd",
     description:
       "Measuring correlation between graphs via learned embeddings vs. classical graph-distance measures.",
-    url: "https://github.com/dcuoliveira/graph-corr-embedd",
+    url: "https://github.com/mbottoni/graph-corr-embedd",
     tags: ["research"],
     year: 2024,
     gif: "/assets/projects/graph-corr-embedd.gif",
