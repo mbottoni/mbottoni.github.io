@@ -24,7 +24,7 @@ type NavMenu = {
 // Live sites built by the git-scraping repos (scheduled GitHub Actions that
 // commit official open data as it changes), each served from its own Pages.
 const data_menu: NavMenu = {
-  label: "Data",
+  label: "Data sites",
   items: [
     {
       href: "https://mbottoni.github.io/political-eye/",
@@ -42,13 +42,13 @@ const data_menu: NavMenu = {
 const nav_links: (NavLink | NavMenu)[] = [
   { href: "/", label: "Blog" },
   { href: "/projects.html", label: "Projects" },
-  data_menu,
   { href: "/archive.html", label: "Archive" },
   { href: "/map.html", label: "Map" },
   { href: "/about.html", label: "About" },
   { href: "/resume.pdf", label: "Resume" },
   { href: "/links.html", label: "Links" },
   { href: "/arcade.html", label: "Arcade" },
+  data_menu,
 ];
 
 const moon_svg =
@@ -58,7 +58,7 @@ const search_svg =
 
 function nav_menu(m: NavMenu): HtmlString {
   return html`<details class="nav-menu">
-          <summary>${m.label}</summary>
+          <summary aria-label="${m.label}" title="${m.label}"></summary>
           <div class="nav-menu-list">${
     m.items.map((i) =>
       html`<a href="${i.href}"><span class="nav-menu-label">${i.label} <span aria-hidden="true">↗</span></span><span class="nav-menu-note">${i.note}</span></a>`
