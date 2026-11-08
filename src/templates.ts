@@ -3,6 +3,7 @@ import { MapData, Post, PostNav } from "./main.ts";
 import { comments } from "./comments.ts";
 import { type ThemeConfig } from "./themes.ts";
 import { type Project } from "./projects.ts";
+import { type ElsewhereLink, type ReadingItem } from "./reading.ts";
 import { tagPath } from "./tags.ts";
 
 const site_url = "https://mbottoni.github.io";
@@ -46,7 +47,7 @@ const nav_links: (NavLink | NavMenu)[] = [
   { href: "/map.html", label: "Map" },
   { href: "/about.html", label: "About" },
   { href: "/resume.pdf", label: "Resume" },
-  { href: "/links.html", label: "Links" },
+  { href: "/reading.html", label: "Reading" },
   { href: "/arcade.html", label: "Arcade" },
   data_menu,
 ];
@@ -503,6 +504,76 @@ export const project_detail_page = (
     `,
   });
 };
+
+export type ReadingEntry = ReadingItem & {
+  links: { href: string; label: string }[];
+};
+
+export const reading_page = (
+  items: ReadingEntry[],
+  elsewhere: ElsewhereLink[],
+): HtmlString => {
+  const list = items.map((it) =>
+    html`
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/${it.arxiv}">${it.title}</a>
+          <div class="reading-meta">${it.authors} · ${it.year} · arXiv:${it.arxiv}</div>
+          <p class="reading-note">${it.note}</p>${
+      it.links.length > 0
+        ? html`
+          <p class="reading-links">On this site: ${
+          it.links.map((l, i) =>
+            html`${i > 0 ? " · " : ""}<a href="${l.href}">${l.label}</a>`
+          )
+        }</p>`
+        : ""
+    }
+        </li>`
+  );
+  const others = elsewhere.map((l) =>
+    html`<li><a href="${l.href}">${l.label}</a> <span class="muted">${l.note}</span></li>`
+  );
+  return base({
+    path: "/reading.html",
+    title: "Reading — mbottoni",
+    description:
+      "Papers I keep coming back to, from machine learning theory to diffusion, graphs and information theory.",
+    src: "/src/reading.ts",
+    content: html`
+      <section class="theme-page">
+        <header>
+          <h1>Reading</h1>
+          <p>Papers I keep coming back to, roughly in order of how much time I
+          have spent with them. Where I wrote about one, the post is linked
+          underneath.</p>
+        </header>
+        <ul class="reading-list">${list}
+        </ul>
+        <section class="reading-elsewhere">
+          <h2>Elsewhere</h2>
+          <ul>${others}</ul>
+        </section>
+      </section>
+    `,
+  });
+};
+
+// A moved page: keeps old links working on a static host with no redirects.
+export const redirect_page = (from: string, to: string): HtmlString =>
+  html`<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <title>Moved to ${to}</title>
+  <meta http-equiv="refresh" content="0; url=${to}">
+  <link rel="canonical" href="${site_url}${to}">
+  <meta name="robots" content="noindex">
+</head>
+<body>
+  <p>${from} has moved to <a href="${to}">${to}</a>.</p>
+</body>
+</html>
+`;
 
 export const archive_page = (posts: Post[]): HtmlString => {
   const byYear = new Map<number, Post[]>();
