@@ -5,6 +5,7 @@ import * as djot from "./djot.ts";
 import { HtmlString } from "./templates.ts";
 import { resolveTheme, themes, type ThemeConfig } from "./themes.ts";
 import { projects } from "./projects.ts";
+import { elsewhere, reading } from "./reading.ts";
 import { resolveTags, tagSlug } from "./tags.ts";
 import { resolveSeries, type SeriesMembership, validateSeries } from "./series.ts";
 import { resolveRef } from "./refs.ts";
@@ -155,6 +156,18 @@ async function build(params: {
     "out/res/projects.html",
     templates.projects_page(projects, projectDetails).value,
   );
+  await update_file(
+    "out/res/reading.html",
+    templates.reading_page(
+      resolve_reading(posts, projectDetails, params.filter === ""),
+      elsewhere,
+    ).value,
+  );
+  // /links.html was replaced by /reading.html; keep old links working.
+  await update_file(
+    "out/res/links.html",
+    templates.redirect_page("/links.html", "/reading.html").value,
+  );
   await update_file("out/res/archive.html", templates.archive_page(posts).value);
 
   // Tags: an index plus one page per tag
@@ -208,7 +221,7 @@ async function build(params: {
     );
   }
 
-  const pages = ["about", "resume", "links", "style", "repositories"];
+  const pages = ["about", "resume", "style", "repositories"];
   for (const page of pages) {
     const text = await Deno.readTextFile(`content/${page}.dj`);
     const parsed = djot.parse(text);
@@ -521,6 +534,52 @@ async function collect_posts(ctx: Ctx, filter: string): Promise<Post[]> {
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
+
+// Attach "On this site" links to each reading-list paper. With `strict` (a
+// full build) an unknown or ambiguous post ref, or an unknown project slug,
+// fails the build; a filtered build only sees some posts, so it skips them.
+function resolve_reading(
+  posts: Post[],
+  projectDetails: Set<string>,
+  strict: boolean,
+): templates.ReadingEntry[] {
+  const bySlug = new Map<string, Post[]>();
+  for (const p of posts) {
+    const k = p.slug.toLowerCase();
+    bySlug.set(k, [...(bySlug.get(k) ?? []), p]);
+  }
+  const byStem = new Map(posts.map((p) => [post_stem(p).toLowerCase(), p]));
+  return reading.map((item) => {
+    const links: { href: string; label: string }[] = [];
+    for (const ref of item.posts ?? []) {
+      const k = ref.toLowerCase();
+      const stem = byStem.get(k);
+      const hits = stem ? [stem] : bySlug.get(k) ?? [];
+      if (hits.length === 1) {
+        links.push({ href: hits[0].path, label: hits[0].title });
+      } else if (strict) {
+        fatal(
+          hits.length === 0
+            ? `src/reading.ts: ${item.arxiv} links unknown post '${ref}'`
+            : `src/reading.ts: ${item.arxiv} links ambiguous slug '${ref}', use the full YYYY-MM-DD-slug stem`,
+        );
+      }
+    }
+    for (const slug of item.projects ?? []) {
+      const project = projects.find((p) => p.slug === slug);
+      if (!project) {
+        fatal(`src/reading.ts: ${item.arxiv} links unknown project '${slug}'`);
+      }
+      links.push({
+        href: projectDetails.has(slug)
+          ? templates.projectDetailPath(slug)
+          : project!.url,
+        label: `${project!.title} (project)`,
+      });
+    }
+    return { ...item, links };
+  });
+}
 
 function extract_first_image(source: string): string | undefined {
   const markdown_image = source.match(/!\[[^\]]*\]\(([^\s)]+)(?:\s"[^"]*")?\)/);
