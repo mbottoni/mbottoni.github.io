@@ -88,10 +88,14 @@ body {
 .nav-links a:hover { color: var(--link); }
 .nav-links a.active { color: var(--accent); font-weight: 600; }
 
-/* Dropdown (<details>) in the nav, e.g. "Data" */
+/* Dropdown (<details>) in the nav: an arrow-only toggle beside the search icon */
 .nav-menu { position: relative; padding-left: 0; border-left: none; }
 .nav-menu > summary {
-  font-family: "Open Sans", sans-serif;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
   font-size: 0.85rem;
   color: var(--fg);
   cursor: pointer;
@@ -101,10 +105,8 @@ body {
 .nav-menu > summary::-webkit-details-marker { display: none; }
 .nav-menu > summary::after {
   content: "";
-  display: inline-block;
-  margin-left: 0.3em;
-  vertical-align: 0.15em;
-  border: 0.25em solid transparent;
+  display: block;
+  border: 0.32em solid transparent;
   border-top-color: currentColor;
   border-bottom-width: 0;
   transition: transform 0.15s ease;
@@ -117,8 +119,7 @@ body {
 .nav-menu-list {
   position: absolute;
   top: calc(100% + 0.5rem);
-  left: 50%;
-  transform: translateX(-50%);
+  right: -0.5rem;
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -188,7 +189,6 @@ body {
   /* In the burger menu the dropdown expands in place instead of floating. */
   .nav-menu-list {
     position: static;
-    transform: none;
     min-width: 0;
     margin-top: 0.35rem;
     padding: 0 0 0 0.75rem;
