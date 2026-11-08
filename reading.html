@@ -1,0 +1,430 @@
+
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reading — mbottoni</title>
+  <meta name="description" content="Papers I keep coming back to, from machine learning theory to diffusion, graphs and information theory.">
+  <meta name="author" content="Maruan Bakri Ottoni">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Reading — mbottoni">
+  <meta property="og:description" content="Papers I keep coming back to, from machine learning theory to diffusion, graphs and information theory.">
+  <meta property="og:url" content="https://mbottoni.github.io/reading.html">
+  <meta property="og:image" content="https://avatars.githubusercontent.com/u/37229305?v=4">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Reading — mbottoni">
+  <meta name="twitter:description" content="Papers I keep coming back to, from machine learning theory to diffusion, graphs and information theory.">
+  <meta name="twitter:image" content="https://avatars.githubusercontent.com/u/37229305?v=4">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://mbottoni.github.io/reading.html">
+  <link rel="alternate" type="application/rss+xml" title="mbottoni" href="https://mbottoni.github.io/feed.xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+  @font-face {
+    font-family: 'Open Sans'; src: url('/css/OpenSans-300-Normal.woff2') format('woff2');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono'; src: url('/css/JetBrainsMono-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Normal.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-400-Italic.woff2') format('woff2');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Normal.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'EB Garamond'; src: url('/css/EBGaramond-700-Italic.woff2') format('woff2');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  </style>
+
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="/css/katex/katex.min.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="/">mbottoni</a>
+      <button type="button" class="nav-burger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Blog</a><a href="/projects.html">Projects</a><a href="/archive.html">Archive</a><a href="/map.html">Map</a><a href="/about.html">About</a><a href="/resume.pdf">Resume</a><a href="/reading.html" class="active">Reading</a><a href="/arcade.html">Arcade</a><details class="nav-menu">
+          <summary aria-label="Data sites" title="Data sites"></summary>
+          <div class="nav-menu-list"><a href="https://mbottoni.github.io/political-eye/"><span class="nav-menu-label">Political Eye <span aria-hidden="true">↗</span></span><span class="nav-menu-note">Brazilian politics and public money</span></a><a href="https://mbottoni.github.io/b3-radar/"><span class="nav-menu-label">B3 Radar <span aria-hidden="true">↗</span></span><span class="nav-menu-note">Daily screen of Brazilian stocks</span></a></div>
+        </details>
+        <a class="nav-icon" href="/search.html" aria-label="Search"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm5 12 4 4"/></svg></a>
+        <button class="nav-icon theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+  
+      <section class="theme-page">
+        <header>
+          <h1>Reading</h1>
+          <p>Papers I keep coming back to, roughly in order of how much time I
+          have spent with them. Where I wrote about one, the post is linked
+          underneath.</p>
+        </header>
+        <ul class="reading-list">
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/math/0406077">A Tutorial Introduction to the Minimum Description Length Principle</a>
+          <div class="reading-meta">Grünwald · 2004 · arXiv:math/0406077</div>
+          <p class="reading-note">Learning as compression: prefer the model that gives the shortest description of the data. Chapter 1 is a non-technical tour; chapter 2 makes it precise.</p>
+          <p class="reading-links">On this site: <a href="/2024/07/29/kolmogorov.html">Kolmogorov Complexity</a> · <a href="/2026/01/25/epiplexity.html">From Entropy to Epiplexity</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2107.04562">The Bayesian Learning Rule</a>
+          <div class="reading-meta">Khan &amp; Rue · 2021 · arXiv:2107.04562</div>
+          <p class="reading-note">Ridge regression, Newton's method, the Kalman filter, SGD, RMSprop and dropout all fall out of one natural-gradient Bayesian update.</p>
+          <p class="reading-links">On this site: <a href="/2024/12/23/prob.html">Probability Paradigms</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2407.09468">Beyond Euclid: An Illustrated Guide to Modern Machine Learning with Geometric, Topological, and Algebraic Structures</a>
+          <div class="reading-meta">Sanborn et al. · 2024 · arXiv:2407.09468</div>
+          <p class="reading-note">An illustrated map of machine learning beyond flat vector spaces: data and models with geometric, topological and algebraic structure.</p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2406.08929">Step-by-Step Diffusion: An Elementary Tutorial</a>
+          <div class="reading-meta">Nakkiran et al. · 2024 · arXiv:2406.08929</div>
+          <p class="reading-note">A first course on diffusion and flow matching that derives correct algorithms with as little machinery as possible.</p>
+          <p class="reading-links">On this site: <a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a> · <a href="/2024/09/09/ddim_ddpm.html">DDIM vs DDPM</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2310.03884">Information Geometry for the Working Information Theorist</a>
+          <div class="reading-meta">Mishra, Kumar &amp; Wong · 2023 · arXiv:2310.03884</div>
+          <p class="reading-note">Statistical manifolds, Fisher information and divergences from a geometric point of view, written for information theorists.</p>
+          <p class="reading-links">On this site: <a href="/2024/09/17/divergences.html">Some common divergences</a> · <a href="/projects/fisher-rao-ml.html">fisher-rao-ml (project)</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/1512.06830">Correlation Between Graphs with an Application to Brain Networks Analysis</a>
+          <div class="reading-meta">Fujita et al. · 2015 · arXiv:1512.06830</div>
+          <p class="reading-note">What does it mean for two graphs to be correlated? A definition through the parameters of the random graph models behind them, applied to brain networks.</p>
+          <p class="reading-links">On this site: <a href="/projects/graph-corr-embedd.html">graph-corr-embedd (project)</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2107.07511">A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification</a>
+          <div class="reading-meta">Angelopoulos &amp; Bates · 2021 · arXiv:2107.07511</div>
+          <p class="reading-note">Wrap any trained model in prediction sets with distribution-free, finite-sample guarantees. Short and practical.</p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2202.00665">Tutorial on Amortized Optimization</a>
+          <div class="reading-meta">Amos · 2022 · arXiv:2202.00665</div>
+          <p class="reading-note">Learning to predict the solutions of optimization problems: the idea behind the VAE encoder, and much of reinforcement learning.</p>
+          <p class="reading-links">On this site: <a href="/2024/10/13/vaes.html">A comprehensive list of different types of VAEs</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2002.10689">A Theory of Usable Information Under Computational Constraints</a>
+          <div class="reading-meta">Xu et al. · 2020 · arXiv:2002.10689</div>
+          <p class="reading-note">V-information: what a computationally bounded observer can actually extract. Unlike Shannon information, it can be created by computation.</p>
+          <p class="reading-links">On this site: <a href="/2026/01/25/epiplexity.html">From Entropy to Epiplexity</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2312.06937">Can a Transformer Represent a Kalman Filter?</a>
+          <div class="reading-meta">Goel &amp; Bartlett · 2023 · arXiv:2312.06937</div>
+          <p class="reading-note">Yes, up to a small error bounded uniformly in time: softmax attention can implement kernel smoothing, which tracks the Kalman filter.</p>
+          <p class="reading-links">On this site: <a href="/2023/12/19/Kalman.html">Implementing the Kalman Filter in Python</a> · <a href="/projects/kalman-transformer.html">kalman-transformer (project)</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2412.09563">Does Representation Matter? Exploring Intermediate Layers in Large Language Models</a>
+          <div class="reading-meta">Skean et al. · 2024 · arXiv:2412.09563</div>
+          <p class="reading-note">Intermediate layers of LLMs often give better representations than the last one, for Transformers and state-space models alike.</p>
+          <p class="reading-links">On this site: <a href="/2024/11/17/plato.html">The Platonic Representation Hypothesis: Are AI Models Converging on Universal Representations?</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2309.07867">Beta Diffusion</a>
+          <div class="reading-meta">Zhou et al. · 2023 · arXiv:2309.07867</div>
+          <p class="reading-note">Diffusion for data in bounded ranges, using multiplicative beta-distributed transitions instead of additive Gaussian noise.</p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2512.24880">mHC: Manifold-Constrained Hyper-Connections</a>
+          <div class="reading-meta">Xie et al. · 2025 · arXiv:2512.24880</div>
+          <p class="reading-note">Hyper-connections widen the residual stream but break its identity mapping; mHC restores it by constraining the connections to a manifold.</p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2304.05366">The No Free Lunch Theorem, Kolmogorov Complexity, and the Role of Inductive Biases in Machine Learning</a>
+          <div class="reading-meta">Goldblum et al. · 2023 · arXiv:2304.05366</div>
+          <p class="reading-note">Real-world data has low Kolmogorov complexity and neural networks share that bias toward simplicity, so no-free-lunch theorems bite less than they seem.</p>
+          <p class="reading-links">On this site: <a href="/2024/07/29/kolmogorov.html">Kolmogorov Complexity</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2407.00783">Diffusion Models and Representation Learning: A Survey</a>
+          <div class="reading-meta">Fuest et al. · 2024 · arXiv:2407.00783</div>
+          <p class="reading-note">Both directions: what diffusion models learn as representations, and how representations are used to improve diffusion.</p>
+          <p class="reading-links">On this site: <a href="/2024/09/01/diffusion.html">Diffusion models or Autoencoders?</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2002.02405">How Good is the Bayes Posterior in Deep Neural Networks Really?</a>
+          <div class="reading-meta">Wenzel et al. · 2020 · arXiv:2002.02405</div>
+          <p class="reading-note">The cold posterior effect: in deep nets, a deliberately sharpened posterior predicts better than the actual Bayes posterior.</p>
+          <p class="reading-links">On this site: <a href="/2024/12/23/prob.html">Probability Paradigms</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/1601.00670">Variational Inference: A Review for Statisticians</a>
+          <div class="reading-meta">Blei, Kucukelbir &amp; McAuliffe · 2016 · arXiv:1601.00670</div>
+          <p class="reading-note">The standard introduction to variational inference: posit a family, minimize the KL to the posterior, and scale it with stochastic optimization.</p>
+          <p class="reading-links">On this site: <a href="/2024/10/13/vaes.html">A comprehensive list of different types of VAEs</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a>
+          <div class="reading-meta">Vaswani et al. · 2017 · arXiv:1706.03762</div>
+          <p class="reading-note">The Transformer: attention only, no recurrence or convolutions.</p>
+          <p class="reading-links">On this site: <a href="/2024/01/08/Transformer.html">Implementing the Transformer in Python</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2102.11224">Spectral Density of Random Graphs: Convergence Properties and Application in Model Fitting</a>
+          <div class="reading-meta">Santos, Fujita &amp; Matias · 2021 · arXiv:2102.11224</div>
+          <p class="reading-note">The spectral density of a graph's adjacency matrix as a model-agnostic tool to fit and select random graph models.</p>
+          <p class="reading-links">On this site: <a href="/projects/logit-graph.html">logit-graph (project)</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2304.00803">A Tutorial Introduction to Reinforcement Learning</a>
+          <div class="reading-meta">Vidyasagar · 2023 · arXiv:2304.00803</div>
+          <p class="reading-note">A compact survey of reinforcement learning that treats TD learning and Q-learning as stochastic approximation.</p>
+          <p class="reading-links">On this site: <a href="/2024/08/04/simple_rl.html">Simple Reinforcement Learning Example</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/1911.01547">On the Measure of Intelligence</a>
+          <div class="reading-meta">Chollet · 2019 · arXiv:1911.01547</div>
+          <p class="reading-note">Intelligence as skill-acquisition efficiency rather than skill, with the ARC benchmark to measure it.</p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2206.04041">Neural Collapse: A Review on Modelling Principles and Generalization</a>
+          <div class="reading-meta">Kothapalli · 2022 · arXiv:2206.04041</div>
+          <p class="reading-note">Late in training, last-layer features collapse to their class means, which form a simplex equiangular tight frame. A review of why, and what it implies.</p>
+          <p class="reading-links">On this site: <a href="/2025/07/08/neural-collapse.html">What is Neural Collapse? A Simpler Look</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2308.07037">Bayesian Flow Networks</a>
+          <div class="reading-meta">Graves et al. · 2023 · arXiv:2308.07037</div>
+          <p class="reading-note">Instead of denoising samples, update the parameters of simple distributions by Bayesian inference. No forward process, and discrete data works natively.</p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2502.09992">Large Language Diffusion Models</a>
+          <div class="reading-meta">Nie et al. · 2025 · arXiv:2502.09992</div>
+          <p class="reading-note">LLaDA: a language model trained from scratch as a masked diffusion model rather than autoregressively, and competitive at 8B scale.</p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2602.04770">Generative Modeling via Drifting</a>
+          <div class="reading-meta">Deng et al. · 2026 · arXiv:2602.04770</div>
+          <p class="reading-note">Drifting models move the generated distribution during training instead of at inference time, so sampling takes a single step.</p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/1609.01214">Spectral Entropies as Information-Theoretic Tools for Complex Network Comparison</a>
+          <div class="reading-meta">De Domenico &amp; Biamonte · 2016 · arXiv:1609.01214</div>
+          <p class="reading-note">An entropy for networks from their spectrum, borrowed from quantum statistical mechanics, which yields a Jensen-Shannon distance between networks.</p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/1607.00653">node2vec: Scalable Feature Learning for Networks</a>
+          <div class="reading-meta">Grover &amp; Leskovec · 2016 · arXiv:1607.00653</div>
+          <p class="reading-note">Node embeddings from biased random walks that interpolate between breadth-first and depth-first exploration.</p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2111.09266">GFlowNet Foundations</a>
+          <div class="reading-meta">Bengio et al. · 2021 · arXiv:2111.09266</div>
+          <p class="reading-note">Learn to sample objects like sets and graphs with probability proportional to a reward, amortizing work that MCMC would otherwise do.</p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/1511.05121">Deep Kalman Filters</a>
+          <div class="reading-meta">Krishnan, Shalit &amp; Sontag · 2015 · arXiv:1511.05121</div>
+          <p class="reading-note">Kalman filters with neural-network transitions and emissions, learned with the variational machinery of VAEs.</p>
+          <p class="reading-links">On this site: <a href="/2023/12/19/Kalman.html">Implementing the Kalman Filter in Python</a> · <a href="/2024/10/13/vaes.html">A comprehensive list of different types of VAEs</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2505.09343">Insights into DeepSeek-V3: Scaling Challenges and Reflections on Hardware for AI Architectures</a>
+          <div class="reading-meta">Zhao et al. · 2025 · arXiv:2505.09343</div>
+          <p class="reading-note">How DeepSeek-V3 was co-designed with its hardware: Multi-head Latent Attention, mixture of experts, FP8 training and the interconnect limits behind them.</p>
+          <p class="reading-links">On this site: <a href="/2024/12/28/deepseek.html">Deepseek, an overview and quick notes</a> · <a href="/2025/08/04/moe.html">Mixture of Experts</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2210.02747">Flow Matching for Generative Modeling</a>
+          <div class="reading-meta">Lipman et al. · 2022 · arXiv:2210.02747</div>
+          <p class="reading-note">Train continuous normalizing flows without simulation, by regressing vector fields along fixed conditional paths; diffusion paths are a special case.</p>
+          <p class="reading-links">On this site: <a href="/2024/12/01/flow.html">Flow Matching, a short overview</a> · <a href="/projects/flow-match.html">flow-match (project)</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/1803.03635">The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks</a>
+          <div class="reading-meta">Frankle &amp; Carbin · 2018 · arXiv:1803.03635</div>
+          <p class="reading-note">Dense networks contain sparse subnetworks that, reset to their original initialization, train to the same accuracy.</p>
+          <p class="reading-links">On this site: <a href="/2026/01/26/lottery-ticket.html">The Lottery Ticket Hypothesis</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/1710.10903">Graph Attention Networks</a>
+          <div class="reading-meta">Veličković et al. · 2017 · arXiv:1710.10903</div>
+          <p class="reading-note">Message passing where each node learns how much weight to give each neighbor, via masked self-attention.</p>
+          <p class="reading-links">On this site: <a href="/2024/10/26/gcn.html">Graph Convolutional Networks</a></p>
+        </li>
+        <li class="reading-item">
+          <a class="reading-title" href="https://arxiv.org/abs/2404.19756">KAN: Kolmogorov-Arnold Networks</a>
+          <div class="reading-meta">Liu et al. · 2024 · arXiv:2404.19756</div>
+          <p class="reading-note">Learnable activation functions on the edges instead of fixed ones on the nodes, inspired by the Kolmogorov-Arnold representation theorem.</p>
+          <p class="reading-links">On this site: <a href="/2024/09/21/kan.html">Kolmogorov-Arnold Networks</a></p>
+        </li>
+        </ul>
+        <section class="reading-elsewhere">
+          <h2>Elsewhere</h2>
+          <ul><li><a href="https://terrytao.wordpress.com/">Terence Tao's blog</a> <span class="muted">mathematics, from expository to research</span></li><li><a href="https://qchu.wordpress.com/reading-recommendations/">Qiaochu Yuan's reading recommendations</a> <span class="muted">what to read in mathematics, and in what order</span></li><li><a href="https://dec41.user.srcf.net/">Dexter Chua's notes</a> <span class="muted">lecture notes from the Cambridge Mathematical Tripos</span></li><li><a href="https://complexsystemstheory.net/references-2/">Complex Systems Theory: further reading</a> <span class="muted">references on complex systems</span></li><li><a href="https://github.com/dppalomar?tab=repositories">Daniel Palomar's repositories</a> <span class="muted">portfolio optimization and financial signal processing</span></li></ul>
+        </section>
+      </section>
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/mbottoni/mbottoni.github.io/edit/master/src/reading.ts">
+        <svg class="icon"><use href="/assets/icons.svg#edit"/></svg>
+        Fix typo
+      </a>
+      <a href="/feed.xml">
+        <svg class="icon"><use href="/assets/icons.svg#rss"/></svg>
+        Subscribe
+      </a>
+      <a href="mailto:maruanbakriottoni@gmail.com">
+        <svg class="icon"><use href="/assets/icons.svg#email"/></svg>
+        Get in touch
+      </a>
+      <a href="https://github.com/mbottoni">
+        <svg class="icon"><use href="/assets/icons.svg#github"/></svg>
+        mbottoni
+      </a>
+    </p>
+  </footer>
+  <script defer src="/css/katex/katex.min.js"></script>
+  <script defer src="/css/katex/contrib/auto-render.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'default' });
+  </script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".theme-toggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.getAttribute("data-theme") === "dark"
+            ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          try { localStorage.setItem("theme", next); } catch (e) {}
+        });
+      }
+
+      // Mobile nav toggle (JS-driven: reliable on iOS, unlike a hidden checkbox)
+      var burger = document.querySelector(".nav-burger");
+      var navbar = document.querySelector(".navbar");
+      if (burger && navbar) {
+        burger.addEventListener("click", function () {
+          var open = navbar.classList.toggle("nav-open");
+          burger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+
+      // Nav dropdowns are <details>: they open without JS; this closes them
+      // on an outside click or Escape.
+      var menus = document.querySelectorAll(".nav-menu");
+      document.addEventListener("click", function (e) {
+        menus.forEach(function (m) {
+          if (m.open && !m.contains(e.target)) m.open = false;
+        });
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") return;
+        menus.forEach(function (m) {
+          if (!m.open) return;
+          m.open = false;
+          m.querySelector("summary").focus();
+        });
+      });
+    })();
+
+    function unwrapPlainSpans(root) {
+      for (const span of root.querySelectorAll("span")) {
+        if (!(span instanceof HTMLElement)) continue;
+        // Widgets build their own DOM and style their spans.
+        if (span.closest(".widget")) continue;
+        if (span.attributes.length === 0 && span.childElementCount === 0) {
+          span.replaceWith(document.createTextNode(span.textContent || ""));
+        }
+      }
+      root.normalize();
+    }
+
+    function addCopyButtons() {
+      document.querySelectorAll('figure.code-block').forEach(block => {
+        if (block.querySelector('.copy-button')) return;
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        button.addEventListener('click', () => {
+          const code = block.querySelector('code')?.innerText || '';
+          navigator.clipboard.writeText(code).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => button.textContent = 'Copy', 2000);
+          });
+        });
+        block.appendChild(button);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      unwrapPlainSpans(document.querySelector("main") || document.body);
+      addCopyButtons();
+      let attempts = 0;
+      const maxAttempts = 40;
+      const renderMath = () => {
+        if (typeof renderMathInElement === "function") {
+          try {
+            renderMathInElement(document.body, {
+              delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true },
+              ],
+              throwOnError: false,
+              ignoredTags: [
+                "script", "noscript", "style", "textarea",
+                "pre", "code", "option"
+              ],
+              ignoredClasses: ["code-block", "hljs"],
+            });
+          } catch (e) {
+            console.error("Math rendering error:", e);
+          }
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(renderMath, 75);
+        }
+      };
+      renderMath();
+    });
+  </script>
+  
+</body>
+
+</html>
