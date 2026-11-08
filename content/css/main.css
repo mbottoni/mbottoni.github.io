@@ -88,6 +88,63 @@ body {
 .nav-links a:hover { color: var(--link); }
 .nav-links a.active { color: var(--accent); font-weight: 600; }
 
+/* Dropdown (<details>) in the nav, e.g. "Data" */
+.nav-menu { position: relative; padding-left: 0; border-left: none; }
+.nav-menu > summary {
+  font-family: "Open Sans", sans-serif;
+  font-size: 0.85rem;
+  color: var(--fg);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.nav-menu > summary::-webkit-details-marker { display: none; }
+.nav-menu > summary::after {
+  content: "";
+  display: inline-block;
+  margin-left: 0.3em;
+  vertical-align: 0.15em;
+  border: 0.25em solid transparent;
+  border-top-color: currentColor;
+  border-bottom-width: 0;
+  transition: transform 0.15s ease;
+}
+.nav-menu[open] > summary::after { transform: rotate(180deg); }
+.nav-menu > summary:hover,
+.nav-menu[open] > summary { color: var(--link); }
+.nav-menu > summary:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+
+.nav-menu-list {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 15rem;
+  padding: 0.35rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+}
+.nav-links .nav-menu-list a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 4px;
+}
+.nav-links .nav-menu-list a:hover { background: var(--block-bg); }
+.nav-menu-label { line-height: 1.2; }
+.nav-menu-label span { color: var(--muted); }
+.nav-menu-note {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: var(--muted);
+}
+
 .nav-icon {
   display: inline-flex;
   align-items: center;
@@ -120,13 +177,28 @@ body {
   .nav-links {
     flex-basis: 100%;
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: flex-start;
     gap: 0.5rem;
     overflow: hidden;
     max-height: 0;
     transition: max-height 0.2s ease;
   }
-  .navbar.nav-open .nav-links { max-height: 60vh; padding-top: 0.5rem; }
+  .navbar.nav-open .nav-links { max-height: 80vh; overflow-y: auto; padding-top: 0.5rem; }
+  /* In the burger menu the dropdown expands in place instead of floating. */
+  .nav-menu-list {
+    position: static;
+    transform: none;
+    min-width: 0;
+    margin-top: 0.35rem;
+    padding: 0 0 0 0.75rem;
+    background: none;
+    border: none;
+    border-left: 2px solid var(--border);
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .nav-links .nav-menu-list a { padding: 0.25rem 0.5rem; }
 }
 
 /* ============================================================
@@ -284,7 +356,7 @@ time { color: var(--muted); font-family: "Open Sans", sans-serif; font-size: 1re
 .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
 
 /* ============================================================
-   Home: hero, news, sections
+   Home: hero, sections
    ============================================================ */
 .hero {
   display: flex; gap: 1.5rem; align-items: center;
@@ -304,17 +376,11 @@ time { color: var(--muted); font-family: "Open Sans", sans-serif; font-size: 1re
 .home-section { margin-top: 2rem; }
 .home-section > h2 { margin-bottom: 0.75rem; }
 
-.recent-list, .news-list { list-style: none; margin-left: 0; }
+.recent-list { list-style: none; margin-left: 0; }
 .recent-list > li { margin-bottom: 0.4rem; }
 .recent-list a { color: var(--accent); text-decoration: none; }
 .recent-list a:hover { text-decoration: underline; }
 
-.news-list > li {
-  display: grid; grid-template-columns: 8rem 1fr; gap: 0.5rem;
-  margin-bottom: 0.5rem; align-items: baseline;
-}
-.news-date time { font-size: 0.9rem; }
-@media (max-width: 560px) { .news-list > li { grid-template-columns: 1fr; gap: 0.1rem; } }
 
 /* ============================================================
    Theme cards (topics)

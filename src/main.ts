@@ -5,7 +5,6 @@ import * as djot from "./djot.ts";
 import { HtmlString } from "./templates.ts";
 import { resolveTheme, themes, type ThemeConfig } from "./themes.ts";
 import { projects } from "./projects.ts";
-import { news } from "./news.ts";
 import { resolveTags, tagSlug } from "./tags.ts";
 import { resolveSeries, type SeriesMembership, validateSeries } from "./series.ts";
 import { resolveRef } from "./refs.ts";
@@ -124,7 +123,7 @@ async function build(params: {
 
   await update_file(
     "out/res/index.html",
-    templates.post_list(themeGroups, posts, news).value,
+    templates.post_list(themeGroups, posts).value,
   );
   for (const group of themeGroups) {
     await update_file(
@@ -156,7 +155,6 @@ async function build(params: {
     "out/res/projects.html",
     templates.projects_page(projects, projectDetails).value,
   );
-  await update_file("out/res/news.html", templates.news_page(news).value);
   await update_file("out/res/archive.html", templates.archive_page(posts).value);
 
   // Tags: an index plus one page per tag
